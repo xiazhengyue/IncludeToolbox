@@ -11,7 +11,7 @@
              mc:Ignorable="d"
              x:Name="MyToolWindow">
     <UserControl.Resources>
-        <!-- Use VS styles http://stackoverflow.com/questions/3747972/wpf-usercontrol-cannot-find-xaml-resource-in-referencing-project -->
+        <!-- Use VS styles http://stackoverflow.com/questions/18913208/colors-in-visual-studio-extension -->
         <ResourceDictionary>
             <Style TargetType="Label">
                 <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowTextBrushKey}}"/>
@@ -19,10 +19,15 @@
             <Style TargetType="TreeView">
                 <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.DropDownPopupBackgroundEndColorKey }}"/>
                 <Setter Property="Background" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
             </Style>
+            <!-- <Style TargetType="TreeViewItem">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.DropDownPopupBackgroundEndColorKey }}"/>
+            </Style> -->
             <Style TargetType="ListBox">
                 <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.DropDownPopupBackgroundEndColorKey }}"/>
                 <Setter Property="Background" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
             </Style>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -39,7 +44,7 @@
         </Grid.ColumnDefinitions>
         <Label x:Name="FileNameLabel" Content="&lt;File&gt;" FontWeight="Bold" FontSize="16" FontFamily="Consolas"/>
         <Label x:Name="IncludeTreeLabel" Content="Includes:" VerticalAlignment="Top" Height="25" Grid.Row="1"/>
-        <TreeView x:Name="IncludeTree" Grid.Row="2"/>
+        <TreeView x:Name="IncludeTree" Grid.Row="2" />
         <Label x:Name="IncludedByListLabel" Content="Is included by:" VerticalAlignment="Top" Height="25" Grid.Row="3"/>
         <ListBox x:Name="IncludedByList" Grid.Row="4" RenderTransformOrigin="0.5,0.5">
             <ListBox.RenderTransform>

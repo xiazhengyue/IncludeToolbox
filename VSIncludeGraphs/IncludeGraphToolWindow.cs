@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics;
-using EnvDTE80;
+//using EnvDTE80;
+using System.Runtime.InteropServices;
+using EnvDTE;
+using Microsoft.VisualStudio.VCCodeModel;
+using Microsoft.VisualStudio.Shell;
 
 namespace VSIncludeGraphs
 {
-    using System;
-    using System.Runtime.InteropServices;
-    using Microsoft.VisualStudio.Shell;
-
     /// <summary>
     /// This class implements the tool window exposed by this package and hosts a user control.
     /// </summary>
@@ -22,7 +22,6 @@ namespace VSIncludeGraphs
     public sealed class IncludeGraphToolWindow : ToolWindowPane
     {
         private IncludeGraphToolWindowControl graphToolWindowControl;
-        private const string languageFilter = "C/C++";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IncludeGraphToolWindow"/> class.
@@ -41,23 +40,14 @@ namespace VSIncludeGraphs
         public override void OnToolWindowCreated()
         {
             // Register for window focus changes.
-            DTE2 dte = GetService(typeof(DTE2)) as DTE2;
+            DTE dte = GetService(typeof(DTE)) as DTE;
             if (dte == null)
             {
                 Debug.Fail("Can't get EnvDTE80.DTE2 service!");
             }
 
-            Events2 events = (Events2)dte.Events;
+            Events events = (Events)dte.Events;
             events.WindowEvents.WindowActivated += WindowEvents_WindowActivated;
-
-            // Todo: If we want full graphs, we need to update the graph on the following events.
-            // Or are we going to use VCCodeModel? https://msdn.microsoft.com/en-us/library/t41260xs.aspx
-            //
-            //dte.Events.SolutionItemsEvents.ItemRemoved
-            //dte.Events.SolutionItemsEvents.ItemAdded
-            //dte.Events.SolutionItemsEvents.ItemRenamed
-            //dte.Events.SolutionEvents.ProjectRemoved
-            //dte.Events.SolutionEvents.ProjectAdded
         }
 
         private void WindowEvents_WindowActivated(EnvDTE.Window gotFocus, EnvDTE.Window lostFocus)
@@ -70,10 +60,20 @@ namespace VSIncludeGraphs
 
         private void FocusedDocumentChanged(EnvDTE.Document focusedDocument)
         {
-            if (focusedDocument.Language.Equals(languageFilter))
+            VCFileCodeModel fileCodeModel = focusedDocument?.ProjectItem?.FileCodeModel as VCFileCodeModel;
+            if (fileCodeModel == null)
             {
-                graphToolWindowControl.SetData(focusedDocument.Name);
+                return;
             }
+            graphToolWindowControl.SetData(focusedDocument.Name, fileCodeModel);
+
+
+            VCCodeModel model = (VCCodeModel)focusedDocument.ProjectItem.ContainingProject.CodeModel;
+            foreach(var elem in model.Includes)
+            {
+                Debug.WriteLine(((VCCodeInclude)elem).Name);
+            }
+            Debug.WriteLine("--");
         }
     }
 }

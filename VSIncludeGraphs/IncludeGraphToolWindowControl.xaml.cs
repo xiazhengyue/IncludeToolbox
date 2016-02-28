@@ -5,6 +5,11 @@
 //------------------------------------------------------------------------------
 
 using System.Collections.Generic;
+using System.Windows.Media;
+using Microsoft.VisualStudio.PlatformUI;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.VCCodeModel;
 
 namespace VSIncludeGraphs
 {
@@ -25,9 +30,45 @@ namespace VSIncludeGraphs
             this.InitializeComponent();
         }
 
-        public void SetData(string fileName)
+        private static Brush GetSolidBrush(ThemeResourceKey themeResourceKey)
         {
-            FileNameLabel.Content = fileName;
+            var color = VSColorTheme.GetThemedColor(themeResourceKey);
+            return new SolidColorBrush(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
+        }
+
+        private void AddIncludes(ItemCollection target, EnvDTE.CodeElements includes)
+        {
+            foreach (var elem in includes)
+            {
+                VCCodeInclude include = elem as VCCodeInclude;
+                if (include == null)
+                {
+                    continue;
+                }
+
+                var newItem = new TreeViewItem()
+                {
+                    Header = include.FullName,
+                    ToolTip = include.File,
+                    // Todo: Styling should be part of XAML, but there were some exceptions I don't understand yet
+                    Foreground = GetSolidBrush(EnvironmentColors.ToolWindowTextBrushKey),
+                    Background = GetSolidBrush(EnvironmentColors.DropDownPopupBackgroundEndColorKey),
+                    BorderBrush = GetSolidBrush(EnvironmentColors.DropDownPopupBorderBrushKey),
+                };
+
+                target.Add(newItem);
+
+                // How to access includes recursively? Is that even possible? How much does VCCodeModel know about those files?
+                //AddIncludes(newItem.Items, include.);
+            }
+        }
+
+        public void SetData(string name, VCFileCodeModel fileCodeModel)
+        {
+            FileNameLabel.Content = name;
+
+            IncludeTree.Items.Clear();
+            AddIncludes(IncludeTree.Items, fileCodeModel.Includes);
         }
     }
 }
