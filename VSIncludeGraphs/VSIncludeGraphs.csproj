@@ -58,7 +58,7 @@
     <Compile Include="IncludeGraphToolWindowControl.xaml.cs">
       <DependentUpon>IncludeGraphToolWindowControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="IncludeGraphToolWindowPackage.cs" />
+    <Compile Include="IncludeGraphsPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
