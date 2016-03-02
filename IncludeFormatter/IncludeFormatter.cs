@@ -8,6 +8,7 @@ using System;
 using System.ComponentModel.Design;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace IncludeFormatter
@@ -108,11 +109,72 @@ namespace IncludeFormatter
             }
         }
 
-        private string GetSelectedTextFromEditor(IWpfTextViewHost viewHost) => 
-            viewHost.TextView.Selection.SelectedSpans[0].GetText();
+        struct LineInfo
+        {
+            public enum Type
+            {
+                INCLUDE_QUOT,
+                INCLUDE_ACUTE,
+                NO_INCLUDE
+            }
 
-        private string GetAllTextFromEditor(IWpfTextViewHost viewHost) => 
-            viewHost.TextView.TextSnapshot.GetText();
+            public Type LineType;
+            public string Text;
+            public string IncludeContent;
+            public int Delimiter0, Delimiter1;
+        }
+
+        private LineInfo[] ParseSelection(string selection)
+        {
+            var selectedCodeLines = selection.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            var outInfo = new LineInfo[selectedCodeLines.Length];
+
+            // Simplistic parsing.
+            // "//" comments are intentionally ignored
+            // Todo: Handle multi line comments gracefully
+            for (int line = 0; line < selectedCodeLines.Length; ++line)
+            {
+                outInfo[line].Text = selectedCodeLines[line];
+                outInfo[line].LineType = LineInfo.Type.NO_INCLUDE;
+
+                int occurence = selectedCodeLines[line].IndexOf("#include");
+                if (occurence == -1)
+                    continue;
+
+                outInfo[line].Delimiter0 = selectedCodeLines[line].IndexOf('\"', occurence + "#include".Length);
+                if (outInfo[line].Delimiter0 == -1)
+                {
+                    outInfo[line].Delimiter0 = selectedCodeLines[line].IndexOf('<', occurence + "#include".Length);
+                    if (outInfo[line].Delimiter0 == -1)
+                        continue;
+                    outInfo[line].Delimiter1 = selectedCodeLines[line].IndexOf('>', outInfo[line].Delimiter0 + 1);
+                    outInfo[line].LineType = LineInfo.Type.INCLUDE_ACUTE;
+                }
+                else
+                {
+                    outInfo[line].Delimiter1 = selectedCodeLines[line].IndexOf('\"', outInfo[line].Delimiter0 + 1);
+                    outInfo[line].LineType = LineInfo.Type.INCLUDE_QUOT;
+                }
+                if (outInfo[line].Delimiter1 == -1)
+                    continue;
+
+                outInfo[line].IncludeContent = selectedCodeLines[line].Substring(outInfo[line].Delimiter0 + 1, outInfo[line].Delimiter1 - outInfo[line].Delimiter0 - 1);
+            }
+
+            return outInfo;
+        }
+
+        /// <summary>
+        /// Returns process selection range - whole lines!
+        /// </summary>
+        SnapshotSpan GetSelectionSpan(IWpfTextViewHost viewHost)
+        {
+            var sel = viewHost.TextView.Selection.StreamSelectionSpan;
+            var start = new SnapshotPoint(viewHost.TextView.TextSnapshot, sel.Start.Position).GetContainingLine().Start;
+            var end = new SnapshotPoint(viewHost.TextView.TextSnapshot, sel.End.Position).GetContainingLine().End;
+
+            return new SnapshotSpan(start, end);
+        }
 
         /// <summary>
         /// This function is the callback used to execute the command when the menu item is clicked.
@@ -123,14 +185,21 @@ namespace IncludeFormatter
         /// <param name="e">Event args.</param>
         private void MenuItemCallback(object sender, EventArgs e)
         {
+            // Read.
             var viewHost = GetCurrentViewHost();
-            
-            string selectedCode = GetSelectedTextFromEditor(viewHost);
-            var selectedCodeLines = Regex.Split(selectedCode, "\r\n|\r|\n");
+            var selectionSpan = GetSelectionSpan(viewHost);
+            var lines = ParseSelection(selectionSpan.GetText());
 
+            // Format.
+            lines.OrderBy(x => x.IncludeContent);
 
-            //viewHost.TextView.TextBuffer.CreateEdit();
-
+            // Overwrite.
+            string replaceText = string.Join(Environment.NewLine, lines.Select(x => x.Text));
+            using (var edit = viewHost.TextView.TextBuffer.CreateEdit())
+            {
+                edit.Replace(selectionSpan, replaceText);
+                edit.Apply();
+            }
         }
     }
 }
