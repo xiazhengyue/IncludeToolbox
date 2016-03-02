@@ -180,6 +180,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="license.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Resources\IncludeFormatter.png" />
     <Content Include="Resources\IncludeFormatterPackage.ico" />
   </ItemGroup>
