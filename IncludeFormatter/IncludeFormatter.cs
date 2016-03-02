@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Globalization;
 using System.IO;
@@ -118,6 +119,12 @@ namespace IncludeFormatter
                 NO_INCLUDE
             }
 
+            public void UpdateTextFromIncludeContent()
+            {
+                Text.Remove(Delimiter0 + 1, Delimiter1 - Delimiter0 - 1);
+                Text.Insert(Delimiter0, IncludeContent);
+            }
+
             public Type LineType;
             public string Text;
             public string IncludeContent;
@@ -176,6 +183,37 @@ namespace IncludeFormatter
             return new SnapshotSpan(start, end);
         }
 
+        public class IncludeComparer : IComparer<string>
+        {
+            public IncludeComparer(string[] precedenceRegexes)
+            {
+                this.precedenceRegexes = precedenceRegexes;
+            }
+
+            private readonly string[] precedenceRegexes;
+
+            public int Compare(string lineA, string lineB)
+            {
+                int precedenceA = 0;
+                for (; precedenceA < precedenceRegexes.Length; ++precedenceA)
+                {
+                    if (Regex.Match(lineA, precedenceRegexes[precedenceA]).Success)
+                        break;
+                }
+                int precedenceB = 0;
+                for (; precedenceB < precedenceRegexes.Length; ++precedenceB)
+                {
+                    if (Regex.Match(lineB, precedenceRegexes[precedenceB]).Success)
+                        break;
+                }
+
+                if (precedenceA == precedenceB)
+                    return lineA.CompareTo(lineB);
+                else
+                    return precedenceA.CompareTo(precedenceB);
+            }
+        }
+
         /// <summary>
         /// This function is the callback used to execute the command when the menu item is clicked.
         /// See the constructor to see how the menu item is associated with this function using
@@ -190,8 +228,16 @@ namespace IncludeFormatter
             var selectionSpan = GetSelectionSpan(viewHost);
             var lines = ParseSelection(selectionSpan.GetText());
 
+
             // Format.
-            lines.OrderBy(x => x.IncludeContent);
+            // First means, higher sorting importance.
+            var precedenceRegexes = new string[]
+            {
+                @"^YourSpecialFolder(/|\\)",
+            };
+
+            var comparer = new IncludeComparer();
+            lines = lines.OrderBy(x => x.IncludeContent, comparer).ToArray();
 
             // Overwrite.
             string replaceText = string.Join(Environment.NewLine, lines.Select(x => x.Text));
