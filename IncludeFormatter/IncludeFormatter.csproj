@@ -52,8 +52,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="IncludeComparer.cs" />
     <Compile Include="IncludeFormatter.cs" />
     <Compile Include="IncludeFormatterPackage.cs" />
+    <Compile Include="IncludeLineInfo.cs" />
     <Compile Include="OptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>

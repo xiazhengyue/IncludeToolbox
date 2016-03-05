@@ -4,10 +4,8 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace IncludeFormatter
 {
@@ -107,67 +105,6 @@ namespace IncludeFormatter
             }
         }
 
-        struct LineInfo
-        {
-            public enum Type
-            {
-                INCLUDE_QUOT,
-                INCLUDE_ACUTE,
-                NO_INCLUDE
-            }
-
-            public void UpdateTextFromIncludeContent()
-            {
-                Text.Remove(Delimiter0 + 1, Delimiter1 - Delimiter0 - 1);
-                Text.Insert(Delimiter0, IncludeContent);
-            }
-
-            public Type LineType;
-            public string Text;
-            public string IncludeContent;
-            public int Delimiter0, Delimiter1;
-        }
-
-        private LineInfo[] ParseSelection(string selection)
-        {
-            var selectedCodeLines = selection.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            var outInfo = new LineInfo[selectedCodeLines.Length];
-
-            // Simplistic parsing.
-            // "//" comments are intentionally ignored
-            // Todo: Handle multi line comments gracefully
-            for (int line = 0; line < selectedCodeLines.Length; ++line)
-            {
-                outInfo[line].Text = selectedCodeLines[line];
-                outInfo[line].LineType = LineInfo.Type.NO_INCLUDE;
-
-                int occurence = selectedCodeLines[line].IndexOf("#include");
-                if (occurence == -1)
-                    continue;
-
-                outInfo[line].Delimiter0 = selectedCodeLines[line].IndexOf('\"', occurence + "#include".Length);
-                if (outInfo[line].Delimiter0 == -1)
-                {
-                    outInfo[line].Delimiter0 = selectedCodeLines[line].IndexOf('<', occurence + "#include".Length);
-                    if (outInfo[line].Delimiter0 == -1)
-                        continue;
-                    outInfo[line].Delimiter1 = selectedCodeLines[line].IndexOf('>', outInfo[line].Delimiter0 + 1);
-                    outInfo[line].LineType = LineInfo.Type.INCLUDE_ACUTE;
-                }
-                else
-                {
-                    outInfo[line].Delimiter1 = selectedCodeLines[line].IndexOf('\"', outInfo[line].Delimiter0 + 1);
-                    outInfo[line].LineType = LineInfo.Type.INCLUDE_QUOT;
-                }
-                if (outInfo[line].Delimiter1 == -1)
-                    continue;
-
-                outInfo[line].IncludeContent = selectedCodeLines[line].Substring(outInfo[line].Delimiter0 + 1, outInfo[line].Delimiter1 - outInfo[line].Delimiter0 - 1);
-            }
-
-            return outInfo;
-        }
-
         /// <summary>
         /// Returns process selection range - whole lines!
         /// </summary>
@@ -178,48 +115,6 @@ namespace IncludeFormatter
             var end = new SnapshotPoint(viewHost.TextView.TextSnapshot, sel.End.Position).GetContainingLine().End;
 
             return new SnapshotSpan(start, end);
-        }
-
-        public class IncludeComparer : IComparer<string>
-        {
-            public IncludeComparer(string[] precedenceRegexes)
-            {
-                this.precedenceRegexes = precedenceRegexes;
-            }
-
-            private readonly string[] precedenceRegexes;
-
-            public int Compare(string lineA, string lineB)
-            {
-                if (lineA == null)
-                {
-                    if (lineB == null)
-                        return 0;
-                    return -1;
-                }
-                else if(lineB == null)
-                {
-                    return 1;
-                }
-
-                int precedenceA = 0;
-                for (; precedenceA < precedenceRegexes.Length; ++precedenceA)
-                {
-                    if (Regex.Match(lineA, precedenceRegexes[precedenceA]).Success)
-                        break;
-                }
-                int precedenceB = 0;
-                for (; precedenceB < precedenceRegexes.Length; ++precedenceB)
-                {
-                    if (Regex.Match(lineB, precedenceRegexes[precedenceB]).Success)
-                        break;
-                }
-
-                if (precedenceA == precedenceB)
-                    return lineA.CompareTo(lineB);
-                else
-                    return precedenceA.CompareTo(precedenceB);
-            }
         }
 
         /// <summary>
@@ -236,10 +131,21 @@ namespace IncludeFormatter
             // Read.
             var viewHost = GetCurrentViewHost();
             var selectionSpan = GetSelectionSpan(viewHost);
-            var lines = ParseSelection(selectionSpan.GetText());
+            var lines = IncludeLineInfo.ParseIncludes(selectionSpan.GetText());
 
-            // Format...
-            
+            // Format.
+            switch (settings.DelimiterFormatting)
+            {
+                case OptionsPage.DelimiterMode.Acutes:
+                    foreach (var line in lines)   
+                        line.SetLineType(IncludeLineInfo.Type.IncludeAcute);
+                    break;
+                case OptionsPage.DelimiterMode.Quotations:
+                    foreach (var line in lines)
+                        line.SetLineType(IncludeLineInfo.Type.IncludeQuot);
+                    break;
+            }
+
             // Sorting.
             var comparer = new IncludeComparer(settings.PrecedenceRegexes);
             lines = lines.OrderBy(x => x.IncludeContent, comparer).ToArray();

@@ -19,6 +19,22 @@ namespace IncludeFormatter
         public const string SubCategory = "General";
         private const string collectionName = "IncludeFormatter";
 
+        public enum DelimiterMode
+        {
+            [Description("Leave unchanged.")]
+            Unchanged,
+            [Description("<...>")]
+            Acutes,
+            [Description("\"...\"")]
+            Quotations,
+        }
+
+        [Category("Formatting")]
+        [DisplayName("Delimiter Mode")]
+        [Description("Changes all delimiters to the given type.")]
+        public DelimiterMode DelimiterFormatting { get; set; } = DelimiterMode.Unchanged;
+
+
         [Category("Sorting")]
         [DisplayName("Precedence Regexes")]
         [Description("Earlier match means higher sorting priority.")]
@@ -26,7 +42,6 @@ namespace IncludeFormatter
             get { return precedenceRegexes; }
             set { precedenceRegexes = value.Where(x => x.Length > 0).ToArray(); } // Remove empty lines.
         }
-
         private string[] precedenceRegexes = new string[0];
 
 
@@ -50,6 +65,7 @@ namespace IncludeFormatter
 
             var value = string.Join("\n", PrecedenceRegexes);
             settingsStore.SetString(collectionName, nameof(PrecedenceRegexes), value);
+            settingsStore.SetInt32(collectionName, nameof(DelimiterFormatting), (int)DelimiterFormatting);
         }
 
         public override void LoadSettingsFromStorage()
@@ -57,10 +73,15 @@ namespace IncludeFormatter
             var settingsStore = GetSettingsStore();
 
 
-            if (!settingsStore.PropertyExists(collectionName, nameof(PrecedenceRegexes)))
-                return;
-            var value = settingsStore.GetString(collectionName, nameof(PrecedenceRegexes));
-            PrecedenceRegexes = value.Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
+            if (settingsStore.PropertyExists(collectionName, nameof(PrecedenceRegexes)))
+            {
+                var value = settingsStore.GetString(collectionName, nameof(PrecedenceRegexes));
+                PrecedenceRegexes = value.Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
+            }
+            if (settingsStore.PropertyExists(collectionName, nameof(DelimiterFormatting)))
+            {
+                DelimiterFormatting = (DelimiterMode) settingsStore.GetInt32(collectionName, nameof(DelimiterFormatting));
+            }
         }
     }
 }
