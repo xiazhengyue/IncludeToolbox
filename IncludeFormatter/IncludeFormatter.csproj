@@ -54,6 +54,9 @@
   <ItemGroup>
     <Compile Include="IncludeFormatter.cs" />
     <Compile Include="IncludeFormatterPackage.cs" />
+    <Compile Include="OptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

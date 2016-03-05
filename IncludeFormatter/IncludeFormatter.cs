@@ -1,14 +1,11 @@
 ﻿using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -194,6 +191,17 @@ namespace IncludeFormatter
 
             public int Compare(string lineA, string lineB)
             {
+                if (lineA == null)
+                {
+                    if (lineB == null)
+                        return 0;
+                    return -1;
+                }
+                else if(lineB == null)
+                {
+                    return 1;
+                }
+
                 int precedenceA = 0;
                 for (; precedenceA < precedenceRegexes.Length; ++precedenceA)
                 {
@@ -223,20 +231,17 @@ namespace IncludeFormatter
         /// <param name="e">Event args.</param>
         private void MenuItemCallback(object sender, EventArgs e)
         {
+            var settings = (OptionsPage)package.GetDialogPage(typeof(OptionsPage));
+
             // Read.
             var viewHost = GetCurrentViewHost();
             var selectionSpan = GetSelectionSpan(viewHost);
             var lines = ParseSelection(selectionSpan.GetText());
 
-
-            // Format.
-            // First means, higher sorting importance.
-            var precedenceRegexes = new string[]
-            {
-                @"^YourSpecialFolder(/|\\)",
-            };
-
-            var comparer = new IncludeComparer();
+            // Format...
+            
+            // Sorting.
+            var comparer = new IncludeComparer(settings.PrecedenceRegexes);
             lines = lines.OrderBy(x => x.IncludeContent, comparer).ToArray();
 
             // Overwrite.
