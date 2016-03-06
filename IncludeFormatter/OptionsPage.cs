@@ -41,6 +41,13 @@ namespace IncludeFormatter
         [Description("Changes all slashes to the given type.")]
         public SlashMode SlashFormatting { get; set; } = SlashMode.ForwardSlash;
 
+        [Category("Formatting")]
+        [DisplayName("Remove Empty Lines")]
+        [Description("If checked, all empty lines of a include selection will be removed.")]
+        public bool RemoveEmptyLines { get; set; } = true;
+
+
+
         [Category("Sorting")]
         [DisplayName("Precedence Regexes")]
         [Description("Earlier match means higher sorting priority.")]
@@ -73,6 +80,7 @@ namespace IncludeFormatter
             settingsStore.SetString(collectionName, nameof(PrecedenceRegexes), value);
             settingsStore.SetInt32(collectionName, nameof(DelimiterFormatting), (int)DelimiterFormatting);
             settingsStore.SetInt32(collectionName, nameof(SlashFormatting), (int)SlashFormatting);
+            settingsStore.SetBoolean(collectionName, nameof(RemoveEmptyLines), RemoveEmptyLines);
         }
 
         public override void LoadSettingsFromStorage()
@@ -91,6 +99,9 @@ namespace IncludeFormatter
 
             if (settingsStore.PropertyExists(collectionName, nameof(SlashFormatting)))
                 SlashFormatting = (SlashMode)settingsStore.GetInt32(collectionName, nameof(SlashFormatting));
+
+            if (settingsStore.PropertyExists(collectionName, nameof(RemoveEmptyLines)))
+                RemoveEmptyLines = settingsStore.GetBoolean(collectionName, nameof(RemoveEmptyLines));
         }
     }
 }

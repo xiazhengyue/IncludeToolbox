@@ -8,9 +8,9 @@ namespace IncludeFormatter
 {
     public class IncludeLineInfo
     {
-        public static IncludeLineInfo[] ParseIncludes(string text)
+        public static IncludeLineInfo[] ParseIncludes(string text, bool removeEmptyLines)
         {
-            var lines = text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var lines = text.Split(new[] { Environment.NewLine }, removeEmptyLines ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None);
             var outInfo = new IncludeLineInfo[lines.Length];
 
             // Simplistic parsing.

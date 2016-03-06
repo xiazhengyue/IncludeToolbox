@@ -131,7 +131,7 @@ namespace IncludeFormatter
             // Read.
             var viewHost = GetCurrentViewHost();
             var selectionSpan = GetSelectionSpan(viewHost);
-            var lines = IncludeLineInfo.ParseIncludes(selectionSpan.GetText());
+            var lines = IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), settings.RemoveEmptyLines);
 
             // Format.
             switch (settings.DelimiterFormatting)
