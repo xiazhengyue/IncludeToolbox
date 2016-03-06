@@ -10,7 +10,7 @@ namespace IncludeFormatter
     {
         public static IncludeLineInfo[] ParseIncludes(string text)
         {
-            var lines = text.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            var lines = text.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
             var outInfo = new IncludeLineInfo[lines.Length];
 
             // Simplistic parsing.

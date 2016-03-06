@@ -158,9 +158,19 @@ namespace IncludeFormatter
             }
 
 
-            // Sorting.
+            // Sorting. Ignores non-include lines.
             var comparer = new IncludeComparer(settings.PrecedenceRegexes);
-            lines = lines.OrderBy(x => x.IncludeContent, comparer).ToArray();
+            var sortedIncludes = lines.Where(x => x.LineType != IncludeLineInfo.Type.NoInclude).OrderBy(x => x.IncludeContent, comparer).ToArray();
+            int incIdx = 0;
+            for (int allIdx = 0; allIdx < lines.Length && incIdx < sortedIncludes.Length; ++allIdx)
+            {
+                if (lines[allIdx].LineType != IncludeLineInfo.Type.NoInclude)
+                {
+                    lines[allIdx] = sortedIncludes[incIdx];
+                    ++incIdx;
+                }
+            }
+
 
             // Overwrite.
             string replaceText = string.Join(Environment.NewLine, lines.Select(x => x.Text));
