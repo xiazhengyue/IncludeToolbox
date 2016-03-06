@@ -1,18 +1,18 @@
-﻿using Microsoft.VisualStudio.Editor;
+﻿using System;
+using System.ComponentModel.Design;
+using System.Linq;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
-using System;
-using System.ComponentModel.Design;
-using System.Linq;
 
-namespace IncludeFormatter
+namespace IncludeFormatter.Commands
 {
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class IncludeFormatter
+    internal sealed class FormatIncludes
     {
         /// <summary>
         /// Command ID.
@@ -20,21 +20,16 @@ namespace IncludeFormatter
         public const int CommandId = 0x0100;
 
         /// <summary>
-        /// Command menu group (command set GUID).
-        /// </summary>
-        public static readonly Guid CommandSet = new Guid("aef3a531-8af4-4b7b-800a-e32503dfc6e2");
-
-        /// <summary>
         /// VS Package that provides this command, not null.
         /// </summary>
         private readonly Package package;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="IncludeFormatter"/> class.
+        /// Initializes a new instance of the <see cref="FormatIncludes"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        private IncludeFormatter(Package package)
+        private FormatIncludes(Package package)
         {
             if (package == null)
             {
@@ -46,7 +41,7 @@ namespace IncludeFormatter
             OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
             {
-                var menuCommandID = new CommandID(CommandSet, CommandId);
+                var menuCommandID = new CommandID(CommandSet.Guid, CommandId);
                 var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
                 commandService.AddCommand(menuItem);
             }
@@ -55,7 +50,7 @@ namespace IncludeFormatter
         /// <summary>
         /// Gets the instance of the command.
         /// </summary>
-        public static IncludeFormatter Instance
+        public static FormatIncludes Instance
         {
             get;
             private set;
@@ -78,7 +73,7 @@ namespace IncludeFormatter
         /// <param name="package">Owner package, not null.</param>
         public static void Initialize(Package package)
         {
-            Instance = new IncludeFormatter(package);
+            Instance = new FormatIncludes(package);
         }
 
         private IWpfTextViewHost GetCurrentViewHost()

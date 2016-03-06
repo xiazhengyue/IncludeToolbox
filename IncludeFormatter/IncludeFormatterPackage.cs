@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using IncludeFormatter.Commands;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -36,9 +37,11 @@ namespace IncludeFormatter
         /// </summary>
         protected override void Initialize()
         {
-            IncludeFormatter.Initialize(this);
-            base.Initialize();
+            FormatIncludes.Initialize(this);
+            PurgeIncludes.Initialize(this);
+            base.Initialize();            
         }
+
 
         #endregion
     }

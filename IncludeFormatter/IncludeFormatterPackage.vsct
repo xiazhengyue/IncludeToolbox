@@ -15,10 +15,10 @@
         defining some of the constants that we will use inside the file. -->
 
   <!--This is the file that defines the IDs for all the commands exposed by VisualStudio. -->
-  <Extern href="stdidcmd.h"/>
+  <Extern href="stdidcmd.h" />
 
   <!--This header contains the command ids for the menus provided by the shell. -->
-  <Extern href="vsshlids.h"/>
+  <Extern href="vsshlids.h" />
 
   <!--The Commands section is where commands, menus, and menu groups are defined.
       This section uses a Guid to identify the package that provides the command defined inside it. -->
@@ -37,7 +37,7 @@
          must be a menu. -->
     <Groups>
       <Group guid="guidIncludeFormatterPackageCmdSet" id="MyMenuGroup" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN" />
       </Group>
     </Groups>
 
@@ -52,11 +52,19 @@
               <CommandFlag>DefaultInvisible</CommandFlag>
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node /> -->
-      <Button guid="guidIncludeFormatterPackageCmdSet" id="IncludeFormatterId" priority="0x0100" type="Button">
+      <Button guid="guidIncludeFormatterPackageCmdSet" id="FormatIncludesId" priority="0x0100" type="Button">
         <Parent guid="guidIncludeFormatterPackageCmdSet" id="MyMenuGroup" />
         <Icon guid="guidImages" id="toolIcon" />
         <Strings>
           <ButtonText>Format Selected Includes</ButtonText>
+        </Strings>
+      </Button>
+      <Button guid="guidIncludeFormatterPackageCmdSet" id="PurgeIncludesId" priority="0x0100" type="Button">
+        <Parent guid="guidIncludeFormatterPackageCmdSet" id="MyMenuGroup" />
+        <Icon guid="guidImages" id="toolIcon" />
+        <!-- CommandFlag>DefaultDisabled</CommandFlag -->
+        <Strings>
+          <ButtonText>Purge Unnecessary Includes</ButtonText>
         </Strings>
       </Button>
     </Buttons>
@@ -68,7 +76,7 @@
             bitmap strip containing the bitmaps and then there are the numeric ids of the elements used
             inside a button definition. An important aspect of this declaration is that the element id
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <Bitmap guid="guidImages" href="Resources\IncludeFormatter16.png" usedList="toolIcon"/>
+      <Bitmap guid="guidImages" href="Resources\IncludeFormatter16.png" usedList="toolIcon" />
     </Bitmaps>
   </Commands>
 
@@ -79,11 +87,13 @@
     <!-- This is the guid used to group the menu commands together -->
     <GuidSymbol name="guidIncludeFormatterPackageCmdSet" value="{aef3a531-8af4-4b7b-800a-e32503dfc6e2}">
       <IDSymbol name="MyMenuGroup" value="0x1020" />
-      <IDSymbol name="IncludeFormatterId" value="0x0100" />
+      <IDSymbol name="FormatIncludesId" value="0x0100" />
+      <IDSymbol name="PurgeIncludesId" value="0x0101" />
     </GuidSymbol>
 
-    <GuidSymbol name="guidImages" value="{dd14909e-b406-4cfa-b492-08b8127679df}" >
+    <GuidSymbol name="guidImages" value="{dd14909e-b406-4cfa-b492-08b8127679df}">
       <IDSymbol name="toolIcon" value="1" />
     </GuidSymbol>
+
   </Symbols>
 </CommandTable>
