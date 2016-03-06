@@ -21,19 +21,25 @@ namespace IncludeFormatter
 
         public enum DelimiterMode
         {
-            [Description("Leave unchanged.")]
             Unchanged,
-            [Description("<...>")]
             Acutes,
-            [Description("\"...\"")]
             Quotations,
         }
-
         [Category("Formatting")]
         [DisplayName("Delimiter Mode")]
         [Description("Changes all delimiters to the given type.")]
         public DelimiterMode DelimiterFormatting { get; set; } = DelimiterMode.Unchanged;
 
+        public enum SlashMode
+        {
+            Unchanged,
+            ForwardSlash,
+            BackSlash,
+        }
+        [Category("Formatting")]
+        [DisplayName("Slash Mode")]
+        [Description("Changes all slashes to the given type.")]
+        public SlashMode SlashFormatting { get; set; } = SlashMode.ForwardSlash;
 
         [Category("Sorting")]
         [DisplayName("Precedence Regexes")]
@@ -66,6 +72,7 @@ namespace IncludeFormatter
             var value = string.Join("\n", PrecedenceRegexes);
             settingsStore.SetString(collectionName, nameof(PrecedenceRegexes), value);
             settingsStore.SetInt32(collectionName, nameof(DelimiterFormatting), (int)DelimiterFormatting);
+            settingsStore.SetInt32(collectionName, nameof(SlashFormatting), (int)SlashFormatting);
         }
 
         public override void LoadSettingsFromStorage()
@@ -78,10 +85,12 @@ namespace IncludeFormatter
                 var value = settingsStore.GetString(collectionName, nameof(PrecedenceRegexes));
                 PrecedenceRegexes = value.Split(new[] {"\n"}, StringSplitOptions.RemoveEmptyEntries);
             }
+
             if (settingsStore.PropertyExists(collectionName, nameof(DelimiterFormatting)))
-            {
                 DelimiterFormatting = (DelimiterMode) settingsStore.GetInt32(collectionName, nameof(DelimiterFormatting));
-            }
+
+            if (settingsStore.PropertyExists(collectionName, nameof(SlashFormatting)))
+                SlashFormatting = (SlashMode)settingsStore.GetInt32(collectionName, nameof(SlashFormatting));
         }
     }
 }

@@ -145,6 +145,18 @@ namespace IncludeFormatter
                         line.SetLineType(IncludeLineInfo.Type.IncludeQuot);
                     break;
             }
+            switch (settings.SlashFormatting)
+            {
+                case OptionsPage.SlashMode.ForwardSlash:
+                    foreach (var line in lines)
+                        line.ReplaceIncludeContent(line.IncludeContent.Replace('\\', '/'));
+                    break;
+                case OptionsPage.SlashMode.BackSlash:
+                    foreach (var line in lines)
+                        line.ReplaceIncludeContent(line.IncludeContent.Replace('/', '\\'));
+                    break;
+            }
+
 
             // Sorting.
             var comparer = new IncludeComparer(settings.PrecedenceRegexes);

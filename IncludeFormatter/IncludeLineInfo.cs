@@ -80,8 +80,8 @@ namespace IncludeFormatter
                     else if (lineType == Type.IncludeQuot)
                     {
                         StringBuilder sb = new StringBuilder(text);
-                        sb[Delimiter0] = '<';
-                        sb[Delimiter1] = '>';
+                        sb[Delimiter0] = '"';
+                        sb[Delimiter1] = '"';
                         text = sb.ToString();
                     }
                 }
@@ -103,14 +103,17 @@ namespace IncludeFormatter
             get { return includeContent; }
         }
 
-        void ReplaceIncludeContent(string newContent)
+        public void ReplaceIncludeContent(string newContent)
         {
+            if (lineType == Type.NoInclude)
+                return;
+
             includeContent = newContent;
-            Text.Remove(Delimiter0 + 1, Delimiter1 - Delimiter0 - 1);
-            Text.Insert(Delimiter0, includeContent);
+            text = text.Remove(Delimiter0 + 1, Delimiter1 - Delimiter0 - 1);
+            text = text.Insert(Delimiter0 + 1, includeContent);
             Delimiter1 = Delimiter0 + includeContent.Length;
         }
-        private string includeContent;
+        private string includeContent = "";
 
         public int Delimiter0 { get; private set; } = -1;
         public int Delimiter1 { get; private set; } = -1;
