@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.VCProjectEngine;
 
+
 namespace IncludeFormatter.Commands
 {
     /// <summary>
@@ -103,7 +104,54 @@ namespace IncludeFormatter.Commands
         /// <param name="e">Event args.</param>
         private void MenuItemCallback(object sender, EventArgs e)
         {
-            // todo.
+            // Waiting for an answer on http://stackoverflow.com/questions/35830092/visual-studio-extension-compile-file-with-vcfileconfiguration-fails
+            /*     EnvDTE.DTE dte = (EnvDTE.DTE)Package.GetGlobalService(typeof (EnvDTE.DTE));
+                 if (dte == null)
+                     return;
+
+                 var document = dte.ActiveDocument;
+                 var project = document.ProjectItem.ContainingProject;
+                 VCProject vcProject = project.Object as VCProject;
+                 if (vcProject == null)
+                 {
+                     Output.Error("The given project is not a VC++ Project", "Failed to perform Include Purge");
+                     return;
+                 }
+                 VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
+                 var tools = activeConfiguration.Tools;
+                 //VCCLCompilerTool compilerTool = tools["VCCLCompilerTool"];
+
+
+                 VCFile vcFile = document.ProjectItem.Object as VCFile;
+                 if (vcFile == null)
+                 {
+                     Output.Error("The given file is not a VC++ File", "Failed to perform Include Purge");
+                     return;
+                 }
+                 IVCCollection fileConfigCollection = vcFile.FileConfigurations;
+                 VCFileConfiguration fileConfig = fileConfigCollection.Item(activeConfiguration.Name);
+
+
+                 // strng = fileconfig.Evaluate("$(TargetDir)")
+
+                 if (fileConfig == null)
+                 {
+
+                     return;
+                 }
+                 try
+                 {
+                     fileConfig.Compile(false, true); // WaitOnBuild==true always fails.
+                  //   Output.Info("Success.");
+                 }
+                 catch (Microsoft.VisualStudio.ProjectSystem.ProjectException exception)
+                 {
+                     Output.Error("Fail.");
+                 }
+
+                 //dte.ExecuteCommand("Build.Compile");
+
+         */
         }
     }
 }
