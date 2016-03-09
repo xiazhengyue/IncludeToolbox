@@ -92,6 +92,16 @@ namespace IncludeFormatter
             }
         }
 
+        public void UpdateTextWithIncludeContent()
+        {
+            if (lineType == Type.NoInclude)
+                return;
+
+            text = text.Remove(Delimiter0 + 1, Delimiter1 - Delimiter0 - 1);
+            text = text.Insert(Delimiter0 + 1, includeContent);
+            Delimiter1 = Delimiter0 + includeContent.Length + 1;
+        }
+
         public string Text
         {
             get { return text; }
@@ -101,17 +111,7 @@ namespace IncludeFormatter
         public string IncludeContent
         {
             get { return includeContent; }
-        }
-
-        public void ReplaceIncludeContent(string newContent)
-        {
-            if (lineType == Type.NoInclude)
-                return;
-
-            includeContent = newContent;
-            text = text.Remove(Delimiter0 + 1, Delimiter1 - Delimiter0 - 1);
-            text = text.Insert(Delimiter0 + 1, includeContent);
-            Delimiter1 = Delimiter0 + includeContent.Length;
+            set { includeContent = value; }
         }
         private string includeContent = "";
 

@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudio.VCProjectEngine;
 
 namespace IncludeFormatter.Commands
 {
@@ -112,6 +115,112 @@ namespace IncludeFormatter.Commands
             return new SnapshotSpan(start, end);
         }
 
+        private EnvDTE.Document GetActiveDocument()
+        {
+            EnvDTE.DTE dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
+            if (dte == null)
+                return null;
+
+            return dte.ActiveDocument;
+        }
+
+        Uri[] GetIncludeDirectories()
+        {
+            var document = GetActiveDocument();
+            var project = document.ProjectItem.ContainingProject;
+            VCProject vcProject = project.Object as VCProject;
+            if (vcProject == null)
+            {
+                Output.Error("The given project is not a VC++ Project");
+                return null;
+            }
+            VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
+            var tools = activeConfiguration.Tools;
+            VCCLCompilerTool compilerTool = null;
+            foreach (var tool in activeConfiguration.Tools)
+            {
+                compilerTool = tool as VCCLCompilerTool;
+                if (compilerTool != null)
+                    break;
+            }
+
+            if (compilerTool != null)
+            {
+                string[] pathStrings = compilerTool.FullIncludePath.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+
+                Uri[] pathUris = new Uri[pathStrings.Length];
+                for (int i = 0; i < pathStrings.Length; ++i)
+                {
+                    pathStrings[i] += "/"; // is this safe?
+                    pathUris[i] = new Uri(pathStrings[i], UriKind.Absolute);
+                }
+                return pathUris;
+            }
+            else
+            {
+                Output.Error("Couldn't file a VCCLCompilerTool.");
+                return null;
+            }
+        }
+
+        private void FormatPaths(OptionsPage.PathMode pathformat, bool ignoreFileRelative, IncludeLineInfo[] lines)
+        {
+            if (pathformat == OptionsPage.PathMode.Unchanged)
+                return;
+
+            var directories = new List<Uri>();
+            var document = GetActiveDocument();
+            directories.Add(new Uri(document.Path, UriKind.Absolute));
+            directories.AddRange(GetIncludeDirectories());
+
+            foreach (var line in lines)
+            {
+                if (line.LineType == IncludeLineInfo.Type.NoInclude)
+                    continue;
+
+                // Try to resolve include path to an existing file.
+                Uri absoluteIncludePath = null;
+                foreach (Uri dir in directories)
+                {
+                    string candidate = Path.Combine(dir.OriginalString, line.IncludeContent);
+                    if (File.Exists(candidate))
+                    {
+                        absoluteIncludePath = new Uri(candidate, UriKind.Absolute);
+                        break;
+                    }
+                }
+
+                // todo: Ignore std library files.
+                if (absoluteIncludePath != null)
+                {
+                    int bestLength = Int32.MaxValue;
+                    string bestCandidate = null;
+
+                    int i = ignoreFileRelative ? 1 : 0; // Ignore first one
+                    for(; i<directories.Count; ++i)
+                    {
+                        string raw = directories[i].MakeRelativeUri(absoluteIncludePath).ToString();
+                        string proposal = Uri.UnescapeDataString(raw);
+
+                        if (proposal.Length < bestLength)
+                        {
+                            if (pathformat == OptionsPage.PathMode.Shortest || proposal.IndexOf("../") < 0)
+                            {
+                                bestCandidate = proposal;
+                                bestLength = proposal.Length;
+                            }
+                        }
+                    }
+
+                    if (bestCandidate != null)
+                    {
+                        line.IncludeContent = bestCandidate;
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// This function is the callback used to execute the command when the menu item is clicked.
         /// See the constructor to see how the menu item is associated with this function using
@@ -128,14 +237,17 @@ namespace IncludeFormatter.Commands
             var selectionSpan = GetSelectionSpan(viewHost);
             var lines = IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), settings.RemoveEmptyLines);
 
+            // Manipulate paths.
+            FormatPaths(settings.PathFormat, settings.IgnoreFileRelative, lines);
+
             // Format.
             switch (settings.DelimiterFormatting)
             {
-                case OptionsPage.DelimiterMode.Acutes:
+                case OptionsPage.DelimiterMode.AngleBrackets:
                     foreach (var line in lines)   
                         line.SetLineType(IncludeLineInfo.Type.IncludeAcute);
                     break;
-                case OptionsPage.DelimiterMode.Quotations:
+                case OptionsPage.DelimiterMode.Quotes:
                     foreach (var line in lines)
                         line.SetLineType(IncludeLineInfo.Type.IncludeQuot);
                     break;
@@ -144,14 +256,17 @@ namespace IncludeFormatter.Commands
             {
                 case OptionsPage.SlashMode.ForwardSlash:
                     foreach (var line in lines)
-                        line.ReplaceIncludeContent(line.IncludeContent.Replace('\\', '/'));
+                        line.IncludeContent = line.IncludeContent.Replace('\\', '/');
                     break;
                 case OptionsPage.SlashMode.BackSlash:
                     foreach (var line in lines)
-                        line.ReplaceIncludeContent(line.IncludeContent.Replace('/', '\\'));
+                        line.IncludeContent = line.IncludeContent.Replace('/', '\\');
                     break;
             }
 
+            // Apply changes so far.
+            foreach (var line in lines)
+                line.UpdateTextWithIncludeContent();
 
             // Sorting. Ignores non-include lines.
             var comparer = new IncludeComparer(settings.PrecedenceRegexes);
