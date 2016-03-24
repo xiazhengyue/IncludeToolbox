@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.VCProjectEngine;
@@ -124,15 +125,17 @@ namespace IncludeFormatter.Commands
             return dte.ActiveDocument;
         }
 
-        Uri[] GetIncludeDirectories()
+        List<string> GetProjectIncludeDirectories()
         {
+            var pathStrings = new List<string>();
+
             var document = GetActiveDocument();
             var project = document.ProjectItem.ContainingProject;
             VCProject vcProject = project.Object as VCProject;
             if (vcProject == null)
             {
                 Output.Error("The given project is not a VC++ Project");
-                return null;
+                return pathStrings;
             }
             VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
             var tools = activeConfiguration.Tools;
@@ -144,64 +147,65 @@ namespace IncludeFormatter.Commands
                     break;
             }
 
-            if (compilerTool != null)
-            {
-                string[] pathStrings = compilerTool.FullIncludePath.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-
-
-                Uri[] pathUris = new Uri[pathStrings.Length];
-                for (int i = 0; i < pathStrings.Length; ++i)
-                {
-                    pathStrings[i] += "/"; // is this safe?
-                    pathUris[i] = new Uri(pathStrings[i], UriKind.Absolute);
-                }
-                return pathUris;
-            }
-            else
+            if (compilerTool == null)
             {
                 Output.Error("Couldn't file a VCCLCompilerTool.");
-                return null;
+                return pathStrings;
             }
+
+            string projectPath = Path.GetDirectoryName(Path.GetFullPath(project.FileName));
+            
+            // According to documentation FullIncludePath has resolved macros.
+            pathStrings.AddRange(compilerTool.FullIncludePath.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
+                
+            for (int i = pathStrings.Count-1; i>=0; --i)
+            {
+                try
+                {
+                    if (!Path.IsPathRooted(pathStrings[i]))
+                    {
+                        pathStrings[i] = Path.Combine(projectPath, pathStrings[i]);
+                    }
+                    pathStrings[i] = Path.GetFullPath(PathUtil.NormalizePath(pathStrings[i])) + Path.DirectorySeparatorChar;
+                }
+                catch
+                {
+                    pathStrings.RemoveAt(i);
+                }
+            }
+            return pathStrings;
         }
 
-        private void FormatPaths(OptionsPage.PathMode pathformat, bool ignoreFileRelative, IncludeLineInfo[] lines)
+        private string MakeRelative(string absoluteRoot, string absoluteTarget)
+        {
+            Uri rootUri = new Uri(absoluteRoot);
+            Uri targetUri = new Uri(absoluteTarget);
+            if (rootUri.Scheme != targetUri.Scheme)
+                return "";
+
+            Uri relativeUri = rootUri.MakeRelativeUri(targetUri);
+            string relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+            return PathUtil.NormalizePath(relativePath);
+        }
+
+        private void FormatPaths(OptionsPage.PathMode pathformat, bool ignoreFileRelative, IncludeLineInfo[] lines, List<string> includeDirectories)
         {
             if (pathformat == OptionsPage.PathMode.Unchanged)
                 return;
 
-            var directories = new List<Uri>();
-            var document = GetActiveDocument();
-            directories.Add(new Uri(document.Path, UriKind.Absolute));
-            directories.AddRange(GetIncludeDirectories());
-
             foreach (var line in lines)
             {
-                if (line.LineType == IncludeLineInfo.Type.NoInclude)
-                    continue;
-
-                // Try to resolve include path to an existing file.
-                Uri absoluteIncludePath = null;
-                foreach (Uri dir in directories)
-                {
-                    string candidate = Path.Combine(dir.OriginalString, line.IncludeContent);
-                    if (File.Exists(candidate))
-                    {
-                        absoluteIncludePath = new Uri(candidate, UriKind.Absolute);
-                        break;
-                    }
-                }
-
                 // todo: Ignore std library files.
-                if (absoluteIncludePath != null)
+                if (line.AbsoluteIncludePath != null)
                 {
                     int bestLength = Int32.MaxValue;
                     string bestCandidate = null;
 
-                    int i = ignoreFileRelative ? 1 : 0; // Ignore first one
-                    for(; i<directories.Count; ++i)
+                    int i = ignoreFileRelative ? 1 : 0; // Ignore first one which is always the local dir.
+                    for(; i< includeDirectories.Count; ++i)
                     {
-                        string raw = directories[i].MakeRelativeUri(absoluteIncludePath).ToString();
-                        string proposal = Uri.UnescapeDataString(raw);
+                        string proposal = MakeRelative(includeDirectories[i], line.AbsoluteIncludePath);
 
                         if (proposal.Length < bestLength)
                         {
@@ -232,24 +236,29 @@ namespace IncludeFormatter.Commands
         {
             var settings = (OptionsPage)package.GetDialogPage(typeof(OptionsPage));
 
+            // Try to find absolute paths
+            var document = GetActiveDocument();
+            var includeDirectories = GetProjectIncludeDirectories();
+            includeDirectories.Insert(0, PathUtil.Normalize(document.Path) + Path.DirectorySeparatorChar);
+            
             // Read.
             var viewHost = GetCurrentViewHost();
             var selectionSpan = GetSelectionSpan(viewHost);
-            var lines = IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), settings.RemoveEmptyLines);
+            var lines = IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), settings.RemoveEmptyLines, includeDirectories);
 
             // Manipulate paths.
-            FormatPaths(settings.PathFormat, settings.IgnoreFileRelative, lines);
+            FormatPaths(settings.PathFormat, settings.IgnoreFileRelative, lines, includeDirectories);
 
             // Format.
             switch (settings.DelimiterFormatting)
             {
                 case OptionsPage.DelimiterMode.AngleBrackets:
                     foreach (var line in lines)   
-                        line.SetLineType(IncludeLineInfo.Type.IncludeAcute);
+                        line.SetLineType(IncludeLineInfo.Type.AngleBrackets);
                     break;
                 case OptionsPage.DelimiterMode.Quotes:
                     foreach (var line in lines)
-                        line.SetLineType(IncludeLineInfo.Type.IncludeQuot);
+                        line.SetLineType(IncludeLineInfo.Type.Quotes);
                     break;
             }
             switch (settings.SlashFormatting)

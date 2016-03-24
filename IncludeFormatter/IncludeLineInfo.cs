@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ namespace IncludeFormatter
 {
     public class IncludeLineInfo
     {
-        public static IncludeLineInfo[] ParseIncludes(string text, bool removeEmptyLines)
+        public static IncludeLineInfo[] ParseIncludes(string text, bool removeEmptyLines, List<string> includeDirectories)
         {
             var lines = text.Split(new[] { Environment.NewLine }, removeEmptyLines ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None);
             var outInfo = new IncludeLineInfo[lines.Length];
@@ -33,17 +34,28 @@ namespace IncludeFormatter
                     if (outInfo[line].Delimiter0 == -1)
                         continue;
                     outInfo[line].Delimiter1 = lines[line].IndexOf('>', outInfo[line].Delimiter0 + 1);
-                    outInfo[line].lineType = IncludeLineInfo.Type.IncludeAcute;
+                    outInfo[line].lineType = IncludeLineInfo.Type.AngleBrackets;
                 }
                 else
                 {
                     outInfo[line].Delimiter1 = lines[line].IndexOf('\"', outInfo[line].Delimiter0 + 1);
-                    outInfo[line].lineType = IncludeLineInfo.Type.IncludeQuot;
+                    outInfo[line].lineType = IncludeLineInfo.Type.Quotes;
                 }
                 if (outInfo[line].Delimiter1 == -1)
                     continue;
 
                 outInfo[line].includeContent = lines[line].Substring(outInfo[line].Delimiter0 + 1, outInfo[line].Delimiter1 - outInfo[line].Delimiter0 - 1);
+
+                // Try to resolve include path to an existing file.
+                foreach (string dir in includeDirectories)
+                {
+                    string candidate = Path.Combine(dir, outInfo[line].IncludeContent);
+                    if (File.Exists(candidate))
+                    {
+                        outInfo[line].AbsoluteIncludePath = Microsoft.VisualStudio.PlatformUI.PathUtil.NormalizePath(candidate);
+                        break;
+                    }
+                }
             }
 
             return outInfo;
@@ -52,8 +64,9 @@ namespace IncludeFormatter
 
         public enum Type
         {
-            IncludeQuot,
-            IncludeAcute,
+            Quotes,
+            AngleBrackets,
+
             NoInclude
         }
 
@@ -70,14 +83,14 @@ namespace IncludeFormatter
                 lineType = newLineType;
                 if(Delimiter0 >= 0 && Delimiter1 >= 0)
                 {
-                    if (lineType == Type.IncludeAcute)
+                    if (lineType == Type.AngleBrackets)
                     {
                         StringBuilder sb = new StringBuilder(text);
                         sb[Delimiter0] = '<';
                         sb[Delimiter1] = '>';
                         text = sb.ToString();
                     }
-                    else if (lineType == Type.IncludeQuot)
+                    else if (lineType == Type.Quotes)
                     {
                         StringBuilder sb = new StringBuilder(text);
                         sb[Delimiter0] = '"';
@@ -114,6 +127,8 @@ namespace IncludeFormatter
             set { includeContent = value; }
         }
         private string includeContent = "";
+
+        public string AbsoluteIncludePath { get; private set; } = null;
 
         public int Delimiter0 { get; private set; } = -1;
         public int Delimiter1 { get; private set; } = -1;
