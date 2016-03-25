@@ -5,7 +5,7 @@
     <DisplayName>IncludeFormatter</DisplayName>
     <Description xml:space="preserve">Simple tool for formatting and sorting C/C++ #includes.</Description>
     <License>license.txt</License>
-    <Icon>Resources\IncludeFormatterPackage.jpg</Icon>
+    <Icon>Resources\IncludeFormatterPackage.png</Icon>
   </Metadata>
   <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[14.0]" />
