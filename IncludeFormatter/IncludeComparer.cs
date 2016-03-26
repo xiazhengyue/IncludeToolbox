@@ -1,13 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace IncludeFormatter
 {
     public class IncludeComparer : IComparer<string>
     {
-        public IncludeComparer(string[] precedenceRegexes)
+        public const string CurrentFileNameKey = "$(currentFilename)";
+
+        public IncludeComparer(string[] precedenceRegexes, EnvDTE.Document document)
         {
-            this.precedenceRegexes = precedenceRegexes;
+            string currentFilename = document.Name.Substring(0, document.Name.LastIndexOf('.'));
+
+            this.precedenceRegexes = new string[precedenceRegexes.Length];
+            for (int i = 0; i < this.precedenceRegexes.Length; ++i)
+            {
+                this.precedenceRegexes[i] = precedenceRegexes[i].Replace(CurrentFileNameKey, currentFilename);
+            }
         }
 
         private readonly string[] precedenceRegexes;

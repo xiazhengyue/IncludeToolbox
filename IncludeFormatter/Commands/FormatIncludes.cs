@@ -265,7 +265,7 @@ namespace IncludeFormatter.Commands
                 line.UpdateTextWithIncludeContent();
 
             // Sorting. Ignores non-include lines.
-            var comparer = new IncludeComparer(settings.PrecedenceRegexes);
+            var comparer = new IncludeComparer(settings.PrecedenceRegexes, document);
             var sortedIncludes = lines.Where(x => x.LineType != IncludeLineInfo.Type.NoInclude).OrderBy(x => x.IncludeContent, comparer).ToArray();
             int incIdx = 0;
             for (int allIdx = 0; allIdx < lines.Length && incIdx < sortedIncludes.Length; ++allIdx)

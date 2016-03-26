@@ -70,7 +70,7 @@ namespace IncludeFormatter
 
         [Category("Formatting")]
         [DisplayName("Remove Empty Lines")]
-        [Description("If checked, all empty lines of a include selection will be removed.")]
+        [Description("If true, all empty lines of a include selection will be removed.")]
         public bool RemoveEmptyLines { get; set; } = true;
 
         #endregion
@@ -79,12 +79,12 @@ namespace IncludeFormatter
 
         [Category("Sorting")]
         [DisplayName("Precedence Regexes")]
-        [Description("Earlier match means higher sorting priority.")]
+        [Description("Earlier match means higher sorting priority.\n\" " + IncludeComparer.CurrentFileNameKey + "\" will be replaced with the current file name without extension.")]
         public string[] PrecedenceRegexes {
             get { return precedenceRegexes; }
             set { precedenceRegexes = value.Where(x => x.Length > 0).ToArray(); } // Remove empty lines.
         }
-        private string[] precedenceRegexes = new string[0];
+        private string[] precedenceRegexes = new string[] { "$(currentFilename)\\.(?i)(h|hpp|hxx|inl|c|cpp|cxx)(?-i)$" };
 
         #endregion
 
@@ -112,8 +112,6 @@ namespace IncludeFormatter
             settingsStore.SetInt32(collectionName, nameof(DelimiterFormatting), (int)DelimiterFormatting);
             settingsStore.SetInt32(collectionName, nameof(SlashFormatting), (int)SlashFormatting);
             settingsStore.SetBoolean(collectionName, nameof(RemoveEmptyLines), RemoveEmptyLines);
-
-
 
             var value = string.Join("\n", PrecedenceRegexes);
             settingsStore.SetString(collectionName, nameof(PrecedenceRegexes), value);
