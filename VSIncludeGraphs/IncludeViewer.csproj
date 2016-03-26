@@ -53,12 +53,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="IncludeGraphToolWindow.cs" />
-    <Compile Include="IncludeGraphToolWindowCommand.cs" />
-    <Compile Include="IncludeGraphToolWindowControl.xaml.cs">
-      <DependentUpon>IncludeGraphToolWindowControl.xaml</DependentUpon>
+    <Compile Include="IncludeViewerToolWindow.cs" />
+    <Compile Include="IncludeViewerToolWindowCommand.cs" />
+    <Compile Include="IncludeViewerToolWindowControl.xaml.cs">
+      <DependentUpon>IncludeViewerToolWindowControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="IncludeGraphsPackage.cs" />
+    <Compile Include="IncludeViewerPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -69,14 +69,14 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <VSCTCompile Include="IncludeGraphToolWindowPackage.vsct">
+    <VSCTCompile Include="IncludeViewerToolWindowPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
-    <Content Include="Resources\IncludeGraphToolWindowCommand.png" />
-    <Content Include="Resources\IncludeGraphToolWindowPackage.ico" />
+    <Content Include="Resources\IncludeViewerToolWindowCommand.png" />
+    <Content Include="Resources\IncludeViewerToolWindowPackage.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="IncludeGraphToolWindowControl.xaml">
+    <Page Include="IncludeViewerToolWindowControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

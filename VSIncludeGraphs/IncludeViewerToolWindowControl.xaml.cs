@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// <copyright file="IncludeGraphToolWindowControl.xaml.cs" company="Company">
+// <copyright file="IncludeViewerToolWindowControl.xaml.cs" company="Company">
 //     Copyright (c) Company.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
@@ -11,21 +11,21 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.VCCodeModel;
 
-namespace VSIncludeGraphs
+namespace IncludeViewers
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Windows;
     using System.Windows.Controls;
 
     /// <summary>
-    /// Interaction logic for IncludeGraphToolWindowControl.
+    /// Interaction logic for IncludeViewerToolWindowControl.
     /// </summary>
-    public partial class IncludeGraphToolWindowControl : UserControl
+    public partial class IncludeViewerToolWindowControl : UserControl
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="IncludeGraphToolWindowControl"/> class.
+        /// Initializes a new instance of the <see cref="IncludeViewerToolWindowControl"/> class.
         /// </summary>
-        public IncludeGraphToolWindowControl()
+        public IncludeViewerToolWindowControl()
         {
             this.InitializeComponent();
         }

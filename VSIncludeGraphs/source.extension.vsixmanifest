@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="VSIncludeGraphs.Andreas Reich.b4642e97-5ac9-4176-bcdc-060fb0bf44ea" Version="1.0" Language="en-US" Publisher="Andreas Reich" />
-    <DisplayName>VSIncludeGraphs</DisplayName>
+    <Identity Id="IncludeViewers.Andreas Reich.b4642e97-5ac9-4176-bcdc-060fb0bf44ea" Version="1.0" Language="en-US" Publisher="Andreas Reich" />
+    <DisplayName>IncludeViewers</DisplayName>
     <Description>Empty VSIX Project.</Description>
   </Metadata>
   <Installation>

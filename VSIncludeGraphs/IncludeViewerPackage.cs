@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// <copyright file="IncludeGraphsPackage.cs" company="Company">
+// <copyright file="IncludeViewersPackage.cs" company="Company">
 //     Copyright (c) Company.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
@@ -17,7 +17,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
-namespace VSIncludeGraphs
+namespace IncludeViewers
 {
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
@@ -39,20 +39,20 @@ namespace VSIncludeGraphs
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideToolWindow(typeof(IncludeGraphToolWindow))]
-    [Guid(IncludeGraphsPackage.PackageGuidString)]
+    [ProvideToolWindow(typeof(IncludeViewerToolWindow))]
+    [Guid(IncludeViewersPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    public sealed class IncludeGraphsPackage : Package
+    public sealed class IncludeViewersPackage : Package
     {
         /// <summary>
-        /// IncludeGraphsPackage GUID string.
+        /// IncludeViewersPackage GUID string.
         /// </summary>
         public const string PackageGuidString = "5c2743c4-1b3f-4edd-b6a0-4379f867d47f";
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="IncludeGraphToolWindow"/> class.
+        /// Initializes a new instance of the <see cref="IncludeViewerToolWindow"/> class.
         /// </summary>
-        public IncludeGraphsPackage()
+        public IncludeViewersPackage()
         {
             // Inside this method you can place any initialization code that does not require
             // any Visual Studio service because at this point the package object is created but
@@ -68,7 +68,7 @@ namespace VSIncludeGraphs
         /// </summary>
         protected override void Initialize()
         {
-            IncludeGraphToolWindowCommand.Initialize(this);
+            IncludeViewerToolWindowCommand.Initialize(this);
             base.Initialize();
         }
 

@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// <copyright file="IncludeGraphToolWindowCommand.cs" company="Company">
+// <copyright file="IncludeViewerToolWindowCommand.cs" company="Company">
 //     Copyright (c) Company.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
@@ -10,12 +10,12 @@ using System.Globalization;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace VSIncludeGraphs
+namespace IncludeViewers
 {
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class IncludeGraphToolWindowCommand
+    internal sealed class IncludeViewerToolWindowCommand
     {
         /// <summary>
         /// Command ID.
@@ -33,11 +33,11 @@ namespace VSIncludeGraphs
         private readonly Package package;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="IncludeGraphToolWindowCommand"/> class.
+        /// Initializes a new instance of the <see cref="IncludeViewerToolWindowCommand"/> class.
         /// Adds our command handlers for menu (commands must exist in the command table file)
         /// </summary>
         /// <param name="package">Owner package, not null.</param>
-        private IncludeGraphToolWindowCommand(Package package)
+        private IncludeViewerToolWindowCommand(Package package)
         {
             if (package == null)
             {
@@ -58,7 +58,7 @@ namespace VSIncludeGraphs
         /// <summary>
         /// Gets the instance of the command.
         /// </summary>
-        public static IncludeGraphToolWindowCommand Instance
+        public static IncludeViewerToolWindowCommand Instance
         {
             get;
             private set;
@@ -75,7 +75,7 @@ namespace VSIncludeGraphs
         /// <param name="package">Owner package, not null.</param>
         public static void Initialize(Package package)
         {
-            Instance = new IncludeGraphToolWindowCommand(package);
+            Instance = new IncludeViewerToolWindowCommand(package);
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace VSIncludeGraphs
             // Get the instance number 0 of this tool window. This window is single instance so this instance
             // is actually the only one.
             // The last flag is set to true so that if the tool window does not exists it will be created.
-            ToolWindowPane window = this.package.FindToolWindow(typeof(IncludeGraphToolWindow), 0, true);
+            ToolWindowPane window = this.package.FindToolWindow(typeof(IncludeViewerToolWindow), 0, true);
             if (window?.Frame == null)
             {
                 throw new NotSupportedException("Cannot create tool window");
