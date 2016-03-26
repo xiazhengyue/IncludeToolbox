@@ -166,7 +166,7 @@ namespace IncludeFormatter.Commands
                     {
                         pathStrings[i] = Path.Combine(projectPath, pathStrings[i]);
                     }
-                    pathStrings[i] = Path.GetFullPath(PathUtil.NormalizePath(pathStrings[i])) + Path.DirectorySeparatorChar;
+                    pathStrings[i] = Path.GetFullPath(Utils.NormalizePath(pathStrings[i])) + Path.DirectorySeparatorChar;
                 }
                 catch
                 {
@@ -174,19 +174,6 @@ namespace IncludeFormatter.Commands
                 }
             }
             return pathStrings;
-        }
-
-        private string MakeRelative(string absoluteRoot, string absoluteTarget)
-        {
-            Uri rootUri = new Uri(absoluteRoot);
-            Uri targetUri = new Uri(absoluteTarget);
-            if (rootUri.Scheme != targetUri.Scheme)
-                return "";
-
-            Uri relativeUri = rootUri.MakeRelativeUri(targetUri);
-            string relativePath = Uri.UnescapeDataString(relativeUri.ToString());
-
-            return PathUtil.NormalizePath(relativePath);
         }
 
         private void FormatPaths(OptionsPage.PathMode pathformat, bool ignoreFileRelative, IncludeLineInfo[] lines, List<string> includeDirectories)
@@ -205,11 +192,11 @@ namespace IncludeFormatter.Commands
                     int i = ignoreFileRelative ? 1 : 0; // Ignore first one which is always the local dir.
                     for(; i< includeDirectories.Count; ++i)
                     {
-                        string proposal = MakeRelative(includeDirectories[i], line.AbsoluteIncludePath);
+                        string proposal = Utils.MakeRelative(includeDirectories[i], line.AbsoluteIncludePath);
 
                         if (proposal.Length < bestLength)
                         {
-                            if (pathformat == OptionsPage.PathMode.Shortest || proposal.IndexOf("../") < 0)
+                            if (pathformat == OptionsPage.PathMode.Shortest || (proposal.IndexOf("../") < 0 && proposal.IndexOf("..\\") < 0))
                             {
                                 bestCandidate = proposal;
                                 bestLength = proposal.Length;

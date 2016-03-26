@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace IncludeFormatter
@@ -11,7 +12,11 @@ namespace IncludeFormatter
     {
         public static IncludeLineInfo[] ParseIncludes(string text, bool removeEmptyLines, List<string> includeDirectories)
         {
-            var lines = text.Split(new[] { Environment.NewLine }, removeEmptyLines ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None);
+            var lines = Regex.Split(text, "\r\n|\r|\n");
+            if (removeEmptyLines)
+            {
+                lines = lines.Where(x => x.Length > 0).ToArray();
+            }
             var outInfo = new IncludeLineInfo[lines.Length];
 
             // Simplistic parsing.
@@ -52,7 +57,7 @@ namespace IncludeFormatter
                     string candidate = Path.Combine(dir, outInfo[line].IncludeContent);
                     if (File.Exists(candidate))
                     {
-                        outInfo[line].AbsoluteIncludePath = Microsoft.VisualStudio.PlatformUI.PathUtil.NormalizePath(candidate);
+                        outInfo[line].AbsoluteIncludePath = Utils.NormalizePath(candidate);
                         break;
                     }
                 }
