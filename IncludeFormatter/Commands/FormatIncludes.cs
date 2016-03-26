@@ -166,7 +166,7 @@ namespace IncludeFormatter.Commands
                     {
                         pathStrings[i] = Path.Combine(projectPath, pathStrings[i]);
                     }
-                    pathStrings[i] = Path.GetFullPath(Utils.NormalizePath(pathStrings[i])) + Path.DirectorySeparatorChar;
+                    pathStrings[i] = Utils.GetExactPathName(Path.GetFullPath(pathStrings[i])) + Path.DirectorySeparatorChar;
                 }
                 catch
                 {

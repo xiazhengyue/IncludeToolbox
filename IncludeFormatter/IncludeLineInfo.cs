@@ -57,7 +57,7 @@ namespace IncludeFormatter
                     string candidate = Path.Combine(dir, outInfo[line].IncludeContent);
                     if (File.Exists(candidate))
                     {
-                        outInfo[line].AbsoluteIncludePath = Utils.NormalizePath(candidate);
+                        outInfo[line].AbsoluteIncludePath = Utils.GetExactPathName(candidate);
                         break;
                     }
                 }
