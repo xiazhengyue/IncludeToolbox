@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -12,10 +13,16 @@ namespace IncludeViewer
     /// </summary>
     internal static class IncludeParser
     {
-        public struct IncludeTreeItem
+        public class IncludeTreeItem
         {
+            public IncludeTreeItem(string filename)
+            {
+                Filename = filename;
+                Children = new List<IncludeTreeItem>();
+            }
+
             public string Filename;
-            public IncludeTreeItem[] Children;
+            public List<IncludeTreeItem> Children;
         }
 
         [DllImport("IncludeParser.dll")]
@@ -23,20 +30,23 @@ namespace IncludeViewer
         [DllImport("IncludeParser.dll")]
         public static extern void Exit();
 
-        public static IncludeTreeItem ParseIncludes(string inputFilename, string[] includeDirectories, string[] preprocessorDefinitions, out string processedInputFile)
+        public static IncludeTreeItem ParseIncludes(string inputFilename, string[] includeDirectories,
+            string[] preprocessorDefinitions, out string processedInputFile)
         {
-            IncludeTreeItem outTree = new IncludeTreeItem();
-            StringHandle processedInputFileHandle, includeTreeHandle;
+            IncludeTreeItem outTree = new IncludeTreeItem(inputFilename);
 
+            StringHandle processedInputFileHandle, includeTreeHandle;
             {
                 byte[] inputFilenameUtf8 = Encoding.UTF8.GetBytes(inputFilename);
-                string includeDirectoriesComposed = includeDirectories.Aggregate("", (current, dir) => current + (dir + ";"));
+                string includeDirectoriesComposed = includeDirectories.Aggregate("",
+                    (current, dir) => current + (dir + ";"));
                 byte[] includeDirectoriesUtf8 = Encoding.UTF8.GetBytes(includeDirectoriesComposed);
-                string preprocessorDefinitionsComposed = preprocessorDefinitions.Aggregate("", (current, def) => current + (def + ";"));
+                string preprocessorDefinitionsComposed = preprocessorDefinitions.Aggregate("",
+                    (current, def) => current + (def + ";"));
                 byte[] preprocessorDefinitionsUtf8 = Encoding.UTF8.GetBytes(preprocessorDefinitionsComposed);
 
                 Result r = ParseIncludes(inputFilenameUtf8, includeDirectoriesUtf8, preprocessorDefinitionsUtf8,
-                                        out processedInputFileHandle, out includeTreeHandle);
+                    out processedInputFileHandle, out includeTreeHandle);
 
                 if (r != Result.Success)
                 {
@@ -46,7 +56,23 @@ namespace IncludeViewer
             }
 
             processedInputFile = processedInputFileHandle.ResolveString();
+
             string includeTreeRaw = includeTreeHandle.ResolveString();
+            string[] includeTreeRawStrings = includeTreeRaw.Split(new char[]{ '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            var includeTreeItemStack = new Stack<IncludeTreeItem>();
+            includeTreeItemStack.Push(outTree);
+            foreach (string line in includeTreeRawStrings)
+            {
+                int depth = line.Count(x => x =='\t');
+                if (depth >= includeTreeItemStack.Count)
+                {
+                    includeTreeItemStack.Push(includeTreeItemStack.Peek().Children.Last());
+                }
+                while (depth < includeTreeItemStack.Count - 1)
+                    includeTreeItemStack.Pop();
+
+                includeTreeItemStack.Peek().Children.Add(new IncludeTreeItem(line.Remove(0, depth)));
+            }
 
             return outTree;
         }
@@ -76,7 +102,7 @@ namespace IncludeViewer
 
                 Handle = -1;
 
-                return Encoding.UTF8.GetString(buffer);
+                return Encoding.UTF8.GetString(buffer, 0, buffer.Length - 1); // Exclude \0 at the end.
             }
         }
 
