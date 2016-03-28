@@ -69,8 +69,6 @@ namespace IncludeViewer
         protected override void Initialize()
         {
             IncludeParser.Init();
-            IncludeParser.test();
-
             IncludeViewerToolWindowCommand.Initialize(this);
             base.Initialize();
         }

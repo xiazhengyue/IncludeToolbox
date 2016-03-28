@@ -33,5 +33,16 @@ extern "C"
 	// Gets the needed buffer size of a string in bytes (include null termination).
 	extern INCLUDEPARSER_API Result __stdcall GetStringLength(StringHandle handle, int32_t* outBufferSize);
 
-	extern INCLUDEPARSER_API Result __stdcall Test(const char* absoluteIncludeFilename, StringHandle* outString);
+
+	// includeDirectories: Directories to look for includes separated by ';', paths relative to the file itself will be resolved automatically.
+	// preprocessorDefinitions: Global preprocessor definitions, separated by ';'
+	// outIncludeTreeString: Every line contains an include (new line using '\n'). Number of tabs '\t' gives tree relation. Example:
+	//	C:/blub/included0.h
+	//		C:/blub/File0.h
+	//			C:/blub/IncludedByFile0.h
+	//		C:/blub/File1.h
+	//		C:/blub/File2.h
+	//	C:/blab/included1.h
+	extern INCLUDEPARSER_API Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDirectories, const char* preprocessorDefinitions, 
+															StringHandle* outProcessedInputFile, StringHandle* outIncludeTree);
 }
