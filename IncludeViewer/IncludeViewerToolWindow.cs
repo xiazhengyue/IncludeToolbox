@@ -5,7 +5,7 @@ using EnvDTE;
 using Microsoft.VisualStudio.VCCodeModel;
 using Microsoft.VisualStudio.Shell;
 
-namespace IncludeViewers
+namespace IncludeViewer
 {
     /// <summary>
     /// This class implements the tool window exposed by this package and hosts a user control.

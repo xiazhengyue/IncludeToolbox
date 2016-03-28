@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// <copyright file="IncludeViewersPackage.cs" company="Company">
+// <copyright file="IncludeViewerPackage.cs" company="Company">
 //     Copyright (c) Company.  All rights reserved.
 // </copyright>
 //------------------------------------------------------------------------------
@@ -17,7 +17,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
-namespace IncludeViewers
+namespace IncludeViewer
 {
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
@@ -40,19 +40,19 @@ namespace IncludeViewers
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideToolWindow(typeof(IncludeViewerToolWindow))]
-    [Guid(IncludeViewersPackage.PackageGuidString)]
+    [Guid(IncludeViewerPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-    public sealed class IncludeViewersPackage : Package
+    public sealed class IncludeViewerPackage : Package
     {
         /// <summary>
-        /// IncludeViewersPackage GUID string.
+        /// IncludeViewerPackage GUID string.
         /// </summary>
         public const string PackageGuidString = "5c2743c4-1b3f-4edd-b6a0-4379f867d47f";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IncludeViewerToolWindow"/> class.
         /// </summary>
-        public IncludeViewersPackage()
+        public IncludeViewerPackage()
         {
             // Inside this method you can place any initialization code that does not require
             // any Visual Studio service because at this point the package object is created but
@@ -68,8 +68,18 @@ namespace IncludeViewers
         /// </summary>
         protected override void Initialize()
         {
+            IncludeParser.Init();
+            IncludeParser.test();
+
             IncludeViewerToolWindowCommand.Initialize(this);
             base.Initialize();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            IncludeParser.Exit();
         }
 
         #endregion

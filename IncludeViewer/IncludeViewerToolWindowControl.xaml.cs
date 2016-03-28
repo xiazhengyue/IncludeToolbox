@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.VCCodeModel;
 
-namespace IncludeViewers
+namespace IncludeViewer
 {
     using System.Diagnostics.CodeAnalysis;
     using System.Windows;

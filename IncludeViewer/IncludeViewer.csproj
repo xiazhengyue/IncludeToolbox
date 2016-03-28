@@ -24,8 +24,8 @@
     <ProjectGuid>{3E024E74-5C1B-4AF0-B03E-6531F68F776D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>VSIncludeGraphs</RootNamespace>
-    <AssemblyName>VSIncludeGraphs</AssemblyName>
+    <RootNamespace>IncludeViewer</RootNamespace>
+    <AssemblyName>IncludeViewer</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
@@ -43,6 +43,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CopyVsixExtensionFiles>False</CopyVsixExtensionFiles>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -51,8 +53,10 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="IncludeParser.cs" />
     <Compile Include="IncludeViewerToolWindow.cs" />
     <Compile Include="IncludeViewerToolWindowCommand.cs" />
     <Compile Include="IncludeViewerToolWindowControl.xaml.cs">
@@ -72,6 +76,18 @@
     <VSCTCompile Include="IncludeViewerToolWindowPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
+    <Content Include="ezCore.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="ezCoreUtils.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="ezFoundation.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="ezThirdParty.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Resources\IncludeViewerToolWindowCommand.png" />
     <Content Include="Resources\IncludeViewerToolWindowPackage.ico" />
   </ItemGroup>
@@ -177,6 +193,12 @@
       <ManifestResourceName>VSPackage</ManifestResourceName>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IncludeParser\IncludeParser.vcxproj">
+      <Project>{628fda0d-6357-4ff6-bd39-6057188bd514}</Project>
+      <Name>IncludeParser</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
