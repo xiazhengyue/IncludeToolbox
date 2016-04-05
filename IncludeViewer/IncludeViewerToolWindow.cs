@@ -59,9 +59,22 @@ namespace IncludeViewer
             {
                 Debug.Fail("Can't get EnvDTE80.DTE2 service!");
             }
-
             Events events = (Events)dte.Events;
             events.WindowEvents.WindowActivated += WindowEvents_WindowActivated;
+        }
+
+        protected override void OnClose()
+        {
+            base.OnClose();
+
+            // Unregister from window focus changes.
+            DTE dte = GetService(typeof(DTE)) as DTE;
+            if (dte == null)
+            {
+                Debug.Fail("Can't get EnvDTE80.DTE2 service!");
+            }
+            Events events = (Events)dte.Events;
+            events.WindowEvents.WindowActivated -= WindowEvents_WindowActivated;
         }
 
         private void WindowEvents_WindowActivated(EnvDTE.Window gotFocus, EnvDTE.Window lostFocus)
