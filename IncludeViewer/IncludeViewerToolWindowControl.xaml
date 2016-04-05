@@ -6,8 +6,6 @@
              xmlns:local="clr-namespace:IncludeViewer"
              xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
              x:Class="IncludeViewer.IncludeViewerToolWindowControl"
-             Background="{DynamicResource VsBrush.Window}"
-             Foreground="{DynamicResource VsBrush.WindowText}"
              mc:Ignorable="d"
              x:Name="MyToolWindow">
     <UserControl.Resources>
@@ -43,18 +41,28 @@
             <ColumnDefinition MinWidth="150" />
         </Grid.ColumnDefinitions>
         <Label x:Name="FileNameLabel" Content="&lt;File&gt;" FontWeight="Bold" FontSize="16" FontFamily="Consolas"/>
-        <Label x:Name="IncludeTreeLabel" Content="Includes:" VerticalAlignment="Top" Height="25" Grid.Row="1"/>
+        <Label x:Name="IncludeTreeLabel" Content="Includes:" VerticalAlignment="Top" Height="25" Grid.Row="1" FontWeight="Bold"/>
         <TreeView x:Name="IncludeTree" Grid.Row="2" />
-        <Label x:Name="IncludedByListLabel" Content="Is included by:" VerticalAlignment="Top" Height="25" Grid.Row="3"/>
-        <ListBox x:Name="IncludedByList" Grid.Row="4" RenderTransformOrigin="0.5,0.5">
-            <ListBox.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform ScaleX="-1"/>
-                    <SkewTransform/>
-                    <RotateTransform/>
-                    <TranslateTransform/>
-                </TransformGroup>
-            </ListBox.RenderTransform>
-        </ListBox>
+        <Label x:Name="IncludedByListLabel" Content="Statistics:" VerticalAlignment="Top" Height="25" Grid.Row="3" FontWeight="Bold"/>
+        <Grid Margin="10" Grid.Row="4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25"/>
+                <RowDefinition Height="25"/>
+                <RowDefinition Height="25"/>
+                <RowDefinition Height="25"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="140"/>
+                <ColumnDefinition Width="50*"/>
+            </Grid.ColumnDefinitions>
+            <Label x:Name="statLabel0" Content="Num Unique Includes" Grid.Row="0" Grid.Column="0"/>
+            <Label x:Name="NumUniqueIncludes" Content="-" Grid.Row="0" Grid.Column="1"/>
+            <Label x:Name="statLabel1" Content="Num Includes"  Grid.Row="1" Grid.Column="0"/>
+            <Label x:Name="NumIncludes" Content="-" Grid.Row="1" Grid.Column="1"/>
+            <Label x:Name="statLabel2" Content="LoC before PreProcessor"  Grid.Row="2" Grid.Column="0"/>
+            <Label x:Name="LocBeforePreProcessor" Content="-" Grid.Row="2" Grid.Column="1"/>
+            <Label x:Name="statLabel3" Content="LoC after PreProcessor" Grid.Row="3" Grid.Column="0"/>
+            <Label x:Name="LocAfterPreProcessor" Content="-" Grid.Row="3" Grid.Column="1"/>
+        </Grid>
     </Grid>
 </UserControl>

@@ -1,5 +1,3 @@
-#include "IncludeParser.h"
-
 #include <Foundation/Configuration/Startup.h>
 #include <Foundation/IO/FileSystem/DataDirTypeFolder.h>
 #include <Foundation/IO/FileSystem/FileReader.h>
@@ -9,6 +7,9 @@
 #include <Foundation/Logging/ConsoleWriter.h>
 
 #include <CoreUtils/CodeUtils/Preprocessor.h>
+
+#include "IncludeParser.h"
+
 
 namespace
 {

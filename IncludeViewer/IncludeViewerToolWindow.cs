@@ -1,9 +1,23 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 //using EnvDTE80;
 using System.Runtime.InteropServices;
 using EnvDTE;
 using Microsoft.VisualStudio.VCCodeModel;
 using Microsoft.VisualStudio.Shell;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.IO;
+using System.Linq;
+using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.PlatformUI;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudio.VCProjectEngine;
 
 namespace IncludeViewer
 {
@@ -58,22 +72,88 @@ namespace IncludeViewer
             }
         }
 
+        private VCCLCompilerTool GetCurrentCompilerTool(EnvDTE.Document document)
+        {
+            var project = document.ProjectItem.ContainingProject;
+            VCProject vcProject = project.Object as VCProject;
+            if (vcProject == null)
+            {
+                Output.Error("The given project is not a VC++ Project");
+                return null;
+            }
+            VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
+            var tools = activeConfiguration.Tools;
+            VCCLCompilerTool compilerTool = null;
+            foreach (var tool in activeConfiguration.Tools)
+            {
+                compilerTool = tool as VCCLCompilerTool;
+                if (compilerTool != null)
+                    break;
+            }
+
+            if (compilerTool == null)
+            {
+                Output.Error("Couldn't file a VCCLCompilerTool.");
+                return null;
+            }
+
+            return compilerTool;
+        }
+
+        private string GetIncludeDirectories(VCCLCompilerTool compilerTool, string projectPath)
+        {
+            // Need to separate to resolve.
+            var pathStrings = new List<string>();
+            pathStrings.AddRange(compilerTool.FullIncludePath.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
+
+            for (int i = pathStrings.Count - 1; i >= 0; --i)
+            {
+                try
+                {
+                    if (!Path.IsPathRooted(pathStrings[i]))
+                    {
+                        pathStrings[i] = Path.Combine(projectPath, pathStrings[i]);
+                    }
+                    pathStrings[i] = Utils.GetExactPathName(Path.GetFullPath(pathStrings[i])) + Path.DirectorySeparatorChar;
+                }
+                catch
+                {
+                    pathStrings.RemoveAt(i);
+                }
+            }
+            return pathStrings.Aggregate("", (current, def) => current + (def + ";"));
+        }
+
+        string GetPreprocessorDefinitions(VCCLCompilerTool compilerTool)
+        {
+            // todo
+            string builtInDefinitions = @"_MSC_VER 1900;_M_X64;_M_AMD64;_MSC_BUILD 0;_MSC_FULL_VER 190023506;"; //"_AMD64_;"
+            
+            return builtInDefinitions + compilerTool.PreprocessorDefinitions;
+        }
+
+
         private void FocusedDocumentChanged(EnvDTE.Document focusedDocument)
         {
-            VCFileCodeModel fileCodeModel = focusedDocument?.ProjectItem?.FileCodeModel as VCFileCodeModel;
-            if (fileCodeModel == null)
-            {
+            var compilerTool = GetCurrentCompilerTool(focusedDocument);
+            if (compilerTool == null)
                 return;
-            }
-            graphToolWindowControl.SetData(focusedDocument.Name, fileCodeModel);
 
+            string projectPath = Path.GetDirectoryName(Path.GetFullPath(focusedDocument.ProjectItem.ContainingProject.FileName));
+            string includeDirs = GetIncludeDirectories(compilerTool, projectPath);
+            string preprocessorDefinitions = GetPreprocessorDefinitions(compilerTool);
 
-            VCCodeModel model = (VCCodeModel)focusedDocument.ProjectItem.ContainingProject.CodeModel;
-            foreach(var elem in model.Includes)
+            string processedDocument;
+            var treeRoot = IncludeParser.ParseIncludes(focusedDocument.FullName, includeDirs, preprocessorDefinitions, out processedDocument);
+
+            int lineCount = 0;
+            EnvDTE.TextDocument textDocument = focusedDocument.Object() as EnvDTE.TextDocument;
+            if (textDocument != null)
             {
-                Debug.WriteLine(((VCCodeInclude)elem).Name);
+                lineCount = textDocument.EndPoint.Line;
             }
-            Debug.WriteLine("--");
+            int processedLineCount = processedDocument.Count(x => x == '\n');
+            graphToolWindowControl.SetData(focusedDocument.Name, treeRoot, lineCount, processedLineCount);
         }
     }
 }

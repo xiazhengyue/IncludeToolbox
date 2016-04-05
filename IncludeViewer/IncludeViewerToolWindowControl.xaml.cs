@@ -36,20 +36,20 @@ namespace IncludeViewer
             return new SolidColorBrush(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
         }
 
-        private void AddIncludes(ItemCollection target, EnvDTE.CodeElements includes)
+        private int numIncludes = 0;
+        private HashSet<string> uniqueIncludes = new HashSet<string>();
+
+        private void AddIncludes(ItemCollection target, IEnumerable<IncludeParser.IncludeTreeItem> includes)
         {
             foreach (var elem in includes)
             {
-                VCCodeInclude include = elem as VCCodeInclude;
-                if (include == null)
-                {
-                    continue;
-                }
+                ++numIncludes;
+                uniqueIncludes.Add(elem.Filename);
 
                 var newItem = new TreeViewItem()
                 {
-                    Header = include.FullName,
-                    ToolTip = include.File,
+                    Header = elem.Filename, // todo: as found first time in include directive
+                    ToolTip = elem.Filename,
                     // Todo: Styling should be part of XAML, but there were some exceptions I don't understand yet
                     Foreground = GetSolidBrush(EnvironmentColors.ToolWindowTextBrushKey),
                     Background = GetSolidBrush(EnvironmentColors.DropDownPopupBackgroundEndColorKey),
@@ -57,18 +57,25 @@ namespace IncludeViewer
                 };
 
                 target.Add(newItem);
-
-                // How to access includes recursively? Is that even possible? How much does VCCodeModel know about those files?
-                //AddIncludes(newItem.Items, include.);
+                
+                if (elem.Children != null)
+                    AddIncludes(newItem.Items, elem.Children);
             }
         }
 
-        public void SetData(string name, VCFileCodeModel fileCodeModel)
+        public void SetData(string name, IncludeParser.IncludeTreeItem treeRoot, int lineCount, int processedLineCount)
         {
             FileNameLabel.Content = name;
 
+            numIncludes = 0;
+            uniqueIncludes.Clear();
             IncludeTree.Items.Clear();
-            AddIncludes(IncludeTree.Items, fileCodeModel.Includes);
+            AddIncludes(IncludeTree.Items, treeRoot.Children);
+
+            NumIncludes.Content = numIncludes.ToString();
+            NumUniqueIncludes.Content = uniqueIncludes.Count.ToString();
+            LocBeforePreProcessor.Content = lineCount.ToString();
+            LocAfterPreProcessor.Content = processedLineCount.ToString();
         }
     }
 }

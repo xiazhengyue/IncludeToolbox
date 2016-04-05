@@ -11,7 +11,7 @@ namespace IncludeViewer
     /// <summary>
     /// Interface to the native include parser.
     /// </summary>
-    internal static class IncludeParser
+    public static class IncludeParser
     {
         public class IncludeTreeItem
         {
@@ -30,20 +30,15 @@ namespace IncludeViewer
         [DllImport("IncludeParser.dll")]
         public static extern void Exit();
 
-        public static IncludeTreeItem ParseIncludes(string inputFilename, string[] includeDirectories,
-            string[] preprocessorDefinitions, out string processedInputFile)
+        public static IncludeTreeItem ParseIncludes(string inputFilename, string includeDirectories, string preprocessorDefinitions, out string processedInputFile)
         {
             IncludeTreeItem outTree = new IncludeTreeItem(inputFilename);
 
             StringHandle processedInputFileHandle, includeTreeHandle;
             {
                 byte[] inputFilenameUtf8 = Encoding.UTF8.GetBytes(inputFilename);
-                string includeDirectoriesComposed = includeDirectories.Aggregate("",
-                    (current, dir) => current + (dir + ";"));
-                byte[] includeDirectoriesUtf8 = Encoding.UTF8.GetBytes(includeDirectoriesComposed);
-                string preprocessorDefinitionsComposed = preprocessorDefinitions.Aggregate("",
-                    (current, def) => current + (def + ";"));
-                byte[] preprocessorDefinitionsUtf8 = Encoding.UTF8.GetBytes(preprocessorDefinitionsComposed);
+                byte[] includeDirectoriesUtf8 = Encoding.UTF8.GetBytes(includeDirectories);
+                byte[] preprocessorDefinitionsUtf8 = Encoding.UTF8.GetBytes(preprocessorDefinitions);
 
                 Result r = ParseIncludes(inputFilenameUtf8, includeDirectoriesUtf8, preprocessorDefinitionsUtf8,
                     out processedInputFileHandle, out includeTreeHandle);
