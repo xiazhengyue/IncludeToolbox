@@ -6,7 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace IncludeFormatter
+namespace IncludeToolbox
 {
     /// <summary>
     /// Option page.

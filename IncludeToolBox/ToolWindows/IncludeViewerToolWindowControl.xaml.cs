@@ -6,10 +6,9 @@
 
 using System.Collections.Generic;
 using System.Windows.Media;
+using IncludeToolbox;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.VCCodeModel;
 
 namespace IncludeViewer
 {

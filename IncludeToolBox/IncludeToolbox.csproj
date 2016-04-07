@@ -24,8 +24,8 @@
     <ProjectGuid>{BB4BFB45-287B-4A10-ACC5-3956F3738597}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>IncludeFormatter</RootNamespace>
-    <AssemblyName>IncludeFormatter</AssemblyName>
+    <RootNamespace>IncludeToolbox</RootNamespace>
+    <AssemblyName>IncludeToolbox</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
@@ -42,6 +42,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -50,14 +51,21 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Commands\CommandSet.cs" />
+    <Compile Include="Commands\IncludeViewerToolWindowCommand.cs" />
     <Compile Include="IncludeComparer.cs" />
     <Compile Include="Commands\FormatIncludes.cs" />
-    <Compile Include="IncludeFormatterPackage.cs" />
+    <Compile Include="IncludeParser.cs" />
+    <Compile Include="IncludeToolboxPackage.cs" />
     <Compile Include="IncludeLineInfo.cs" />
-    <Compile Include="OptionsPage.cs">
+    <Compile Include="ToolWindows\IncludeViewerToolWindow.cs" />
+    <Compile Include="ToolWindows\IncludeViewerToolWindowControl.xaml.cs">
+      <DependentUpon>IncludeViewerToolWindowControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Options\OptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Output.cs" />
@@ -125,7 +133,6 @@
       <HintPath>..\packages\Microsoft.VisualStudio.ProjectSystem.14.1.80-pre\lib\net451\Microsoft.VisualStudio.ProjectSystem.VS.V14Only.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Settings.14.0, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
     <Reference Include="Microsoft.VisualStudio.Shell.14.0, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.VisualStudio.Shell.14.0.14.1.24720\lib\Microsoft.VisualStudio.Shell.14.0.dll</HintPath>
       <Private>True</Private>
@@ -199,6 +206,8 @@
     <Reference Include="Microsoft.VisualStudio.VCProjectEngine, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -235,10 +244,12 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <VSCTCompile Include="IncludeFormatterPackage.vsct">
+    <VSCTCompile Include="IncludeToolboxPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
@@ -251,6 +262,18 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ezCore.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="ezCoreUtils.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="ezFoundation.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="ezThirdParty.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="license.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -264,6 +287,18 @@
     <Content Include="Resources\IncludeFormatterPackage.png">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="ToolWindows\IncludeViewerToolWindowControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IncludeParser\IncludeParser.vcxproj">
+      <Project>{628fda0d-6357-4ff6-bd39-6057188bd514}</Project>
+      <Name>IncludeParser</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />

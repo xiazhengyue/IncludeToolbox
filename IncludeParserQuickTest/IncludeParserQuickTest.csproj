@@ -45,7 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\IncludeViewer\IncludeParser.cs">
+    <Compile Include="..\IncludeToolbox\IncludeParser.cs">
       <Link>IncludeParser.cs</Link>
     </Compile>
     <Compile Include="Program.cs" />
@@ -59,22 +59,22 @@
       <Link>IncludeParser.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\IncludeViewer\ezCore.dll">
+    <None Include="..\IncludeToolbox\ezCore.dll">
       <Link>ezCore.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\IncludeViewer\ezCoreUtils.dll">
+    </None>
+    <None Include="..\IncludeToolbox\ezCoreUtils.dll">
       <Link>ezCoreUtils.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\IncludeViewer\ezFoundation.dll">
+    </None>
+    <None Include="..\IncludeToolbox\ezFoundation.dll">
       <Link>ezFoundation.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\IncludeViewer\ezThirdParty.dll">
+    </None>
+    <None Include="..\IncludeToolbox\ezThirdParty.dll">
       <Link>ezThirdParty.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

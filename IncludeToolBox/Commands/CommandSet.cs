@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IncludeFormatter.Commands
+namespace IncludeToolbox.Commands
 {
     static class CommandSet
     {

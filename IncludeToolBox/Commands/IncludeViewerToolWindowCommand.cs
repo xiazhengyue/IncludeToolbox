@@ -1,16 +1,10 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="IncludeViewerToolWindowCommand.cs" company="Company">
-//     Copyright (c) Company.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
-
-using System;
+﻿using System;
 using System.ComponentModel.Design;
-using System.Globalization;
+using IncludeViewer;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace IncludeViewer
+namespace IncludeToolbox.Commands
 {
     /// <summary>
     /// Command handler
@@ -20,7 +14,7 @@ namespace IncludeViewer
         /// <summary>
         /// Command ID.
         /// </summary>
-        public const int CommandId = 0x0100;
+        public const int CommandId = 0x0102;
 
         /// <summary>
         /// Command menu group (command set GUID).

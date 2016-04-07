@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IncludeFormatter
+namespace IncludeToolbox
 {
     static class Utils
     {

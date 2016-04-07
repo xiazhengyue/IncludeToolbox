@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.VCProjectEngine;
 
 
-namespace IncludeFormatter.Commands
+namespace IncludeToolbox.Commands
 {
     /// <summary>
     /// Command handler

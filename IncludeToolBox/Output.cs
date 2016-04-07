@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace IncludeFormatter
+namespace IncludeToolbox
 {
     static internal class Output
     {

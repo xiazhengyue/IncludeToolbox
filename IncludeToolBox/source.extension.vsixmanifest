@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="IncludeFormatter.Andreas Reich.075c2e2b-7b71-45ba-b2e6-c1dadc81cfac" Version="0.4" Language="en-US" Publisher="Andreas Reich" />
-    <DisplayName>IncludeFormatter</DisplayName>
-    <Description xml:space="preserve">Simple tool for formatting and sorting C/C++ #includes.</Description>
+    <Identity Id="IncludeToolbox.Andreas Reich.075c2e2b-7b71-45ba-b2e6-c1dadc81cfac" Version="0.4" Language="en-US" Publisher="Andreas Reich" />
+    <DisplayName>IncludeToolbox</DisplayName>
+    <Description xml:space="preserve">Various tools for managing C/C++ #includes: Formatting, sorting, exploring, pruning.</Description>
     <License>license.txt</License>
     <Icon>Resources\IncludeFormatterPackage.png</Icon>
   </Metadata>

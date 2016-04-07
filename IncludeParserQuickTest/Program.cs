@@ -11,7 +11,7 @@ namespace IncludeParserQuickTest
     {
         public static void Main()
         {
-            IncludeViewer.IncludeParser.Init();
+            IncludeToolbox.IncludeParser.Init();
 
             string[] includeDirs =
             {
@@ -49,13 +49,13 @@ namespace IncludeParserQuickTest
             string preprocessorDefinitionsComposed = preprocessorDefines.Aggregate("", (current, def) => current + (def + ";"));
 
             string processedFile;
-            var tree = IncludeViewer.IncludeParser.ParseIncludes(
+            var tree = IncludeToolbox.IncludeParser.ParseIncludes(
                     Directory.GetCurrentDirectory() + @"\..\..\..\IncludeParser/IncludeParser.cpp",
                                                                      //@"c:\Users\Andreas\Development\current_development\IncludeViewer\ezEngine\Code\Engine\Foundation\Basics.h",
                                                                      //@"C:/Users/Andreas/Development/current_development/IncludeViewer/ezEngine/Code/Engine/Foundation/Basics/Platform/Win/Platform_win.h",
                                                                      //@"C:/Program Files (x86)/Windows Kits/8.1/Include/um/winbase.h",
                                                                      includeDirsComposed, preprocessorDefinitionsComposed, out processedFile);
-            IncludeViewer.IncludeParser.Exit();
+            IncludeToolbox.IncludeParser.Exit();
         }
     }
 }

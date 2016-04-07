@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace IncludeFormatter
+namespace IncludeToolbox
 {
     public class IncludeComparer : IComparer<string>
     {
