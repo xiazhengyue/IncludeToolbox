@@ -9,8 +9,13 @@ using System.ComponentModel.Design;
 using System.Globalization;
 using System.Windows.Forms;
 using EnvDTE;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.VCProjectEngine;
 
 
@@ -105,53 +110,77 @@ namespace IncludeFormatter.Commands
         private void MenuItemCallback(object sender, EventArgs e)
         {
             // Waiting for an answer on http://stackoverflow.com/questions/35830092/visual-studio-extension-compile-file-with-vcfileconfiguration-fails
-            /*     EnvDTE.DTE dte = (EnvDTE.DTE)Package.GetGlobalService(typeof (EnvDTE.DTE));
-                 if (dte == null)
-                     return;
+                EnvDTE.DTE dte = (EnvDTE.DTE)Package.GetGlobalService(typeof (EnvDTE.DTE));
+                if (dte == null)
+                    return;
 
-                 var document = dte.ActiveDocument;
-                 var project = document.ProjectItem.ContainingProject;
-                 VCProject vcProject = project.Object as VCProject;
-                 if (vcProject == null)
-                 {
-                     Output.Error("The given project is not a VC++ Project", "Failed to perform Include Purge");
-                     return;
-                 }
-                 VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
-                 var tools = activeConfiguration.Tools;
-                 //VCCLCompilerTool compilerTool = tools["VCCLCompilerTool"];
-
-
-                 VCFile vcFile = document.ProjectItem.Object as VCFile;
-                 if (vcFile == null)
-                 {
-                     Output.Error("The given file is not a VC++ File", "Failed to perform Include Purge");
-                     return;
-                 }
-                 IVCCollection fileConfigCollection = vcFile.FileConfigurations;
-                 VCFileConfiguration fileConfig = fileConfigCollection.Item(activeConfiguration.Name);
+                var document = dte.ActiveDocument;
+                var project = document.ProjectItem.ContainingProject;
+                VCProject vcProject = project.Object as VCProject;
+                if (vcProject == null)
+                {
+                    Output.Error("The given project is not a VC++ Project");
+                    return;
+                }
+                VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
+                var tools = activeConfiguration.Tools;
+                //VCCLCompilerTool compilerTool = tools["VCCLCompilerTool"];
 
 
-                 // strng = fileconfig.Evaluate("$(TargetDir)")
+                VCFile vcFile = document.ProjectItem.Object as VCFile;
+                if (vcFile == null)
+                {
+                    Output.Error("The given file is not a VC++ File");
+                    return;
+                }
+                IVCCollection fileConfigCollection = vcFile.FileConfigurations;
+                VCFileConfiguration fileConfig = fileConfigCollection.Item(activeConfiguration.Name);
 
-                 if (fileConfig == null)
-                 {
 
-                     return;
-                 }
-                 try
-                 {
-                     fileConfig.Compile(false, true); // WaitOnBuild==true always fails.
-                  //   Output.Info("Success.");
-                 }
-                 catch (Microsoft.VisualStudio.ProjectSystem.ProjectException exception)
-                 {
-                     Output.Error("Fail.");
-                 }
+                // strng = fileconfig.Evaluate("$(TargetDir)")
 
-                 //dte.ExecuteCommand("Build.Compile");
+                if (fileConfig == null)
+                {
 
-         */
+                    return;
+                }
+
+                fileConfig.Compile(false, false); // WaitOnBuild==true always fails.
+
+
+
+            IVsOutputWindow outWindow = ServiceProvider.GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+            Guid buildPaneGuid = VSConstants.GUID_BuildOutputWindowPane;
+            IVsOutputWindowPane pane;
+            outWindow.GetPane(ref buildPaneGuid, out pane);
+
+            IVsUserData userData = (IVsUserData)pane;
+            object o;
+            Guid guidViewHost = DefGuidList.guidIWpfTextViewHost;
+            userData.GetData(ref guidViewHost, out o);
+
+            IWpfTextViewHost viewHost = (IWpfTextViewHost)o;
+            IWpfTextView textView = viewHost.TextView;
+            textView.TextBuffer.Changed += outputTextChanged;
+
+            System.Threading.Thread.Sleep(10000);
+
+            //dte.ExecuteCommand("Build.Compile");
+
+
+        }
+
+        private void outputTextChanged(object sender, TextContentChangedEventArgs e)
+        {
+            string text = e.After.GetText();
+            if (text.Contains("Build: 0 succeeded, 1 failed"))
+            {
+                Output.Info("Fail!");
+            }
+            else if (text.Contains("Build: 1 succeeded"))
+            {
+                Output.Info("Success!");
+            }
         }
     }
 }

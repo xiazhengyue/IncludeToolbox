@@ -38,7 +38,7 @@ namespace IncludeFormatter
         protected override void Initialize()
         {
             FormatIncludes.Initialize(this);
-            //PurgeIncludes.Initialize(this);
+            PurgeIncludes.Initialize(this);
             base.Initialize();            
         }
 
