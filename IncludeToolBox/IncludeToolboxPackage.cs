@@ -52,10 +52,10 @@ namespace IncludeToolbox
         /// </summary>
         protected override void Initialize()
         {
+            Output.Instance.Init();
             IncludeParser.Init();
             IncludeViewerToolWindowCommand.Initialize(this);
             FormatIncludes.Initialize(this);
-            PurgeIncludes.Initialize(this);
             base.Initialize();            
         }
         protected override void Dispose(bool disposing)

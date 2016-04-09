@@ -128,31 +128,14 @@ namespace IncludeToolbox.Commands
         List<string> GetProjectIncludeDirectories()
         {
             var pathStrings = new List<string>();
-
             var document = GetActiveDocument();
-            var project = document.ProjectItem.ContainingProject;
-            VCProject vcProject = project.Object as VCProject;
-            if (vcProject == null)
-            {
-                Output.Error("The given project is not a VC++ Project");
-                return pathStrings;
-            }
-            VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
-            var tools = activeConfiguration.Tools;
-            VCCLCompilerTool compilerTool = null;
-            foreach (var tool in activeConfiguration.Tools)
-            {
-                compilerTool = tool as VCCLCompilerTool;
-                if (compilerTool != null)
-                    break;
-            }
-
+            var compilerTool = Utils.GetVCppCompilerTool(document);
             if (compilerTool == null)
             {
-                Output.Error("Couldn't file a VCCLCompilerTool.");
                 return pathStrings;
             }
 
+            var project = document.ProjectItem.ContainingProject;
             string projectPath = Path.GetDirectoryName(Path.GetFullPath(project.FileName));
             
             // According to documentation FullIncludePath has resolved macros.

@@ -1,19 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-//using EnvDTE80;
 using System.Runtime.InteropServices;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
-using System.ComponentModel.Design;
 using System.IO;
 using System.Linq;
 using IncludeToolbox;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.PlatformUI;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.VCProjectEngine;
 
 namespace IncludeViewer
@@ -82,34 +75,6 @@ namespace IncludeViewer
             }
         }
 
-        private VCCLCompilerTool GetCurrentCompilerTool(EnvDTE.Document document)
-        {
-            var project = document.ProjectItem.ContainingProject;
-            VCProject vcProject = project.Object as VCProject;
-            if (vcProject == null)
-            {
-                Output.Error("The given project is not a VC++ Project");
-                return null;
-            }
-            VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
-            var tools = activeConfiguration.Tools;
-            VCCLCompilerTool compilerTool = null;
-            foreach (var tool in activeConfiguration.Tools)
-            {
-                compilerTool = tool as VCCLCompilerTool;
-                if (compilerTool != null)
-                    break;
-            }
-
-            if (compilerTool == null)
-            {
-                Output.Error("Couldn't file a VCCLCompilerTool.");
-                return null;
-            }
-
-            return compilerTool;
-        }
-
         private string GetIncludeDirectories(VCCLCompilerTool compilerTool, string projectPath)
         {
             // Need to separate to resolve.
@@ -145,7 +110,7 @@ namespace IncludeViewer
 
         private void FocusedDocumentChanged(EnvDTE.Document focusedDocument)
         {
-            var compilerTool = GetCurrentCompilerTool(focusedDocument);
+            var compilerTool = Utils.GetVCppCompilerTool(focusedDocument);
             if (compilerTool == null)
                 return;
 
@@ -163,6 +128,8 @@ namespace IncludeViewer
                 lineCount = textDocument.EndPoint.Line;
             }
             int processedLineCount = processedDocument.Count(x => x == '\n');
+
+
             graphToolWindowControl.SetData(focusedDocument.Name, treeRoot, lineCount, processedLineCount);
         }
     }
