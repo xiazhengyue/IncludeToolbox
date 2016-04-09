@@ -1,0 +1,224 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6AB9C4A5-F99F-4EC0-A789-3B261383AF75}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ezEngine_preprocessor</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);..\ezEngine\Code\Engine</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);..\ezEngine\Code\Engine</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;EZENGINE_PREPROCESSOR_EXPORTS;CoreUtils_EXPORTS;Foundation_EXPORTS;Core_EXPORTS;BUILDSYSTEM_COMPILE_ENGINE_AS_DLL;BUILDSYSTEM_BUILDING_COREUTILS_LIB;BUILDSYSTEM_BUILDING_FOUNDATION_LIB;BUILDSYSTEM_BUILDING_CORE_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;EZENGINE_PREPROCESSOR_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;EZENGINE_PREPROCESSOR_EXPORTS;CoreUtils_EXPORTS;Foundation_EXPORTS;Core_EXPORTS;BUILDSYSTEM_COMPILE_ENGINE_AS_DLL;BUILDSYSTEM_BUILDING_COREUTILS_LIB;BUILDSYSTEM_BUILDING_FOUNDATION_LIB;BUILDSYSTEM_BUILDING_CORE_LIB</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>Rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;EZENGINE_PREPROCESSOR_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Conditions.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Defines.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Expand.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\FileHandling.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Macros.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\ParsingHelpers.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Preprocessor.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Tokenizer.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Algorithm\Implementation\Hashing.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Basics\Assert.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Basics\Basics.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Communication\Implementation\GlobalEvent.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Communication\Implementation\Message.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Configuration\Implementation\Plugin.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Configuration\Implementation\ReloadableVariable.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Configuration\Implementation\Startup.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\FileSystem\Implementation\DataDirType.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\FileSystem\Implementation\DataDirTypeFolder.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\FileSystem\Implementation\FileReader.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\FileSystem\Implementation\FileSystem.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\FileSystem\Implementation\FileWriter.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\ArchiveReader.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\ArchiveWriter.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\ChunkStream.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\DependencyFile.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\DirectoryWatcher.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\ExtendedJSONReader.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\ExtendedJSONWriter.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\JSONParser.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\JSONReader.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\JSONWriter.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\MemoryStream.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\OSFile.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\StandardJSONWriter.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\StreamOperationsOther.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Logging\Implementation\ConsoleWriter.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Logging\Implementation\Log.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Logging\Implementation\VisualStudioWriter.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Math\Implementation\Color.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Math\Implementation\Math.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Memory\Implementation\AllocatorBase.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Memory\Implementation\AllocatorWrapper.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Memory\Implementation\MemoryTracker.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Memory\Implementation\MemoryUtils.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Reflection\Implementation\PropertyAttributes.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Reflection\Implementation\ReflectionUtils.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Reflection\Implementation\RTTI.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Reflection\Implementation\StandardTypes.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\HashedString.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\PathUtils.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\snprintf.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\StringBuilder.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\StringConversion.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\StringUtils.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\System\Implementation\SystemInformation.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\System\Implementation\UuidGenerator.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Threading\Implementation\ThreadLocalStorage.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Threading\Implementation\ThreadUtils.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\Clock.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\DefaultTimeStepSmoothing.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\Stopwatch.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\Time.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\Timestamp.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Types\Implementation\Variant.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Utilities\Implementation\ConversionUtils.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Utilities\Implementation\StackTracer.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

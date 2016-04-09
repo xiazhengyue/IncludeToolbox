@@ -1,0 +1,265 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Foundation">
+      <UniqueIdentifier>{1c3db9cf-a12a-4447-8786-395c40346973}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CoreUtils">
+      <UniqueIdentifier>{91e726b8-3a6f-479d-a296-1d1ac996ad1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CoreUtils\CodeUtils">
+      <UniqueIdentifier>{039dcb1e-05f5-42d7-8ec1-3b3995ee4af9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Strings">
+      <UniqueIdentifier>{9851125a-d3c5-4f68-be64-3dac44a65a75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\IO">
+      <UniqueIdentifier>{4b90da08-ba97-44c7-8b3d-688a89b8296c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Logging">
+      <UniqueIdentifier>{ea735dda-8536-4299-87c6-ec46a64337b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Containers">
+      <UniqueIdentifier>{c6d57c6b-2640-41f3-88fd-407a21ee3099}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Basics">
+      <UniqueIdentifier>{1be64258-5d6a-42ab-88b3-488b196ff400}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Memory">
+      <UniqueIdentifier>{dc5e122a-1ee4-4684-b884-1a40fc6803f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Math">
+      <UniqueIdentifier>{4d45c8d6-4337-4566-8a7e-365ff41ba6cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Utilities">
+      <UniqueIdentifier>{c338674a-dc68-45da-8571-d15d6c6620a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Threading">
+      <UniqueIdentifier>{a7ebc053-ad33-4da6-a6f7-ed084a05c448}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Time">
+      <UniqueIdentifier>{2267c9dc-c9d7-49e1-abd3-0bc9424586ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Configuration">
+      <UniqueIdentifier>{9bf2f10a-701b-4069-bfd0-6c68dcfd86aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Reflection">
+      <UniqueIdentifier>{c1582e15-78ca-42bd-8858-56ec8fc4f452}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Algorithm">
+      <UniqueIdentifier>{e38a44e7-e390-405e-b3e1-e877258bcea2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Types">
+      <UniqueIdentifier>{3b181599-a5df-468b-a2cb-2774f855314c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\Communication">
+      <UniqueIdentifier>{80bb3b41-05f7-4a9d-859c-aeccf5acd5c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\System">
+      <UniqueIdentifier>{bdd93de9-c25c-4169-abeb-de245c91592f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Foundation\IO\Filesystem">
+      <UniqueIdentifier>{aa448def-c179-417c-883f-8444d2e15a3e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Conditions.cpp">
+      <Filter>CoreUtils\CodeUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Defines.cpp">
+      <Filter>CoreUtils\CodeUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Expand.cpp">
+      <Filter>CoreUtils\CodeUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\FileHandling.cpp">
+      <Filter>CoreUtils\CodeUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Macros.cpp">
+      <Filter>CoreUtils\CodeUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\ParsingHelpers.cpp">
+      <Filter>CoreUtils\CodeUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Preprocessor.cpp">
+      <Filter>CoreUtils\CodeUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Tokenizer.cpp">
+      <Filter>CoreUtils\CodeUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\HashedString.cpp">
+      <Filter>Foundation\Strings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\PathUtils.cpp">
+      <Filter>Foundation\Strings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\snprintf.cpp">
+      <Filter>Foundation\Strings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\StringBuilder.cpp">
+      <Filter>Foundation\Strings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\StringConversion.cpp">
+      <Filter>Foundation\Strings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Logging\Implementation\ConsoleWriter.cpp">
+      <Filter>Foundation\Logging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Logging\Implementation\Log.cpp">
+      <Filter>Foundation\Logging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Logging\Implementation\VisualStudioWriter.cpp">
+      <Filter>Foundation\Logging</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Basics\Assert.cpp">
+      <Filter>Foundation\Basics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Basics\Basics.cpp">
+      <Filter>Foundation\Basics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Memory\Implementation\AllocatorBase.cpp">
+      <Filter>Foundation\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Memory\Implementation\AllocatorWrapper.cpp">
+      <Filter>Foundation\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Memory\Implementation\MemoryUtils.cpp">
+      <Filter>Foundation\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Math\Implementation\Math.cpp">
+      <Filter>Foundation\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\Clock.cpp">
+      <Filter>Foundation\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\DefaultTimeStepSmoothing.cpp">
+      <Filter>Foundation\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\Stopwatch.cpp">
+      <Filter>Foundation\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\Time.cpp">
+      <Filter>Foundation\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\Timestamp.cpp">
+      <Filter>Foundation\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\ArchiveReader.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\ArchiveWriter.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\ChunkStream.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\DependencyFile.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\DirectoryWatcher.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\MemoryStream.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\OSFile.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\StandardJSONWriter.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\StreamOperationsOther.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Configuration\Implementation\Startup.cpp">
+      <Filter>Foundation\Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Reflection\Implementation\ReflectionUtils.cpp">
+      <Filter>Foundation\Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Reflection\Implementation\RTTI.cpp">
+      <Filter>Foundation\Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Algorithm\Implementation\Hashing.cpp">
+      <Filter>Foundation\Algorithm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\FileSystem\Implementation\FileReader.cpp">
+      <Filter>Foundation\IO\Filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\FileSystem\Implementation\FileSystem.cpp">
+      <Filter>Foundation\IO\Filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\FileSystem\Implementation\FileWriter.cpp">
+      <Filter>Foundation\IO\Filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Types\Implementation\Variant.cpp">
+      <Filter>Foundation\Types</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\System\Implementation\SystemInformation.cpp">
+      <Filter>Foundation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\System\Implementation\UuidGenerator.cpp">
+      <Filter>Foundation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Configuration\Implementation\Plugin.cpp">
+      <Filter>Foundation\Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Configuration\Implementation\ReloadableVariable.cpp">
+      <Filter>Foundation\Configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Communication\Implementation\GlobalEvent.cpp">
+      <Filter>Foundation\Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Communication\Implementation\Message.cpp">
+      <Filter>Foundation\Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\JSONReader.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\JSONWriter.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\JSONParser.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\ExtendedJSONWriter.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\Implementation\ExtendedJSONReader.cpp">
+      <Filter>Foundation\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Strings\Implementation\StringUtils.cpp">
+      <Filter>Foundation\Strings</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\FileSystem\Implementation\DataDirTypeFolder.cpp">
+      <Filter>Foundation\IO\Filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\IO\FileSystem\Implementation\DataDirType.cpp">
+      <Filter>Foundation\IO\Filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Utilities\Implementation\ConversionUtils.cpp">
+      <Filter>Foundation\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Math\Implementation\Color.cpp">
+      <Filter>Foundation\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Memory\Implementation\MemoryTracker.cpp">
+      <Filter>Foundation\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Reflection\Implementation\StandardTypes.cpp">
+      <Filter>Foundation\Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Reflection\Implementation\PropertyAttributes.cpp">
+      <Filter>Foundation\Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Threading\Implementation\ThreadUtils.cpp">
+      <Filter>Foundation\Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Threading\Implementation\ThreadLocalStorage.cpp">
+      <Filter>Foundation\Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Utilities\Implementation\StackTracer.cpp">
+      <Filter>Foundation\Utilities</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

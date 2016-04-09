@@ -262,18 +262,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ezCore.dll">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="ezCoreUtils.dll">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="ezFoundation.dll">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="ezThirdParty.dll">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Content Include="license.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -295,6 +283,10 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ezEngine_preprocessor\ezEngine_preprocessor.vcxproj">
+      <Project>{6ab9c4a5-f99f-4ec0-a789-3b261383af75}</Project>
+      <Name>ezEngine_preprocessor</Name>
+    </ProjectReference>
     <ProjectReference Include="..\IncludeParser\IncludeParser.vcxproj">
       <Project>{628fda0d-6357-4ff6-bd39-6057188bd514}</Project>
       <Name>IncludeParser</Name>

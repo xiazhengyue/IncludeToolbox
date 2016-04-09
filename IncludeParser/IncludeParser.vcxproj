@@ -65,7 +65,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ezCore.lib;ezFoundation.lib;ezCoreUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../Debug/ezEngine_preprocessor.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>
@@ -91,10 +91,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ezCore.lib;ezFoundation.lib;ezCoreUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../Release/ezEngine_preprocessor.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy "$(SolutionDir)$(Configuration)\$(ProjectName).dll" "../IncludeViewer/Dll/$(ProjectName).dll" /y /f</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -102,6 +103,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IncludeParser.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ezEngine_preprocessor\ezEngine_preprocessor.vcxproj">
+      <Project>{6ab9c4a5-f99f-4ec0-a789-3b261383af75}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
