@@ -5,10 +5,12 @@
 #include <Foundation/Memory/MemoryUtils.h>
 #include <Foundation/Logging/VisualStudioWriter.h>
 #include <Foundation/Logging/ConsoleWriter.h>
+#include <Foundation/Threading/Thread.h>
 
 #include <CoreUtils/CodeUtils/Preprocessor.h>
 
 #include "IncludeParser.h"
+#include <memory>
 
 
 namespace
@@ -182,6 +184,14 @@ namespace
 Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDirectories, const char* preprocessorDefinitions,
 								StringHandle* outProcessedInputFile, StringHandle* outIncludeTree)
 {
+	//std::unique_ptr<ezThreadLocalPointerTable> threadLocalPointerTable;
+	//if(!ezThreadLocalStorage::GetPerThreadPointerTable())
+	//{
+	//	threadLocalPointerTable.reset(new ezThreadLocalPointerTable());
+	//	ezThreadLocalStorage::SetPerThreadPointerTable(threadLocalPointerTable.get());
+	//}
+
+	
 	ezPreprocessor preprocessor;
 
 	// Setup preprocessor defines.

@@ -25,7 +25,9 @@ namespace IncludeViewer
     [Guid("c87b586a-6c8b-4129-9b6d-56a761e0ac6d")]
     public sealed class IncludeViewerToolWindow : ToolWindowPane
     {
-        private IncludeViewerToolWindowControl graphToolWindowControl;
+        private readonly IncludeViewerToolWindowControl graphToolWindowControl;
+        //private System.Threading.Tasks.Task parseTask;
+        //private long focusToken = 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IncludeViewerToolWindow"/> class.
@@ -106,8 +108,17 @@ namespace IncludeViewer
             return builtInDefinitions + compilerTool.PreprocessorDefinitions;
         }
 
-
         private void FocusedDocumentChanged(EnvDTE.Document focusedDocument)
+        {
+            ParseIncludes(focusedDocument);
+
+         //   System.Threading.Interlocked.Increment(ref focusToken);
+
+         //   parseTask = new System.Threading.Tasks.Task(() => ParseIncludes(focusedDocument, focusToken));
+         //   parseTask.Start();
+        }
+
+        private void ParseIncludes(EnvDTE.Document focusedDocument/*, long callToken*/)
         {
             var compilerTool = Utils.GetVCppCompilerTool(focusedDocument);
             if (compilerTool == null)
@@ -118,18 +129,24 @@ namespace IncludeViewer
             string preprocessorDefinitions = GetPreprocessorDefinitions(compilerTool);
 
             string processedDocument;
-            var treeRoot = IncludeParser.ParseIncludes(focusedDocument.FullName, includeDirs, preprocessorDefinitions, out processedDocument);
+            var includeTreeRoot = IncludeParser.ParseIncludes(focusedDocument.FullName, includeDirs, preprocessorDefinitions, out processedDocument);
 
-            int lineCount = 0;
-            EnvDTE.TextDocument textDocument = focusedDocument.Object() as EnvDTE.TextDocument;
-            if (textDocument != null)
+            // Apply only, if focus token still relevant.
+           // if (System.Threading.Interlocked.CompareExchange(ref callToken, -1, focusToken) == -1)
             {
-                lineCount = textDocument.EndPoint.Line;
+               // graphToolWindowControl.Dispatcher.InvokeAsync(() =>
+                {
+                    int lineCount = 0;
+                    EnvDTE.TextDocument textDocument = focusedDocument.Object() as EnvDTE.TextDocument;
+                    if (textDocument != null)
+                    {
+                        lineCount = textDocument.EndPoint.Line;
+                    }
+                    int processedLineCount = processedDocument.Count(x => x == '\n');
+
+                    graphToolWindowControl.SetData(focusedDocument.Name, includeTreeRoot, lineCount, processedLineCount);
+                }
             }
-            int processedLineCount = processedDocument.Count(x => x == '\n');
-
-
-            graphToolWindowControl.SetData(focusedDocument.Name, treeRoot, lineCount, processedLineCount);
         }
     }
 }
