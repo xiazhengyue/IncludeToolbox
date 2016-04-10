@@ -17,15 +17,25 @@ namespace IncludeToolbox
         public void Init()
         {
             EnvDTE.DTE dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
-            Window window = dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
-            OutputWindow outputWindow = (OutputWindow)window.Object;
-            outputWindowPane = outputWindow.OutputWindowPanes.Add("IncludeToolBox");
+            if (dte?.Windows.Count > 0)
+            {
+                Window window = dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
+                OutputWindow outputWindow = (OutputWindow) window.Object;
+                outputWindowPane = outputWindow.OutputWindowPanes.Add("IncludeToolBox");
+            }
         }
 
         public void WriteLine(string line)
         {
-            System.Diagnostics.Debug.Assert(outputWindowPane != null);
-            outputWindowPane.OutputString(line);
+            if (outputWindowPane == null)
+            {
+                Init();
+            }
+            if (outputWindowPane != null)
+            {
+                System.Diagnostics.Debug.Assert(outputWindowPane != null);
+                outputWindowPane.OutputString(line);
+            }
         }
 
         public void WriteLine(string line, params object[] stringParams)
