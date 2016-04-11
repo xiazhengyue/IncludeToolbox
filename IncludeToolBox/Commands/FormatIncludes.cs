@@ -45,7 +45,7 @@ namespace IncludeToolbox.Commands
             OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (commandService != null)
             {
-                var menuCommandID = new CommandID(CommandSet.Guid, CommandId);
+                var menuCommandID = new CommandID(MenuCommandSet.Guid, CommandId);
                 var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
                 commandService.AddCommand(menuItem);
             }
@@ -116,49 +116,6 @@ namespace IncludeToolbox.Commands
             return new SnapshotSpan(start, end);
         }
 
-        private EnvDTE.Document GetActiveDocument()
-        {
-            EnvDTE.DTE dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
-            if (dte == null)
-                return null;
-
-            return dte.ActiveDocument;
-        }
-
-        List<string> GetProjectIncludeDirectories()
-        {
-            var pathStrings = new List<string>();
-            var document = GetActiveDocument();
-            var compilerTool = Utils.GetVCppCompilerTool(document);
-            if (compilerTool == null)
-            {
-                return pathStrings;
-            }
-
-            var project = document.ProjectItem.ContainingProject;
-            string projectPath = Path.GetDirectoryName(Path.GetFullPath(project.FileName));
-            
-            // According to documentation FullIncludePath has resolved macros.
-            pathStrings.AddRange(compilerTool.FullIncludePath.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
-                
-            for (int i = pathStrings.Count-1; i>=0; --i)
-            {
-                try
-                {
-                    if (!Path.IsPathRooted(pathStrings[i]))
-                    {
-                        pathStrings[i] = Path.Combine(projectPath, pathStrings[i]);
-                    }
-                    pathStrings[i] = Utils.GetExactPathName(Path.GetFullPath(pathStrings[i])) + Path.DirectorySeparatorChar;
-                }
-                catch
-                {
-                    pathStrings.RemoveAt(i);
-                }
-            }
-            return pathStrings;
-        }
-
         private void FormatPaths(OptionsPage.PathMode pathformat, bool ignoreFileRelative, IncludeLineInfo[] lines, List<string> includeDirectories)
         {
             if (pathformat == OptionsPage.PathMode.Unchanged)
@@ -207,8 +164,14 @@ namespace IncludeToolbox.Commands
             var settings = (OptionsPage)package.GetDialogPage(typeof(OptionsPage));
 
             // Try to find absolute paths
-            var document = GetActiveDocument();
-            var includeDirectories = GetProjectIncludeDirectories();
+            var document = Utils.GetActiveDocument();
+            var project = document.ProjectItem.ContainingProject;
+            if (project == null)
+            {
+                Output.Instance.WriteLine("The document {0} is not part of a project.", document.Name);
+                return;
+            }
+            var includeDirectories = Utils.GetProjectIncludeDirectories(project);
             includeDirectories.Insert(0, PathUtil.Normalize(document.Path) + Path.DirectorySeparatorChar);
             
             // Read.

@@ -25,7 +25,7 @@ namespace IncludeToolbox
             }
         }
 
-        public void WriteLine(string line)
+        public void Write(string text)
         {
             if (outputWindowPane == null)
             {
@@ -34,8 +34,19 @@ namespace IncludeToolbox
             if (outputWindowPane != null)
             {
                 System.Diagnostics.Debug.Assert(outputWindowPane != null);
-                outputWindowPane.OutputString(line);
+                outputWindowPane.OutputString(text);
             }
+        }
+
+        public void Write(string text, params object[] stringParams)
+        {
+            string output = string.Format(text, stringParams);
+            Write(output);
+        }
+
+        public void WriteLine(string line)
+        {
+            Write(line + '\n');
         }
 
         public void WriteLine(string line, params object[] stringParams)

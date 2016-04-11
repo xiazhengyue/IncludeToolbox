@@ -1,23 +1,7 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="IncludeFormatterPackage.cs" company="Company">
-//     Copyright (c) Company.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
-
-using System;
-using System.ComponentModel;
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using IncludeToolbox.Commands;
 using IncludeViewer;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.Win32;
 
 namespace IncludeToolbox
 {
@@ -53,10 +37,14 @@ namespace IncludeToolbox
         protected override void Initialize()
         {
             IncludeParser.Init();
-            IncludeViewerToolWindowCommand.Initialize(this);
-            FormatIncludes.Initialize(this);
+
+            Commands.IncludeViewerToolWindowCommand.Initialize(this);
+            Commands.FormatIncludes.Initialize(this);
+            Commands.IncludeWhatYouUse.Initialize(this);
+
             base.Initialize();            
         }
+
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);

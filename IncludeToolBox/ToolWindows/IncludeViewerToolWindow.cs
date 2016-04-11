@@ -76,30 +76,6 @@ namespace IncludeViewer
             }
         }
 
-        private string GetIncludeDirectories(VCCLCompilerTool compilerTool, string projectPath)
-        {
-            // Need to separate to resolve.
-            var pathStrings = new List<string>();
-            pathStrings.AddRange(compilerTool.FullIncludePath.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
-
-            for (int i = pathStrings.Count - 1; i >= 0; --i)
-            {
-                try
-                {
-                    if (!Path.IsPathRooted(pathStrings[i]))
-                    {
-                        pathStrings[i] = Path.Combine(projectPath, pathStrings[i]);
-                    }
-                    pathStrings[i] = Utils.GetExactPathName(Path.GetFullPath(pathStrings[i])) + Path.DirectorySeparatorChar;
-                }
-                catch
-                {
-                    pathStrings.RemoveAt(i);
-                }
-            }
-            return pathStrings.Aggregate("", (current, def) => current + (def + ";"));
-        }
-
         string GetPreprocessorDefinitions(VCCLCompilerTool compilerTool)
         {
             // todo
@@ -120,12 +96,18 @@ namespace IncludeViewer
 
         private void ParseIncludes(EnvDTE.Document focusedDocument/*, long callToken*/)
         {
-            var compilerTool = Utils.GetVCppCompilerTool(focusedDocument);
+            var project = focusedDocument.ProjectItem.ContainingProject;
+            if (project == null)
+            {
+                Output.Instance.WriteLine("The document {0} is not part of a project.", focusedDocument.Name);
+                return;
+            }
+
+            var compilerTool = Utils.GetVCppCompilerTool(project);
             if (compilerTool == null)
                 return;
 
-            string projectPath = Path.GetDirectoryName(Path.GetFullPath(focusedDocument.ProjectItem.ContainingProject.FileName));
-            string includeDirs = GetIncludeDirectories(compilerTool, projectPath);
+            string includeDirs = Utils.GetProjectIncludeDirectories(project).Aggregate("", (current, def) => current + (def + ";")); ;
             string preprocessorDefinitions = GetPreprocessorDefinitions(compilerTool);
 
             string processedDocument;

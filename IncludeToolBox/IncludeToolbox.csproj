@@ -54,8 +54,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Commands\CommandSet.cs" />
+    <Compile Include="Commands\MenuCommandSet.cs" />
     <Compile Include="Commands\IncludeViewerToolWindowCommand.cs" />
+    <Compile Include="Commands\IncludeWhatYouUse.cs" />
     <Compile Include="IncludeComparer.cs" />
     <Compile Include="Commands\FormatIncludes.cs" />
     <Compile Include="IncludeParser.cs" />
@@ -261,6 +262,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\include-what-you-use\include-what-you-use.exe">
+      <Link>include-what-you-use.exe</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="license.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>

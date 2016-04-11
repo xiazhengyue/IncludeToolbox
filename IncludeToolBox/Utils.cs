@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.VCProjectEngine;
 
 namespace IncludeToolbox
@@ -47,13 +48,14 @@ namespace IncludeToolbox
             }
         }
 
-        public static VCCLCompilerTool GetVCppCompilerTool(EnvDTE.Document document)
+
+
+        public static VCCLCompilerTool GetVCppCompilerTool(EnvDTE.Project project)
         {
-            var project = document.ProjectItem.ContainingProject;
-            VCProject vcProject = project.Object as VCProject;
+            VCProject vcProject = project?.Object as VCProject;
             if (vcProject == null)
             {
-                Output.Instance.WriteLine("Cannot find VC++ Project for document '{0}'", document.Name);
+                Output.Instance.WriteLine("Given Project is not a VCProject.");
                 return null;
             }
             VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
@@ -74,5 +76,44 @@ namespace IncludeToolbox
 
             return compilerTool;
         }
+
+        public static EnvDTE.Document GetActiveDocument()
+        {
+            EnvDTE.DTE dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
+            if (dte == null)
+                return null;
+
+            return dte.ActiveDocument;
+        }
+        public static List<string> GetProjectIncludeDirectories(EnvDTE.Project project, bool endWithSeparator = true)
+        {
+            VCCLCompilerTool compilerTool = GetVCppCompilerTool(project);
+            string projectPath = Path.GetDirectoryName(Path.GetFullPath(project.FileName));
+
+            // According to documentation FullIncludePath has resolved macros.
+            List<string> pathStrings = new List<string>();
+            pathStrings.AddRange(compilerTool.FullIncludePath.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
+
+            for (int i = pathStrings.Count - 1; i >= 0; --i)
+            {
+                try
+                {
+                    if (!Path.IsPathRooted(pathStrings[i]))
+                    {
+                        pathStrings[i] = Path.Combine(projectPath, pathStrings[i]);
+                    }
+                    pathStrings[i] = Utils.GetExactPathName(Path.GetFullPath(pathStrings[i]));
+
+                    if (endWithSeparator)
+                        pathStrings[i] += Path.DirectorySeparatorChar;
+                }
+                catch
+                {
+                    pathStrings.RemoveAt(i);
+                }
+            }
+            return pathStrings;
+        }
+
     }
 }

@@ -39,6 +39,9 @@
       <Group guid="guidIncludeFormatterCmdSet" id="EditMenuGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN" />
       </Group>
+      <Group guid="guidIncludeViewerToolWindowPackageCmdSet" id="ToolMenuGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
+      </Group>
     </Groups>
 
     <!--Buttons section. -->
@@ -60,25 +63,23 @@
           <ButtonText>Format Selected Includes</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidIncludeFormatterCmdSet" id="PurgeIncludesId" priority="0x0100" type="Button">
+      <Button guid="guidIncludeFormatterCmdSet" id="cmdidIncludeWhatYouUse" priority="0x0101" type="Button">
         <Parent guid="guidIncludeFormatterCmdSet" id="EditMenuGroup" />
         <Icon guid="guidImages" id="toolIcon" />
         <Strings>
-          <ButtonText>Purge Unnecessary Includes</ButtonText>
+          <ButtonText>Run Include-What-You-Use</ButtonText>
         </Strings>
-
-        <!-- not ready yet, inactive for now-->
-        <CommandFlag>DefaultInvisible</CommandFlag>
       </Button>
 
       <Button guid="guidIncludeViewerToolWindowPackageCmdSet" id="IncludeViewerToolWindowCommandId" priority="0x0100" type="Button">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
         <Icon guid="guidImages" id="toolIcon" />
         <Strings>
           <ButtonText>IncludeViewerToolWindow</ButtonText>
         </Strings>
       </Button>
       
+
     </Buttons>
 
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
@@ -100,15 +101,16 @@
       <IDSymbol name="EditMenuGroup" value="0x1020" />
       <IDSymbol name="FormatIncludesId" value="0x0100" />
       <IDSymbol name="PurgeIncludesId" value="0x0101" />
+      <IDSymbol name="cmdidIncludeWhatYouUse" value="0x0103" />
     </GuidSymbol>
 
     <GuidSymbol name="guidIncludeViewerToolWindowPackageCmdSet" value="{032eb795-1f1c-440d-af98-43cdc1de7a8b}">
+      <IDSymbol value="4128" name="ToolMenuGroup" />
       <IDSymbol name="IncludeViewerToolWindowCommandId" value="0x0102" />
     </GuidSymbol>
     
     <GuidSymbol name="guidImages" value="{dd14909e-b406-4cfa-b492-08b8127679df}">
       <IDSymbol name="toolIcon" value="1" />
     </GuidSymbol>
-
   </Symbols>
 </CommandTable>
