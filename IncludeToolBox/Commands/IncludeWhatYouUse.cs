@@ -99,6 +99,14 @@ namespace IncludeToolbox.Commands
             if (compilerTool == null)
                 return;
 
+            var dialogFactory = ServiceProvider.GetService(typeof(SVsThreadedWaitDialogFactory)) as IVsThreadedWaitDialogFactory;
+            IVsThreadedWaitDialog2 dialog = null;
+            if (dialogFactory != null)
+            {
+                dialogFactory.CreateInstance(out dialog);
+            }
+            dialog?.StartWaitDialog("Include Toolbox", "Running Include-What-You-Use", null, null, "Running Include-What-You-Use", 0, false, true);
+
             using (var process = new System.Diagnostics.Process())
             {
                 process.StartInfo.UseShellExecute = false;
@@ -141,6 +149,8 @@ namespace IncludeToolbox.Commands
                 process.CancelOutputRead();
                 process.CancelErrorRead();
             }
+
+            dialog?.EndWaitDialog();
         }
     }
 }
