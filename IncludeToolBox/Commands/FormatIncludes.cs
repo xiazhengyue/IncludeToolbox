@@ -116,9 +116,9 @@ namespace IncludeToolbox.Commands
             return new SnapshotSpan(start, end);
         }
 
-        private void FormatPaths(OptionsPage.PathMode pathformat, bool ignoreFileRelative, IncludeLineInfo[] lines, List<string> includeDirectories)
+        private void FormatPaths(FormatterOptionsPage.PathMode pathformat, bool ignoreFileRelative, IncludeLineInfo[] lines, List<string> includeDirectories)
         {
-            if (pathformat == OptionsPage.PathMode.Unchanged)
+            if (pathformat == FormatterOptionsPage.PathMode.Unchanged)
                 return;
 
             foreach (var line in lines)
@@ -136,7 +136,7 @@ namespace IncludeToolbox.Commands
 
                         if (proposal.Length < bestLength)
                         {
-                            if (pathformat == OptionsPage.PathMode.Shortest || (proposal.IndexOf("../") < 0 && proposal.IndexOf("..\\") < 0))
+                            if (pathformat == FormatterOptionsPage.PathMode.Shortest || (proposal.IndexOf("../") < 0 && proposal.IndexOf("..\\") < 0))
                             {
                                 bestCandidate = proposal;
                                 bestLength = proposal.Length;
@@ -161,7 +161,7 @@ namespace IncludeToolbox.Commands
         /// <param name="e">Event args.</param>
         private void MenuItemCallback(object sender, EventArgs e)
         {
-            var settings = (OptionsPage)package.GetDialogPage(typeof(OptionsPage));
+            var settings = (FormatterOptionsPage)package.GetDialogPage(typeof(FormatterOptionsPage));
 
             // Try to find absolute paths
             var document = Utils.GetActiveDocument();
@@ -185,22 +185,22 @@ namespace IncludeToolbox.Commands
             // Format.
             switch (settings.DelimiterFormatting)
             {
-                case OptionsPage.DelimiterMode.AngleBrackets:
+                case FormatterOptionsPage.DelimiterMode.AngleBrackets:
                     foreach (var line in lines)   
                         line.SetLineType(IncludeLineInfo.Type.AngleBrackets);
                     break;
-                case OptionsPage.DelimiterMode.Quotes:
+                case FormatterOptionsPage.DelimiterMode.Quotes:
                     foreach (var line in lines)
                         line.SetLineType(IncludeLineInfo.Type.Quotes);
                     break;
             }
             switch (settings.SlashFormatting)
             {
-                case OptionsPage.SlashMode.ForwardSlash:
+                case FormatterOptionsPage.SlashMode.ForwardSlash:
                     foreach (var line in lines)
                         line.IncludeContent = line.IncludeContent.Replace('\\', '/');
                     break;
-                case OptionsPage.SlashMode.BackSlash:
+                case FormatterOptionsPage.SlashMode.BackSlash:
                     foreach (var line in lines)
                         line.IncludeContent = line.IncludeContent.Replace('/', '\\');
                     break;

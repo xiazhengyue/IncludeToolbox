@@ -83,6 +83,8 @@ namespace IncludeToolbox.Commands
         /// <param name="e">Event args.</param>
         private void MenuItemCallback(object sender, EventArgs e)
         {
+            var settings = (IncludeWhatYouUseOptionsPage)package.GetDialogPage(typeof(IncludeWhatYouUseOptionsPage));
+
             var document = Utils.GetActiveDocument();
             if (document == null)
             {
@@ -126,8 +128,29 @@ namespace IncludeToolbox.Commands
                 // Clang options
                 process.StartInfo.Arguments += "-w -x c++ -std=c++14 -fcxx-exceptions -fexceptions -fms-compatibility -fms-extensions -fmsc-version=1900 -Wno-invalid-token-paste "; // todo fmsc-version!
                 // icwyu options
-                process.StartInfo.Arguments += "-Xiwyu --verbose=1 -Xiwyu --transitive_includes_only "; // todo: Espose stuff.
-
+                {
+                    process.StartInfo.Arguments += "-Xiwyu --verbose=" + settings.LogVerbosity + " ";
+                    for (int i = 0; i < settings.MappingFiles.Length; ++i)
+                        process.StartInfo.Arguments += "-Xiwyu --mapping_file=" + settings.MappingFiles[i] + " ";
+                    if (settings.NoDefaultMappings)
+                        process.StartInfo.Arguments += "-Xiwyu --no_default_mappings ";
+                    if (settings.PCHInCode)
+                        process.StartInfo.Arguments += "-Xiwyu --pch_in_code ";
+                    switch (settings.PrefixHeaderIncludes)
+                    {
+                        case IncludeWhatYouUseOptionsPage.PrefixHeaderMode.Add:
+                            process.StartInfo.Arguments += "-Xiwyu --prefix_header_includes=add ";
+                            break;
+                        case IncludeWhatYouUseOptionsPage.PrefixHeaderMode.Remove:
+                            process.StartInfo.Arguments += "-Xiwyu --prefix_header_includes=remove ";
+                            break;
+                        case IncludeWhatYouUseOptionsPage.PrefixHeaderMode.Keep:
+                            process.StartInfo.Arguments += "-Xiwyu --prefix_header_includes=keep ";
+                            break;
+                    }
+                    if (settings.TransitiveIncludesOnly)
+                        process.StartInfo.Arguments += "-Xiwyu --transitive_includes_only ";
+                }
                 
 
                 // Finally, the file itself.

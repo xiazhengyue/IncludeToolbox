@@ -13,10 +13,9 @@ namespace IncludeToolbox
     /// Settings are automatically persisted, since this class is registered with ProvideProfile at the package.
     /// </summary>
     [Guid("B822F53B-32C0-4560-9A84-2F9DA7AB0E4C")]
-    public class OptionsPage : DialogPage
+    public class FormatterOptionsPage : DialogPage
     {
-        public const string Category = "Include Formatter";
-        public const string SubCategory = "General";
+        public const string SubCategory = "Include Formatter";
         private const string collectionName = "IncludeFormatter";
 
         #region Path

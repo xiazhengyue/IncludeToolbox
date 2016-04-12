@@ -62,11 +62,15 @@
     <Compile Include="IncludeParser.cs" />
     <Compile Include="IncludeToolboxPackage.cs" />
     <Compile Include="IncludeLineInfo.cs" />
+    <Compile Include="Options\Constants.cs" />
+    <Compile Include="Options\IncludeWhatYouUseOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ToolWindows\IncludeViewerToolWindow.cs" />
     <Compile Include="ToolWindows\IncludeViewerToolWindowControl.xaml.cs">
       <DependentUpon>IncludeViewerToolWindowControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Options\OptionsPage.cs">
+    <Compile Include="Options\FormatterOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Output.cs" />

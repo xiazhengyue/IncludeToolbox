@@ -7,8 +7,12 @@ namespace IncludeToolbox
 {
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideOptionPage(typeof(OptionsPage), OptionsPage.Category, OptionsPage.SubCategory, 1000, 1001, true)]
-    [ProvideProfile(typeof(OptionsPage), OptionsPage.Category, OptionsPage.SubCategory, 1000, 1001, true)]
+    [ProvideOptionPage(typeof(FormatterOptionsPage), Options.Constants.Category, FormatterOptionsPage.SubCategory, 1000, 1001, true)]
+    [ProvideProfile(typeof(FormatterOptionsPage), Options.Constants.Category, FormatterOptionsPage.SubCategory, 1000, 1001, true)]
+
+    [ProvideOptionPage(typeof(IncludeWhatYouUseOptionsPage), Options.Constants.Category, IncludeWhatYouUseOptionsPage.SubCategory, 1000, 1002, true)]
+    [ProvideProfile(typeof(IncludeWhatYouUseOptionsPage), Options.Constants.Category, IncludeWhatYouUseOptionsPage.SubCategory, 1000, 1002, true)]
+
     [ProvideToolWindow(typeof(IncludeViewerToolWindow))]
     [Guid(IncludeToolboxPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
