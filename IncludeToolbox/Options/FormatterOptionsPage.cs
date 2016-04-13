@@ -88,7 +88,7 @@ namespace IncludeToolbox
         #endregion
 
         // In theory the whole save/load mechanism should be done automatically.
-        // Bute *something* is broken there.
+        // But *something* is broken there.
         // see http://stackoverflow.com/questions/32751040/store-array-in-options-using-dialogpage
 
 

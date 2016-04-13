@@ -44,5 +44,5 @@ extern "C"
 	//		C:/blub/File2.h
 	//	C:/blab/included1.h
 	extern INCLUDEPARSER_API Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDirectories, const char* preprocessorDefinitions, 
-															StringHandle* outProcessedInputFile, StringHandle* outIncludeTree);
+															StringHandle* outProcessedInputFile, StringHandle* outIncludeTree, StringHandle* outLog);
 }

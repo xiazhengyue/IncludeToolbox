@@ -179,10 +179,56 @@ namespace
 		ezDynamicArray<ezString> fileStack;
 		ezStringBuilder* outIncludeTreeString;
 	};
+
+	void LogMessageHandler(const ezLoggingEventData& eventData, ezStringBuilder& output)
+	{
+		if (eventData.m_EventType == ezLogMsgType::BeginGroup)
+			output.Append("\n");
+
+		for (ezUInt32 i = 0; i < eventData.m_uiIndentation; ++i)
+			output.Append(" ");
+
+		switch (eventData.m_EventType)
+		{
+		case ezLogMsgType::BeginGroup:
+			output.AppendFormat("+++++ %s (%s) +++++\n", eventData.m_szText, eventData.m_szTag);
+			break;
+		case ezLogMsgType::EndGroup:
+			output.AppendFormat("----- %s -----\n\n", eventData.m_szText);
+			break;
+		case ezLogMsgType::ErrorMsg:
+			output.AppendFormat("Error: %s\n", eventData.m_szText);
+			break;
+		case ezLogMsgType::SeriousWarningMsg:
+			output.AppendFormat("Seriously: %s\n", eventData.m_szText);
+			break;
+		case ezLogMsgType::WarningMsg:
+			output.AppendFormat("Warning: %s\n", eventData.m_szText);
+			break;
+		case ezLogMsgType::SuccessMsg:
+			output.AppendFormat("%s\n", eventData.m_szText);
+			break;
+		case ezLogMsgType::InfoMsg:
+			output.AppendFormat("%s\n", eventData.m_szText);
+			break;
+		case ezLogMsgType::DevMsg:
+			output.AppendFormat("%s\n", eventData.m_szText);
+			break;
+		case ezLogMsgType::DebugMsg:
+			output.AppendFormat("%s\n", eventData.m_szText);
+			break;
+		default:
+			output.AppendFormat("%s\n", eventData.m_szText);
+
+			ezLog::Warning("Unknown Message Type %d", eventData.m_EventType);
+			break;
+		}
+	}
+
 }
 
 Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDirectories, const char* preprocessorDefinitions,
-								StringHandle* outProcessedInputFile, StringHandle* outIncludeTree)
+								StringHandle* outProcessedInputFile, StringHandle* outIncludeTree, StringHandle* outLog)
 {
 	//std::unique_ptr<ezThreadLocalPointerTable> threadLocalPointerTable;
 	//if(!ezThreadLocalStorage::GetPerThreadPointerTable())
@@ -214,6 +260,11 @@ Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDir
 	});
 
 	// Setup logging.
+	ezStringBuilder* outLogString;
+	*outLog = StringStorage::GetNewHandle(outLogString);
+	*outLogString = "";
+	ezGlobalLog::AddLogWriter([outLogString](const ezLoggingEventData& eventData) { LogMessageHandler(eventData, *outLogString); });
+	// Preprocessor logging.
 	Result result = RESULT_SUCCESS;
 	preprocessor.m_ProcessingEvents.AddEventHandler([&result](const ezPreprocessor::ProcessingEvent& event)
 	{
@@ -223,15 +274,13 @@ Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDir
 			result = RESULT_FAILURE;
 		}
 	});
-#ifdef _DEBUG
 	preprocessor.SetLogInterface(ezLog::GetDefaultLogSystem());
-#endif
-	// todo (?): Output the log to the user?
 
 	// Process.
 	ezStringBuilder* processedFile;
 	*outProcessedInputFile = StringStorage::GetNewHandle(processedFile);
 	preprocessor.Process(inputFilename, *processedFile);
+
 
 	return result;
 }

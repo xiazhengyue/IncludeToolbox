@@ -34,14 +34,16 @@ namespace IncludeToolbox
         {
             IncludeTreeItem outTree = new IncludeTreeItem(inputFilename);
 
-            StringHandle processedInputFileHandle, includeTreeHandle;
+            StringHandle processedInputFileHandle, includeTreeHandle, log;
             {
                 byte[] inputFilenameUtf8 = Encoding.UTF8.GetBytes(inputFilename);
                 byte[] includeDirectoriesUtf8 = Encoding.UTF8.GetBytes(includeDirectories);
                 byte[] preprocessorDefinitionsUtf8 = Encoding.UTF8.GetBytes(preprocessorDefinitions);
 
                 Result r = ParseIncludes(inputFilenameUtf8, includeDirectoriesUtf8, preprocessorDefinitionsUtf8,
-                    out processedInputFileHandle, out includeTreeHandle);
+                    out processedInputFileHandle, out includeTreeHandle, out log);
+
+                Output.Instance.Write(log.ResolveString());
 
                 if (r != Result.Success)
                 {
@@ -109,7 +111,7 @@ namespace IncludeToolbox
 
         [DllImport("IncludeParser.dll")]
         private static extern Result ParseIncludes(byte[] inputFilename, byte[] includeDirectories, byte[] preprocessorDefinitions, 
-                                                    out StringHandle outProcessedInputFile, out StringHandle outIncludeTree);
+                                                    out StringHandle outProcessedInputFile, out StringHandle outIncludeTree, out StringHandle outLog);
 
         #endregion
     }
