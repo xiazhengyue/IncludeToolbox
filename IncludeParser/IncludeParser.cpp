@@ -182,17 +182,17 @@ namespace
 
 	void LogMessageHandler(const ezLoggingEventData& eventData, ezStringBuilder& output)
 	{
-		if (eventData.m_EventType == ezLogMsgType::BeginGroup)
-			output.Append("\n");
+		//if (eventData.m_EventType == ezLogMsgType::BeginGroup)
+		//	output.Append("\n");
 
 		for (ezUInt32 i = 0; i < eventData.m_uiIndentation; ++i)
 			output.Append(" ");
 
 		switch (eventData.m_EventType)
 		{
-		case ezLogMsgType::BeginGroup:
-			output.AppendFormat("+++++ %s (%s) +++++\n", eventData.m_szText, eventData.m_szTag);
-			break;
+		//case ezLogMsgType::BeginGroup:
+		//	output.AppendFormat("+++++ %s (%s) +++++\n", eventData.m_szText, eventData.m_szTag);
+		//	break;
 		case ezLogMsgType::EndGroup:
 			output.AppendFormat("----- %s -----\n\n", eventData.m_szText);
 			break;
@@ -202,26 +202,21 @@ namespace
 		case ezLogMsgType::SeriousWarningMsg:
 			output.AppendFormat("Seriously: %s\n", eventData.m_szText);
 			break;
-		case ezLogMsgType::WarningMsg:
-			output.AppendFormat("Warning: %s\n", eventData.m_szText);
-			break;
-		case ezLogMsgType::SuccessMsg:
-			output.AppendFormat("%s\n", eventData.m_szText);
-			break;
-		case ezLogMsgType::InfoMsg:
-			output.AppendFormat("%s\n", eventData.m_szText);
-			break;
-		case ezLogMsgType::DevMsg:
-			output.AppendFormat("%s\n", eventData.m_szText);
-			break;
-		case ezLogMsgType::DebugMsg:
-			output.AppendFormat("%s\n", eventData.m_szText);
-			break;
-		default:
-			output.AppendFormat("%s\n", eventData.m_szText);
-
-			ezLog::Warning("Unknown Message Type %d", eventData.m_EventType);
-			break;
+		//case ezLogMsgType::WarningMsg:
+		//	output.AppendFormat("Warning: %s\n", eventData.m_szText);
+		//	break;
+		//case ezLogMsgType::SuccessMsg:
+		//	output.AppendFormat("%s\n", eventData.m_szText);
+		//	break;
+		//case ezLogMsgType::InfoMsg:
+		//	output.AppendFormat("%s\n", eventData.m_szText);
+		//	break;
+		//case ezLogMsgType::DevMsg:
+		//	output.AppendFormat("%s\n", eventData.m_szText);
+		//	break;
+		//case ezLogMsgType::DebugMsg:
+		//	output.AppendFormat("%s\n", eventData.m_szText);
+		//	break;
 		}
 	}
 
