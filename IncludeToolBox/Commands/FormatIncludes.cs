@@ -80,30 +80,6 @@ namespace IncludeToolbox.Commands
             Instance = new FormatIncludes(package);
         }
 
-        private IWpfTextViewHost GetCurrentViewHost()
-        {
-            var textManager = this.ServiceProvider.GetService(typeof(SVsTextManager)) as IVsTextManager;
-
-            IVsTextView textView = null;
-            int mustHaveFocus = 1;
-            textManager.GetActiveView(mustHaveFocus, null, out textView);
-
-            var userData = textView as IVsUserData;
-            if (userData == null)
-            {
-                return null;
-            }
-            else
-            {
-                Guid guidViewHost = DefGuidList.guidIWpfTextViewHost;
-                object holder;
-                userData.GetData(ref guidViewHost, out holder);
-                var viewHost = (IWpfTextViewHost)holder;
-
-                return viewHost;
-            }
-        }
-
         /// <summary>
         /// Returns process selection range - whole lines!
         /// </summary>
@@ -175,7 +151,7 @@ namespace IncludeToolbox.Commands
             includeDirectories.Insert(0, PathUtil.Normalize(document.Path) + Path.DirectorySeparatorChar);
             
             // Read.
-            var viewHost = GetCurrentViewHost();
+            var viewHost = Utils.GetCurrentViewHost();
             var selectionSpan = GetSelectionSpan(viewHost);
             var lines = IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), settings.RemoveEmptyLines, includeDirectories);
 

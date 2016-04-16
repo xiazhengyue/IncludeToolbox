@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
 using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace IncludeToolbox.Commands
 {
@@ -73,42 +77,192 @@ namespace IncludeToolbox.Commands
         {
             Instance = new IncludeWhatYouUse(package);
         }
-       
-        /// <summary>
-        /// This function is the callback used to execute the command when the menu item is clicked.
-        /// See the constructor to see how the menu item is associated with this function using
-        /// OleMenuCommandService service and MenuCommand class.
-        /// </summary>
-        /// <param name="sender">Event sender.</param>
-        /// <param name="e">Event args.</param>
-        private void MenuItemCallback(object sender, EventArgs e)
-        {
-            var settings = (IncludeWhatYouUseOptionsPage)package.GetDialogPage(typeof(IncludeWhatYouUseOptionsPage));
 
-            var document = Utils.GetActiveDocument();
-            if (document == null)
+        class FormatTask
+        {
+            public override string ToString()
             {
-                Output.Instance.WriteLine("No active document!");
-                return;
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.Append("Remove:\n");
+                foreach(int i in linesToRemove)
+                    stringBuilder.AppendFormat("{0},", i);
+                stringBuilder.Append("\nAdd:\n");
+                foreach (string s in linesToAdd)
+                    stringBuilder.AppendFormat("{0}\n", s);
+                return stringBuilder.ToString();
             }
-            var project = document.ProjectItem.ContainingProject;
-            if (project == null)
+
+            public HashSet<int> linesToRemove = new HashSet<int>();
+            public List<string> linesToAdd = new List<string>();
+        };
+
+
+        private Dictionary<string, FormatTask> ParseOutput(string output)
+        {
+            Dictionary<string, FormatTask> fileTasks = new Dictionary<string, FormatTask>();
+            FormatTask currentTask = null;
+            bool removeCommands = true;
+
+            var removeRegex = new Regex(@"^-\s+#include\s*[""<](.+)["">]\s+\/\/ lines (\d+)-(\d+)$");
+            var addlineRegex = new Regex(@"(#include\s*[""<].+["">])|(^class.+;$)|(^struct.+;$)");
+            //- #include <Core/Basics.h>  // lines 3-3
+
+            // Parse what to do.
+            var lines = Regex.Split(output, "\r\n|\r|\n");
+            bool lastLineWasEmpty = false;
+            foreach (string line in lines)
             {
-                Output.Instance.WriteLine("The document {0} is not part of a project.", document.Name);
-                return;
+                if (line.Length == 0)
+                {
+                    if (lastLineWasEmpty)
+                    {
+                        currentTask = null;
+                    }
+
+                    lastLineWasEmpty = true;
+                    continue;
+                }
+                lastLineWasEmpty = false;
+
+                int i = line.IndexOf(" should add these lines:");
+                if (i < 0)
+                {
+                    i = line.IndexOf(" should remove these lines:");
+                    if (i >= 0)
+                        removeCommands = true;
+                }
+                else
+                {
+                    removeCommands = false;
+                }
+
+                if (i >= 0)
+                {
+                    string file = line.Substring(0, i);
+
+                    if (!fileTasks.TryGetValue(file, out currentTask))
+                    {
+                        currentTask = new FormatTask();
+                        fileTasks.Add(file, currentTask);
+                    }
+                }
+                else if (currentTask != null)
+                {
+                    if (removeCommands)
+                    {
+                        var match = removeRegex.Match(line);
+                        if (match.Success)
+                        {
+                            int removeStart, removeEnd;
+                            if (int.TryParse(match.Groups[2].Value, out removeStart) &&
+                                int.TryParse(match.Groups[3].Value, out removeEnd))
+                            {
+                                for (int lineIdx = removeStart; lineIdx <= removeEnd; ++lineIdx)
+                                    currentTask.linesToRemove.Add(lineIdx);
+                            }
+                        }
+                        else if (lastLineWasEmpty)
+                        {
+                            currentTask = null;
+                        }
+                    }
+                    else
+                    {
+                        var match = addlineRegex.Match(line);
+                        if (match.Success)
+                        {
+                            currentTask.linesToAdd.Add(line);
+                        }
+                        else if (lastLineWasEmpty)
+                        {
+                            currentTask = null;
+                        }
+                    }
+                }
+
             }
+
+            return fileTasks;
+        }
+
+        void ApplyTasks(Dictionary<string, FormatTask> tasks)
+        {
+            EnvDTE.DTE dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
+            var textManager = this.ServiceProvider.GetService(typeof(SVsTextManager)) as IVsTextManager;
+
+            foreach (KeyValuePair<string, FormatTask> entry in tasks)
+            {
+                string filename = entry.Key.Replace('/', '\\'); // Classy. But Necessary.
+                EnvDTE.Window fileWindow = dte.ItemOperations.OpenFile(filename);
+                if (fileWindow == null)
+                {
+                    Output.Instance.ErrorMsg("Failed to open File {0}", filename);
+                    continue;
+                }
+                fileWindow.Activate();
+
+                var viewHost = Utils.GetCurrentViewHost();                
+                using (var edit = viewHost.TextView.TextBuffer.CreateEdit())
+                {
+                    var originalLines = edit.Snapshot.Lines.ToArray();
+
+                    // Add lines.
+                    {
+                        // Find last include.
+                        // Will find even if commented out, but we don't care.
+                        int lastIncludeLine = -1;
+                        for(int line=originalLines.Length - 1; line>=0; --line)
+                        {
+                            if (originalLines[line].GetText().Contains("#include"))
+                            {
+                                lastIncludeLine = line;
+                                break;
+                            }
+                        }
+
+                        // Insert lines.
+                        int insertPosition = 0;
+                        if (lastIncludeLine >= 0 && lastIncludeLine < originalLines.Length)
+                        {
+                            insertPosition = originalLines[lastIncludeLine].EndIncludingLineBreak;
+                        }
+                        StringBuilder stringToInsert = new StringBuilder();
+                        
+                        foreach (string lineToAdd in entry.Value.linesToAdd)
+                        {
+                            stringToInsert.Clear();
+                            stringToInsert.Append(lineToAdd);
+                            stringToInsert.Append("\n"); // todo: Consistent new lines?
+                            edit.Insert(insertPosition, stringToInsert.ToString());
+                        }
+                    }
+
+                    // Remove lines.
+                    // It should safe to do that last since we added includes at the bottom, this way there is no confusion with the text snapshot.
+                    {
+                        foreach (int lineToRemove in entry.Value.linesToRemove.Reverse())
+                        {
+                            edit.Delete(originalLines[lineToRemove].ExtentIncludingLineBreak);
+                        }
+                    }
+
+                    edit.Apply();
+                }
+
+                // For Debugging:
+                //Output.Instance.WriteLine("");
+                //Output.Instance.WriteLine(entry.Key);
+                //Output.Instance.WriteLine(entry.Value.ToString());
+            }
+        }
+
+        private string RunIncludeWhatYouUse(string fullFileName, EnvDTE.Project project, IncludeWhatYouUseOptionsPage settings)
+        {
             var compilerTool = Utils.GetVCppCompilerTool(project);
             if (compilerTool == null)
-                return;
+                return "";
 
-            var dialogFactory = ServiceProvider.GetService(typeof(SVsThreadedWaitDialogFactory)) as IVsThreadedWaitDialogFactory;
-            IVsThreadedWaitDialog2 dialog = null;
-            if (dialogFactory != null)
-            {
-                dialogFactory.CreateInstance(out dialog);
-            }
-            dialog?.StartWaitDialog("Include Toolbox", "Running Include-What-You-Use", null, null, "Running Include-What-You-Use", 0, false, true);
-
+            string output = "";
             using (var process = new System.Diagnostics.Process())
             {
                 process.StartInfo.UseShellExecute = false;
@@ -121,7 +275,8 @@ namespace IncludeToolbox.Commands
                 // Includes and Preprocessor.
                 var includeEntries = Utils.GetProjectIncludeDirectories(project, false);
                 process.StartInfo.Arguments = includeEntries.Aggregate("", (current, inc) => current + ("-I \"" + inc + "\" "));
-                process.StartInfo.Arguments = compilerTool.PreprocessorDefinitions.Split(new char[] {';'}, StringSplitOptions.RemoveEmptyEntries).
+                process.StartInfo.Arguments = compilerTool.PreprocessorDefinitions.
+                    Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).
                     Aggregate(process.StartInfo.Arguments, (current, def) => current + ("-D" + def + " "));
                 process.StartInfo.Arguments += " -DM_X64 -DM_AMD64 ";// TODO!!!
 
@@ -151,19 +306,27 @@ namespace IncludeToolbox.Commands
                     if (settings.TransitiveIncludesOnly)
                         process.StartInfo.Arguments += "-Xiwyu --transitive_includes_only ";
                 }
-                
+
 
                 // Finally, the file itself.
                 process.StartInfo.Arguments += "\"";
-                process.StartInfo.Arguments += document.FullName;
+                process.StartInfo.Arguments += fullFileName;
                 process.StartInfo.Arguments += "\"";
 
                 Output.Instance.Write("Running command '{0}' with following arguments:\n{1}\n\n", process.StartInfo.FileName, process.StartInfo.Arguments);
 
                 // Start the child process.
                 process.EnableRaisingEvents = true;
-                process.OutputDataReceived += (s, args) => Output.Instance.WriteLine(args.Data);
-                process.ErrorDataReceived += (s, args) => Output.Instance.WriteLine(args.Data);
+                process.OutputDataReceived += (s, args) =>
+                {
+                    Output.Instance.WriteLine(args.Data);
+                    output += args.Data + "\n";
+                };
+                process.ErrorDataReceived += (s, args) =>
+                {
+                    Output.Instance.WriteLine(args.Data);
+                    output += args.Data + "\n";
+                };
                 process.Start();
 
                 process.BeginOutputReadLine();
@@ -171,6 +334,54 @@ namespace IncludeToolbox.Commands
                 process.WaitForExit();
                 process.CancelOutputRead();
                 process.CancelErrorRead();
+            }
+
+            return output;
+        }
+
+
+        /// <summary>
+        /// This function is the callback used to execute the command when the menu item is clicked.
+        /// See the constructor to see how the menu item is associated with this function using
+        /// OleMenuCommandService service and MenuCommand class.
+        /// </summary>
+        /// <param name="sender">Event sender.</param>
+        /// <param name="e">Event args.</param>
+        private void MenuItemCallback(object sender, EventArgs e)
+        {
+            var settings = (IncludeWhatYouUseOptionsPage)package.GetDialogPage(typeof(IncludeWhatYouUseOptionsPage));
+            Output.Instance.Clear();
+
+            var document = Utils.GetActiveDocument();
+            if (document == null)
+            {
+                Output.Instance.WriteLine("No active document!");
+                return;
+            }
+            var project = document.ProjectItem.ContainingProject;
+            if (project == null)
+            {
+                Output.Instance.WriteLine("The document {0} is not part of a project.", document.Name);
+                return;
+            }
+
+            // Save all documents.
+            document.DTE.Documents.SaveAll();
+
+            // Start wait dialog.
+            var dialogFactory = ServiceProvider.GetService(typeof(SVsThreadedWaitDialogFactory)) as IVsThreadedWaitDialogFactory;
+            IVsThreadedWaitDialog2 dialog = null;
+            if (dialogFactory != null)
+            {
+                dialogFactory.CreateInstance(out dialog);
+            }
+            dialog?.StartWaitDialog("Include Toolbox", "Running Include-What-You-Use", null, null, "Running Include-What-You-Use", 0, false, true);
+
+            string output = RunIncludeWhatYouUse(document.FullName, project, settings);
+            if (settings.ApplyProposal)
+            {
+                var tasks = ParseOutput(output);
+                ApplyTasks(tasks);
             }
 
             dialog?.EndWaitDialog();

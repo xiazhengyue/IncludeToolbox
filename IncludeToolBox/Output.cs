@@ -25,6 +25,15 @@ namespace IncludeToolbox
             }
         }
 
+        public void Clear()
+        {
+            if (outputWindowPane == null)
+            {
+                Init();
+            }
+            outputWindowPane.Clear();
+        }
+
         public void Write(string text)
         {
             if (outputWindowPane == null)

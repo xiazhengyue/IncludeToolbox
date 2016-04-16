@@ -18,6 +18,8 @@ namespace IncludeToolbox
         public const string SubCategory = "Include-What-You-Use";
         private const string collectionName = "IncludeFormatter";
 
+        #region iwyu
+
         [Category("iwyu options")]
         [DisplayName("Log Verbosity")]
         [Description("The higher the level, the more output. A level lower 1 might disable automatic include replacing (--verbose)")]
@@ -54,9 +56,26 @@ namespace IncludeToolbox
         [Description("Do not suggest that a file add foo.h unless foo.h is already visible in the file's transitive includes. (--transitive_includes_only)")]
         public bool TransitiveIncludesOnly { get; set; } = true;
 
+        #endregion
+
+        #region postprocessing
+
+        [Category("Post Processing")]
+        [DisplayName("Apply Proposal")]
+        [Description("Applies iwyu's proposal directly to all files. Reqiures at least Log Verbosity of 1.")]
+        public bool ApplyProposal { get; set; } = true;
+
+        // Not implemented yet.
+      //  [Category("Post Processing")]
+      //  [DisplayName("Run Include Formatter on Changes")]
+      //  [Description("Runs the Include Formatter on all changes.")]
+        private bool RunIncludeFormatter { get; set; } = true;
+
+
+        #endregion
 
         // In theory the whole save/load mechanism should be done automatically.
-        // Bute *something* is broken there.
+        // But *something* is broken there.
         // see http://stackoverflow.com/questions/32751040/store-array-in-options-using-dialogpage
 
 
@@ -82,6 +101,9 @@ namespace IncludeToolbox
             settingsStore.SetBoolean(collectionName, nameof(PCHInCode), PCHInCode);
             settingsStore.SetInt32(collectionName, nameof(PrefixHeaderIncludes), (int)PrefixHeaderIncludes);
             settingsStore.SetBoolean(collectionName, nameof(TransitiveIncludesOnly), TransitiveIncludesOnly);
+
+            settingsStore.SetBoolean(collectionName, nameof(ApplyProposal), ApplyProposal);
+            settingsStore.SetBoolean(collectionName, nameof(RunIncludeFormatter), RunIncludeFormatter);
         }
 
         public override void LoadSettingsFromStorage()
@@ -103,6 +125,11 @@ namespace IncludeToolbox
                 PrefixHeaderIncludes = (PrefixHeaderMode)settingsStore.GetInt32(collectionName, nameof(PrefixHeaderIncludes));
             if (settingsStore.PropertyExists(collectionName, nameof(TransitiveIncludesOnly)))
                 TransitiveIncludesOnly = settingsStore.GetBoolean(collectionName, nameof(TransitiveIncludesOnly));
+
+            if (settingsStore.PropertyExists(collectionName, nameof(ApplyProposal)))
+                ApplyProposal = settingsStore.GetBoolean(collectionName, nameof(ApplyProposal));
+            if (settingsStore.PropertyExists(collectionName, nameof(RunIncludeFormatter)))
+                RunIncludeFormatter = settingsStore.GetBoolean(collectionName, nameof(RunIncludeFormatter));
         }
     }
 }

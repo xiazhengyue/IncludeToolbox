@@ -2,19 +2,20 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.VCProjectEngine;
 
 namespace IncludeToolbox
 {
-    static class Utils
+    internal static class Utils
     {
         public static string NormalizePath(string path)
         {
             return Path.GetFullPath(new Uri(path).LocalPath)
-                       .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         }
 
         public static string MakeRelative(string absoluteRoot, string absoluteTarget)
@@ -43,7 +44,8 @@ namespace IncludeToolbox
                     GetExactPathName(di.Parent.FullName),
                     di.Parent.GetFileSystemInfos(di.Name)[0].Name);
             }
-            else {
+            else
+            {
                 return di.Name.ToUpper();
             }
         }
@@ -79,12 +81,13 @@ namespace IncludeToolbox
 
         public static EnvDTE.Document GetActiveDocument()
         {
-            EnvDTE.DTE dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
+            EnvDTE.DTE dte = (EnvDTE.DTE) Package.GetGlobalService(typeof (EnvDTE.DTE));
             if (dte == null)
                 return null;
 
             return dte.ActiveDocument;
         }
+
         public static List<string> GetProjectIncludeDirectories(EnvDTE.Project project, bool endWithSeparator = true)
         {
             VCCLCompilerTool compilerTool = GetVCppCompilerTool(project);
@@ -92,7 +95,7 @@ namespace IncludeToolbox
 
             // According to documentation FullIncludePath has resolved macros.
             List<string> pathStrings = new List<string>();
-            pathStrings.AddRange(compilerTool.FullIncludePath.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
+            pathStrings.AddRange(compilerTool.FullIncludePath.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries));
 
             for (int i = pathStrings.Count - 1; i >= 0; --i)
             {
@@ -115,5 +118,27 @@ namespace IncludeToolbox
             return pathStrings;
         }
 
+        public static IWpfTextViewHost GetCurrentViewHost()
+        {
+            IVsTextManager textManager = Package.GetGlobalService(typeof (SVsTextManager)) as IVsTextManager;
+
+            IVsTextView textView = null;
+            textManager.GetActiveView(1, null, out textView);
+
+            var userData = textView as IVsUserData;
+            if (userData == null)
+            {
+                return null;
+            }
+            else
+            {
+                Guid guidViewHost = DefGuidList.guidIWpfTextViewHost;
+                object holder;
+                userData.GetData(ref guidViewHost, out holder);
+                var viewHost = (IWpfTextViewHost) holder;
+
+                return viewHost;
+            }
+        }
     }
 }
