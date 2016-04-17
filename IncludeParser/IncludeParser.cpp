@@ -15,7 +15,7 @@ namespace
 	class StringStorage
 	{
 	public:
-		static StringHandle GetNewHandle(ezStringBuilder*& outString)
+		static StringHandle GetNewHandle(ezStringBuilder** outString)
 		{
 			StringHandle outHandle = nextHandle;
 			cachedStrings.Insert(outHandle, ezString());
@@ -24,9 +24,9 @@ namespace
 			return outHandle;
 		}
 
-		static ezResult GetString(StringHandle handle, ezStringBuilder*& outString)
+		static ezResult GetString(StringHandle handle, ezStringBuilder** outString)
 		{
-			return cachedStrings.TryGetValue(handle, outString) ? EZ_SUCCESS : EZ_FAILURE;
+			return cachedStrings.TryGetValue(handle, *outString) ? EZ_SUCCESS : EZ_FAILURE;
 		}
 
 		static void RemoveString(StringHandle handle)
@@ -203,7 +203,7 @@ void __stdcall Exit()
 Result __stdcall ResolveString(StringHandle handle, char* buffer, int32_t bufferSize)
 {
 	ezStringBuilder* string;
-	if (StringStorage::GetString(handle, string).Failed())
+	if (StringStorage::GetString(handle, &string).Failed())
 		return RESULT_FAILURE;
 
 	int32_t copySize = ezMath::Min<int32_t>(bufferSize, string->GetElementCount() + 1);
@@ -217,7 +217,7 @@ Result __stdcall ResolveString(StringHandle handle, char* buffer, int32_t buffer
 Result __stdcall GetStringLength(StringHandle handle, int32_t* outBufferSize)
 {
 	ezStringBuilder* string;
-	if (StringStorage::GetString(handle, string).Failed())
+	if (StringStorage::GetString(handle, &string).Failed())
 		return RESULT_FAILURE;
 
 	*outBufferSize = string->GetElementCount() + 1;
@@ -239,8 +239,8 @@ Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDir
 	}
 
 	// Prepare file locator.
-	ezStringBuilder* outIncludeTreeString;
-	*outIncludeTree = StringStorage::GetNewHandle(outIncludeTreeString);
+	ezStringBuilder* outIncludeTreeString = nullptr;
+	*outIncludeTree = StringStorage::GetNewHandle(&outIncludeTreeString);
 	FileLocator fileLocator(includeDirectories, outIncludeTreeString);
 
 	// Our file locator is too large for ezDelegate, so we need to wrap it.
@@ -250,8 +250,9 @@ Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDir
 	});
 
 	// Setup logging.
-	ezStringBuilder* outLogString;
-	*outLog = StringStorage::GetNewHandle(outLogString);
+	ezStringBuilder* outLogString = nullptr;
+	*outLog = StringStorage::GetNewHandle(&outLogString);
+	*outLogString = "";
 
 	// Todo: Log keeps crashin. Need to investigate!
 	//outLogString->Reserve(2048);
@@ -259,11 +260,13 @@ Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDir
 	//ezGlobalLog::AddLogWriter([outLogString](const ezLoggingEventData& eventData) { LogMessageHandler(eventData, outLogString); });
 	// Preprocessor logging.
 	Result outResult = RESULT_SUCCESS;
-	preprocessor.m_ProcessingEvents.AddEventHandler([&outResult](const ezPreprocessor::ProcessingEvent& event)
+	preprocessor.m_ProcessingEvents.AddEventHandler([&outResult, outLogString](const ezPreprocessor::ProcessingEvent& event)
 	{
 		if (event.m_Type == ezPreprocessor::ProcessingEvent::Error)
 		{
-			//if(ezStringUtils::FindSubString(event.m_szInfo, "Redefinition of macro") == nullptr)
+			ezStringBuilder token(event.m_pToken->m_DataView);
+			outLogString->AppendFormat("ezPreprocessor failed at line %i column %i (token '%s'):\n\t%s",
+				event.m_pToken->m_uiLine, event.m_pToken->m_uiColumn, token.GetData(), event.m_szInfo);
 			outResult = RESULT_FAILURE;
 		}
 	});
@@ -271,8 +274,8 @@ Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDir
 	preprocessor.SetLogInterface(logInterface); //ezGlobalLog::GetInstance());
 
 												// Process.
-	ezStringBuilder* processedFile;
-	*outProcessedInputFile = StringStorage::GetNewHandle(processedFile);
+	ezStringBuilder* processedFile = nullptr;
+	*outProcessedInputFile = StringStorage::GetNewHandle(&processedFile);
 	preprocessor.Process(inputFilename, *processedFile);
 
 	return outResult;
