@@ -26,8 +26,12 @@ namespace IncludeViewer
     public sealed class IncludeViewerToolWindow : ToolWindowPane
     {
         private readonly IncludeViewerToolWindowControl graphToolWindowControl;
-        //private System.Threading.Tasks.Task parseTask;
-        //private long focusToken = 0;
+
+        private EnvDTE.Document currentProcessedDocument;
+        private System.Threading.Tasks.Task parseTask;
+
+        private EnvDTE.Document queuedDocument;
+        private System.Threading.Tasks.Task queuedTask;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IncludeViewerToolWindow"/> class.
@@ -86,49 +90,116 @@ namespace IncludeViewer
 
         private void FocusedDocumentChanged(EnvDTE.Document focusedDocument)
         {
-            ParseIncludes(focusedDocument);
-
-         //   System.Threading.Interlocked.Increment(ref focusToken);
-
-         //   parseTask = new System.Threading.Tasks.Task(() => ParseIncludes(focusedDocument, focusToken));
-         //   parseTask.Start();
-        }
-
-        private void ParseIncludes(EnvDTE.Document focusedDocument/*, long callToken*/)
-        {
-            var project = focusedDocument.ProjectItem.ContainingProject;
-            if (project == null)
+            lock (this)
             {
-                Output.Instance.WriteLine("The document {0} is not part of a project.", focusedDocument.Name);
-                return;
-            }
-
-            var compilerTool = Utils.GetVCppCompilerTool(project);
-            if (compilerTool == null)
-                return;
-
-            string includeDirs = Utils.GetProjectIncludeDirectories(project).Aggregate("", (current, def) => current + (def + ";")); ;
-            string preprocessorDefinitions = GetPreprocessorDefinitions(compilerTool);
-
-            string processedDocument;
-            var includeTreeRoot = IncludeParser.ParseIncludes(focusedDocument.FullName, includeDirs, preprocessorDefinitions, out processedDocument);
-
-            // Apply only, if focus token still relevant.
-           // if (System.Threading.Interlocked.CompareExchange(ref callToken, -1, focusToken) == -1)
-            {
-               // graphToolWindowControl.Dispatcher.InvokeAsync(() =>
+                if (currentProcessedDocument == focusedDocument)
                 {
-                    int lineCount = 0;
-                    EnvDTE.TextDocument textDocument = focusedDocument.Object() as EnvDTE.TextDocument;
-                    if (textDocument != null)
-                    {
-                        lineCount = textDocument.EndPoint.Line;
-                    }
-                    int processedLineCount = processedDocument.Count(x => x == '\n');
-
-                    graphToolWindowControl.SetData(focusedDocument.Name, includeTreeRoot, lineCount, processedLineCount);
+                    queuedTask = null;
+                    queuedDocument = null;
+                }
+                else if (parseTask == null || parseTask.IsCompleted)
+                {
+                    currentProcessedDocument = focusedDocument;
+                    parseTask = new System.Threading.Tasks.Task(() => ParseIncludes(focusedDocument));
+                    StartTask(parseTask);
+                }
+                else if(queuedDocument != focusedDocument || queuedTask == null || queuedTask.IsCompleted)
+                {
+                    queuedDocument = focusedDocument;
+                    queuedTask = new System.Threading.Tasks.Task(() => ParseIncludes(focusedDocument));
                 }
             }
+        }
+
+        private void ParseIncludes(EnvDTE.Document focusedDocument)
+        {
+            try
+            {
+                var project = focusedDocument.ProjectItem.ContainingProject;
+                if (project == null)
+                {
+                    Output.Instance.WriteLine("The document {0} is not part of a project.", focusedDocument.Name);
+                    return;
+                }
+
+                var compilerTool = Utils.GetVCppCompilerTool(project);
+                if (compilerTool == null)
+                    return;
+
+                string includeDirs = Utils.GetProjectIncludeDirectories(project)
+                    .Aggregate("", (current, def) => current + (def + ";"));
+                ;
+                string preprocessorDefinitions = GetPreprocessorDefinitions(compilerTool);
+
+                string processedDocument;
+                var includeTreeRoot = IncludeParser.ParseIncludes(focusedDocument.FullName, includeDirs,
+                    preprocessorDefinitions, out processedDocument);
+
+                // Apply only, if there is not another task queued.
+                lock (this)
+                {
+                    if (queuedTask == null)
+                    {
+                        graphToolWindowControl.Dispatcher.InvokeAsync(
+                            () => ApplyParsingResults(focusedDocument, includeTreeRoot, processedDocument));
+                    }
+                    else
+                    {
+                        StartQueuedTask();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                graphToolWindowControl.Dispatcher.InvokeAsync(() => Output.Instance.ErrorMsg("Unexpected error: ", e.ToString()));
+            }
+        }
+
+        private void ApplyParsingResults(EnvDTE.Document focusedDocument, IncludeParser.IncludeTreeItem includeTreeRoot, string processedDocument)
+        {
+            int lineCount = 0;
+            EnvDTE.TextDocument textDocument = focusedDocument.Object() as EnvDTE.TextDocument;
+            if (textDocument != null)
+            {
+                lineCount = textDocument.EndPoint.Line;
+            }
+            int processedLineCount = processedDocument.Count(x => x == '\n');
+
+            graphToolWindowControl.SetData(focusedDocument.Name, includeTreeRoot, lineCount, processedLineCount);
+
+            lock (this)
+            {
+                currentProcessedDocument = null;
+                parseTask = null;
+
+                // Queued task should be executed?
+                if (queuedTask != null)
+                {
+                    StartQueuedTask();
+                }
+                else
+                {
+                    graphToolWindowControl.ProgressBar.Visibility = System.Windows.Visibility.Hidden;
+                }
+            }
+        }
+
+        private void StartQueuedTask()
+        {
+            parseTask = queuedTask;
+            currentProcessedDocument = queuedDocument;
+
+            queuedDocument = null;
+            queuedTask = null;
+
+            graphToolWindowControl.ProgressBar.Visibility = System.Windows.Visibility.Visible;
+            StartTask(parseTask);
+        }
+
+        private void StartTask(System.Threading.Tasks.Task task)
+        {
+            graphToolWindowControl.ProgressBar.Visibility = System.Windows.Visibility.Visible;
+            task.Start();
         }
     }
 }

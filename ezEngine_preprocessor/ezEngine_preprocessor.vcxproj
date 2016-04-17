@@ -208,6 +208,7 @@
     <ClCompile Include="..\ezEngine\Code\Engine\Foundation\System\Implementation\SystemInformation.cpp" />
     <ClCompile Include="..\ezEngine\Code\Engine\Foundation\System\Implementation\UuidGenerator.cpp" />
     <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Threading\Implementation\ThreadLocalStorage.cpp" />
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Threading\Implementation\ThreadSignal.cpp" />
     <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Threading\Implementation\ThreadUtils.cpp" />
     <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\Clock.cpp" />
     <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Time\Implementation\DefaultTimeStepSmoothing.cpp" />

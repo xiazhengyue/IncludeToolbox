@@ -42,7 +42,8 @@
         </Grid.ColumnDefinitions>
         <Label x:Name="FileNameLabel" Content="&lt;File&gt;" FontWeight="Bold" FontSize="16" FontFamily="Consolas"/>
         <Label x:Name="IncludeTreeLabel" Content="Includes:" VerticalAlignment="Top" Height="25" Grid.Row="1" FontWeight="Bold"/>
-        <TreeView x:Name="IncludeTree" Grid.Row="2" />
+        <TreeView x:Name="IncludeTree" Grid.Row="2"/>
+        <ProgressBar x:Name="ProgressBar" Height="25" VerticalAlignment="Center" Width="100" Grid.Row="2" IsIndeterminate="True" Visibility="Hidden"/>
         <Label x:Name="IncludedByListLabel" Content="Statistics:" VerticalAlignment="Top" Height="25" Grid.Row="3" FontWeight="Bold"/>
         <Grid Margin="10" Grid.Row="4">
             <Grid.RowDefinitions>

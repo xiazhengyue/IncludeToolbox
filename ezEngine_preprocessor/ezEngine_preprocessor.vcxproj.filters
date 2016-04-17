@@ -61,6 +61,9 @@
     <Filter Include="Foundation\IO\Filesystem">
       <UniqueIdentifier>{aa448def-c179-417c-883f-8444d2e15a3e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Foundation\Profiling">
+      <UniqueIdentifier>{4da6d90d-8410-4129-84c6-8f10f0876f85}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ezEngine\Code\Engine\CoreUtils\CodeUtils\Implementation\Conditions.cpp">
@@ -252,14 +255,17 @@
     <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Reflection\Implementation\PropertyAttributes.cpp">
       <Filter>Foundation\Reflection</Filter>
     </ClCompile>
-    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Threading\Implementation\ThreadUtils.cpp">
-      <Filter>Foundation\Threading</Filter>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Utilities\Implementation\StackTracer.cpp">
+      <Filter>Foundation\Utilities</Filter>
     </ClCompile>
     <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Threading\Implementation\ThreadLocalStorage.cpp">
       <Filter>Foundation\Threading</Filter>
     </ClCompile>
-    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Utilities\Implementation\StackTracer.cpp">
-      <Filter>Foundation\Utilities</Filter>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Threading\Implementation\ThreadSignal.cpp">
+      <Filter>Foundation\Threading</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ezEngine\Code\Engine\Foundation\Threading\Implementation\ThreadUtils.cpp">
+      <Filter>Foundation\Threading</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
