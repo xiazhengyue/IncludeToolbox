@@ -36,13 +36,13 @@ extern "C"
 
 	// includeDirectories: Directories to look for includes separated by ';', paths relative to the file itself will be resolved automatically.
 	// preprocessorDefinitions: Global preprocessor definitions, separated by ';'
-	// outIncludeTreeString: Every line contains an include (new line using '\n'). Number of tabs '\t' gives tree relation. Example:
-	//	C:/blub/included0.h
-	//		C:/blub/File0.h
-	//			C:/blub/IncludedByFile0.h
-	//		C:/blub/File1.h
-	//		C:/blub/File2.h
-	//	C:/blab/included1.h
+	// outIncludeTreeString: Every line contains first an absolute include path and then, separated by #, the original include string (new line using '\n'). Number of tabs '\t' gives tree relation. Example:
+	//	C:/blub/included0.h#included0.h
+	//		C:/blub/asdf/File0.h#asdf/File00
+	//			C:/blub/IncludedByFile0.h#..\IncludedByFile0.h
+	//		C:/blub/File1.h#File1.h
+	//		C:/blub/File2.h#File2.h
+	//	C:/blab/included1.h#../blab/File1.h
 	extern INCLUDEPARSER_API Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDirectories, const char* preprocessorDefinitions, 
 															StringHandle* outProcessedInputFile, StringHandle* outIncludeTree, StringHandle* outLog);
 }

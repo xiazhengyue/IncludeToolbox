@@ -15,13 +15,15 @@ namespace IncludeToolbox
     {
         public class IncludeTreeItem
         {
-            public IncludeTreeItem(string filename)
+            public IncludeTreeItem(string filename, string includeName)
             {
                 Filename = filename;
+                IncludeName = includeName;
                 Children = new List<IncludeTreeItem>();
             }
 
             public string Filename;
+            public string IncludeName;
             public List<IncludeTreeItem> Children;
         }
 
@@ -32,7 +34,7 @@ namespace IncludeToolbox
 
         public static IncludeTreeItem ParseIncludes(string inputFilename, string includeDirectories, string preprocessorDefinitions, out string processedInputFile)
         {
-            IncludeTreeItem outTree = new IncludeTreeItem(inputFilename);
+            IncludeTreeItem outTree = new IncludeTreeItem(inputFilename, "");
 
             StringHandle processedInputFileHandle, includeTreeHandle, log;
             {
@@ -55,12 +57,13 @@ namespace IncludeToolbox
             processedInputFile = processedInputFileHandle.ResolveString();
 
             string includeTreeRaw = includeTreeHandle.ResolveString();
-            string[] includeTreeRawStrings = includeTreeRaw.Split(new char[]{ '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] includeTreeRawStrings = includeTreeRaw.Split(new char[]{ '#', '\n' });
             var includeTreeItemStack = new Stack<IncludeTreeItem>();
             includeTreeItemStack.Push(outTree);
-            foreach (string line in includeTreeRawStrings)
+
+            for(int i=0; i<includeTreeRawStrings.Length; i+=2)
             {
-                int depth = line.Count(x => x =='\t');
+                int depth = includeTreeRawStrings[i].Count(x => x == '\t');
                 if (depth >= includeTreeItemStack.Count)
                 {
                     includeTreeItemStack.Push(includeTreeItemStack.Peek().Children.Last());
@@ -68,7 +71,8 @@ namespace IncludeToolbox
                 while (depth < includeTreeItemStack.Count - 1)
                     includeTreeItemStack.Pop();
 
-                includeTreeItemStack.Peek().Children.Add(new IncludeTreeItem(line.Remove(0, depth)));
+                includeTreeItemStack.Peek().Children.Add(
+                    new IncludeTreeItem(includeTreeRawStrings[i].Remove(0, depth), i+1<includeTreeRawStrings.Length ? includeTreeRawStrings[i+1] : ""));
             }
 
             return outTree;

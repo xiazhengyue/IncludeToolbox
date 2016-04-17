@@ -77,7 +77,8 @@ namespace
 			if (result.Succeeded())
 			{
 				fileStack.PushBack(out_sAbsoluteFilePath);
-				outIncludeTreeString->Append(out_sAbsoluteFilePath, "\n");
+				outIncludeTreeString->Append(out_sAbsoluteFilePath, "#", szIncludeFile, "\n");
+
 			}
 			else
 			{

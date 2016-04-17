@@ -47,7 +47,7 @@ namespace IncludeViewer
 
                 var newItem = new TreeViewItem()
                 {
-                    Header = elem.Filename, // todo: as found first time in include directive
+                    Header = elem.IncludeName,
                     ToolTip = elem.Filename,
                     // Todo: Styling should be part of XAML, but there were some exceptions I don't understand yet
                     Foreground = GetSolidBrush(EnvironmentColors.ToolWindowTextBrushKey),
