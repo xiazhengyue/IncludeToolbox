@@ -122,8 +122,7 @@ namespace IncludeToolbox.Commands
                     lastLineWasEmpty = true;
                     continue;
                 }
-                lastLineWasEmpty = false;
-
+                
                 int i = line.IndexOf(" should add these lines:");
                 if (i < 0)
                 {
@@ -180,6 +179,7 @@ namespace IncludeToolbox.Commands
                     }
                 }
 
+                lastLineWasEmpty = false;
             }
 
             return fileTasks;
