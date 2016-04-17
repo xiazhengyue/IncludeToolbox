@@ -33,6 +33,8 @@ namespace IncludeViewer
         private EnvDTE.Document queuedDocument;
         private System.Threading.Tasks.Task queuedTask;
 
+        private EnvDTE.Document lastFocusedDocument;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="IncludeViewerToolWindow"/> class.
         /// </summary>
@@ -74,8 +76,9 @@ namespace IncludeViewer
 
         private void WindowEvents_WindowActivated(EnvDTE.Window gotFocus, EnvDTE.Window lostFocus)
         {
-            if (gotFocus.Document != null)
+            if (gotFocus.Document != null && gotFocus.Document != lastFocusedDocument)
             {
+                lastFocusedDocument = gotFocus.Document;
                 FocusedDocumentChanged(gotFocus.Document);
             }
         }
@@ -113,6 +116,9 @@ namespace IncludeViewer
 
         private void ParseIncludes(EnvDTE.Document focusedDocument)
         {
+            IncludeParser.IncludeTreeItem includeTreeRoot = null;
+            string processedDocument = "";
+
             try
             {
                 var project = focusedDocument.ProjectItem.ContainingProject;
@@ -128,13 +134,19 @@ namespace IncludeViewer
 
                 string includeDirs = Utils.GetProjectIncludeDirectories(project)
                     .Aggregate("", (current, def) => current + (def + ";"));
-                ;
+
                 string preprocessorDefinitions = GetPreprocessorDefinitions(compilerTool);
-
-                string processedDocument;
-                var includeTreeRoot = IncludeParser.ParseIncludes(focusedDocument.FullName, includeDirs,
-                    preprocessorDefinitions, out processedDocument);
-
+                includeTreeRoot = IncludeParser.ParseIncludes(focusedDocument.FullName, includeDirs, preprocessorDefinitions, out processedDocument);
+            }
+            catch (Exception e)
+            {
+                graphToolWindowControl.Dispatcher.InvokeAsync(() =>
+                {
+                    Output.Instance.ErrorMsg("Unexpected error: {0}", e.ToString());
+                });
+            }
+            finally
+            {
                 // Apply only, if there is not another task queued.
                 lock (this)
                 {
@@ -145,18 +157,16 @@ namespace IncludeViewer
                     }
                     else
                     {
-                        StartQueuedTask();
+                        graphToolWindowControl.Dispatcher.InvokeAsync(StartQueuedTask);
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                graphToolWindowControl.Dispatcher.InvokeAsync(() => Output.Instance.ErrorMsg("Unexpected error: ", e.ToString()));
             }
         }
 
         private void ApplyParsingResults(EnvDTE.Document focusedDocument, IncludeParser.IncludeTreeItem includeTreeRoot, string processedDocument)
         {
+            System.Diagnostics.Debug.Assert(graphToolWindowControl.Dispatcher.Thread == System.Threading.Thread.CurrentThread);
+
             int lineCount = 0;
             EnvDTE.TextDocument textDocument = focusedDocument.Object() as EnvDTE.TextDocument;
             if (textDocument != null)
@@ -192,7 +202,6 @@ namespace IncludeViewer
             queuedDocument = null;
             queuedTask = null;
 
-            graphToolWindowControl.ProgressBar.Visibility = System.Windows.Visibility.Visible;
             StartTask(parseTask);
         }
 

@@ -69,7 +69,10 @@ namespace IncludeViewer
             numIncludes = 0;
             uniqueIncludes.Clear();
             IncludeTree.Items.Clear();
-            AddIncludes(IncludeTree.Items, treeRoot.Children);
+            if (treeRoot != null)
+            {
+                AddIncludes(IncludeTree.Items, treeRoot.Children);
+            }
 
             NumIncludes.Content = numIncludes.ToString();
             NumUniqueIncludes.Content = uniqueIncludes.Count.ToString();
