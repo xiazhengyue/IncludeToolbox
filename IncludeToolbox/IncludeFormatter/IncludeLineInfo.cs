@@ -4,9 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
-namespace IncludeToolbox
+namespace IncludeToolbox.IncludeFormatter
 {
     public class IncludeLineInfo
     {
@@ -60,6 +59,11 @@ namespace IncludeToolbox
                         outInfo[line].AbsoluteIncludePath = Utils.GetExactPathName(candidate);
                         break;
                     }
+                }
+
+                if (outInfo[line].AbsoluteIncludePath == null)
+                {
+                    Output.Instance.WriteLine("Unabled to resolve include: {0}", outInfo[line].IncludeContent);
                 }
             }
 

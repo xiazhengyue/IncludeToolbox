@@ -57,11 +57,12 @@
     <Compile Include="Commands\MenuCommandSet.cs" />
     <Compile Include="Commands\IncludeViewerToolWindowCommand.cs" />
     <Compile Include="Commands\IncludeWhatYouUse.cs" />
-    <Compile Include="IncludeComparer.cs" />
+    <Compile Include="IncludeFormatter\IncludeComparer.cs" />
     <Compile Include="Commands\FormatIncludes.cs" />
+    <Compile Include="IncludeFormatter\IncludeFormatter.cs" />
     <Compile Include="IncludeParser.cs" />
     <Compile Include="IncludeToolboxPackage.cs" />
-    <Compile Include="IncludeLineInfo.cs" />
+    <Compile Include="IncludeFormatter\IncludeLineInfo.cs" />
     <Compile Include="Options\Constants.cs" />
     <Compile Include="Options\IncludeWhatYouUseOptionsPage.cs">
       <SubType>Component</SubType>

@@ -92,42 +92,6 @@ namespace IncludeToolbox.Commands
             return new SnapshotSpan(start, end);
         }
 
-        private void FormatPaths(FormatterOptionsPage.PathMode pathformat, bool ignoreFileRelative, IncludeLineInfo[] lines, List<string> includeDirectories)
-        {
-            if (pathformat == FormatterOptionsPage.PathMode.Unchanged)
-                return;
-
-            foreach (var line in lines)
-            {
-                // todo: Ignore std library files.
-                if (line.AbsoluteIncludePath != null)
-                {
-                    int bestLength = Int32.MaxValue;
-                    string bestCandidate = null;
-
-                    int i = ignoreFileRelative ? 1 : 0; // Ignore first one which is always the local dir.
-                    for(; i< includeDirectories.Count; ++i)
-                    {
-                        string proposal = Utils.MakeRelative(includeDirectories[i], line.AbsoluteIncludePath);
-
-                        if (proposal.Length < bestLength)
-                        {
-                            if (pathformat == FormatterOptionsPage.PathMode.Shortest || (proposal.IndexOf("../") < 0 && proposal.IndexOf("..\\") < 0))
-                            {
-                                bestCandidate = proposal;
-                                bestLength = proposal.Length;
-                            }
-                        }
-                    }
-
-                    if (bestCandidate != null)
-                    {
-                        line.IncludeContent = bestCandidate;
-                    }
-                }
-            }
-        }
-
         /// <summary>
         /// This function is the callback used to execute the command when the menu item is clicked.
         /// See the constructor to see how the menu item is associated with this function using
@@ -137,75 +101,51 @@ namespace IncludeToolbox.Commands
         /// <param name="e">Event args.</param>
         private void MenuItemCallback(object sender, EventArgs e)
         {
-            var settings = (FormatterOptionsPage)package.GetDialogPage(typeof(FormatterOptionsPage));
-
-            // Try to find absolute paths
-            var document = Utils.GetActiveDocument();
-            var project = document.ProjectItem.ContainingProject;
-            if (project == null)
+            try
             {
-                Output.Instance.WriteLine("The document {0} is not part of a project.", document.Name);
-                return;
-            }
-            var includeDirectories = Utils.GetProjectIncludeDirectories(project);
-            includeDirectories.Insert(0, PathUtil.Normalize(document.Path) + Path.DirectorySeparatorChar);
-            
-            // Read.
-            var viewHost = Utils.GetCurrentViewHost();
-            var selectionSpan = GetSelectionSpan(viewHost);
-            var lines = IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), settings.RemoveEmptyLines, includeDirectories);
+                var settings = (FormatterOptionsPage) package.GetDialogPage(typeof (FormatterOptionsPage));
 
-            // Manipulate paths.
-            FormatPaths(settings.PathFormat, settings.IgnoreFileRelative, lines, includeDirectories);
-
-            // Format.
-            switch (settings.DelimiterFormatting)
-            {
-                case FormatterOptionsPage.DelimiterMode.AngleBrackets:
-                    foreach (var line in lines)   
-                        line.SetLineType(IncludeLineInfo.Type.AngleBrackets);
-                    break;
-                case FormatterOptionsPage.DelimiterMode.Quotes:
-                    foreach (var line in lines)
-                        line.SetLineType(IncludeLineInfo.Type.Quotes);
-                    break;
-            }
-            switch (settings.SlashFormatting)
-            {
-                case FormatterOptionsPage.SlashMode.ForwardSlash:
-                    foreach (var line in lines)
-                        line.IncludeContent = line.IncludeContent.Replace('\\', '/');
-                    break;
-                case FormatterOptionsPage.SlashMode.BackSlash:
-                    foreach (var line in lines)
-                        line.IncludeContent = line.IncludeContent.Replace('/', '\\');
-                    break;
-            }
-
-            // Apply changes so far.
-            foreach (var line in lines)
-                line.UpdateTextWithIncludeContent();
-
-            // Sorting. Ignores non-include lines.
-            var comparer = new IncludeComparer(settings.PrecedenceRegexes, document);
-            var sortedIncludes = lines.Where(x => x.LineType != IncludeLineInfo.Type.NoInclude).OrderBy(x => x.IncludeContent, comparer).ToArray();
-            int incIdx = 0;
-            for (int allIdx = 0; allIdx < lines.Length && incIdx < sortedIncludes.Length; ++allIdx)
-            {
-                if (lines[allIdx].LineType != IncludeLineInfo.Type.NoInclude)
+                // Try to find absolute paths
+                var document = Utils.GetActiveDocument();
+                var project = document.ProjectItem.ContainingProject;
+                if (project == null)
                 {
-                    lines[allIdx] = sortedIncludes[incIdx];
-                    ++incIdx;
+                    Output.Instance.WriteLine("The document {0} is not part of a project.", document.Name);
+                    return;
+                }
+                var includeDirectories = Utils.GetProjectIncludeDirectories(project);
+                includeDirectories.Insert(0, PathUtil.Normalize(document.Path) + Path.DirectorySeparatorChar);
+
+                // Read.
+                var viewHost = Utils.GetCurrentViewHost();
+                var selectionSpan = GetSelectionSpan(viewHost);
+                var lines = IncludeFormatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(),
+                    settings.RemoveEmptyLines, includeDirectories);
+
+                // Format.
+                IncludeFormatter.IncludeFormatter.FormatPaths(lines, settings.PathFormat, settings.IgnoreFileRelative,
+                    includeDirectories);
+                IncludeFormatter.IncludeFormatter.FormatDelimiters(lines, settings.DelimiterFormatting);
+                IncludeFormatter.IncludeFormatter.FormatSlashes(lines, settings.SlashFormatting);
+
+                // Apply changes so far.
+                foreach (var line in lines)
+                    line.UpdateTextWithIncludeContent();
+
+                // Sorting. Ignores non-include lines.
+                IncludeFormatter.IncludeFormatter.SortIncludes(lines, settings.PrecedenceRegexes, document.Name);
+
+                // Overwrite.
+                string replaceText = string.Join(Environment.NewLine, lines.Select(x => x.Text));
+                using (var edit = viewHost.TextView.TextBuffer.CreateEdit())
+                {
+                    edit.Replace(selectionSpan, replaceText);
+                    edit.Apply();
                 }
             }
-
-
-            // Overwrite.
-            string replaceText = string.Join(Environment.NewLine, lines.Select(x => x.Text));
-            using (var edit = viewHost.TextView.TextBuffer.CreateEdit())
+            catch (Exception exception)
             {
-                edit.Replace(selectionSpan, replaceText);
-                edit.Apply();
+                Output.Instance.ErrorMsg("Unexpected Error: {0}", exception.ToString());
             }
         }
     }

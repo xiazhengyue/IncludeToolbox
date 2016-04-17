@@ -5,6 +5,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
+using IncludeToolbox.IncludeFormatter;
 
 namespace IncludeToolbox
 {
@@ -25,6 +26,7 @@ namespace IncludeToolbox
             Unchanged,
             Shortest,
             Shortest_AvoidUpSteps,
+            Absolute,
         }
         [Category("Path")]
         [DisplayName("Mode")]

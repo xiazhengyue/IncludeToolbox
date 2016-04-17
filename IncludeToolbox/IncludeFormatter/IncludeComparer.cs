@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace IncludeToolbox
+namespace IncludeToolbox.IncludeFormatter
 {
     public class IncludeComparer : IComparer<string>
     {
         public const string CurrentFileNameKey = "$(currentFilename)";
 
-        public IncludeComparer(string[] precedenceRegexes, EnvDTE.Document document)
+        public IncludeComparer(string[] precedenceRegexes, string documentName)
         {
-            string currentFilename = document.Name.Substring(0, document.Name.LastIndexOf('.'));
+            string currentFilename = documentName.Substring(0, documentName.LastIndexOf('.'));
 
             this.precedenceRegexes = new string[precedenceRegexes.Length];
             for (int i = 0; i < this.precedenceRegexes.Length; ++i)
