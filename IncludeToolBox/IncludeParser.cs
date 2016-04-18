@@ -45,7 +45,7 @@ namespace IncludeToolbox
                 Result r = ParseIncludes(inputFilenameUtf8, includeDirectoriesUtf8, preprocessorDefinitionsUtf8,
                     out processedInputFileHandle, out includeTreeHandle, out log);
 
-                IncludeToolbox.Output.Instance.Write(log.ResolveString());
+                IncludeToolbox.Output.Instance.WriteLine(log.ResolveString());
 
                 if (r != Result.Success)
                 {

@@ -266,8 +266,8 @@ Result __stdcall ParseIncludes(const char* inputFilename, const char* includeDir
 		if (event.m_Type == ezPreprocessor::ProcessingEvent::Error)
 		{
 			ezStringBuilder token(event.m_pToken->m_DataView);
-			outLogString->AppendFormat("ezPreprocessor failed at line %i column %i (token '%s'):\n\t%s",
-				event.m_pToken->m_uiLine, event.m_pToken->m_uiColumn, token.GetData(), event.m_szInfo);
+			outLogString->AppendFormat("ezPreprocessor failed in '%s' at line %i column %i (token '%s'):\n\t%s",
+					event.m_pToken->m_File, event.m_pToken->m_uiLine, event.m_pToken->m_uiColumn, token.GetData(), event.m_szInfo);
 			outResult = RESULT_FAILURE;
 		}
 	});
