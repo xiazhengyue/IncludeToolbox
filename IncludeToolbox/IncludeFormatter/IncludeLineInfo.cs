@@ -19,22 +19,42 @@ namespace IncludeToolbox.IncludeFormatter
             var outInfo = new IncludeLineInfo[lines.Length];
 
             // Simplistic parsing.
-            // "//" comments are intentionally ignored
-            // Todo: Handle multi line comments gracefully
+            int openMultiLineComments = 0;
             for (int line = 0; line < lines.Length; ++line)
             {
                 outInfo[line] = new IncludeLineInfo();
                 outInfo[line].text = lines[line];
                 outInfo[line].lineType = IncludeLineInfo.Type.NoInclude;
 
-                int occurence = lines[line].IndexOf("#include");
-                if (occurence == -1)
+                // Check for single line comment.
+                int singleLineComment = lines[line].IndexOf("//");
+                if (singleLineComment == -1)
+                    singleLineComment = int.MaxValue;
+                // Check for multi line comments.
+                int multiLineCommentEnd = lines[line].IndexOf("*/");
+                if (multiLineCommentEnd > -1 && multiLineCommentEnd < singleLineComment)
+                    --openMultiLineComments;
+                int multiLineCommentStart = lines[line].IndexOf("/*");
+                if (multiLineCommentStart > -1 && multiLineCommentStart < singleLineComment)
+                    ++openMultiLineComments;
+
+                int includeOccurence = lines[line].IndexOf("#include");
+                if (includeOccurence == -1) // No include found
+                    continue;
+                if (includeOccurence > singleLineComment) // Single line before #include
+                    continue;
+                if (openMultiLineComments > 0 && multiLineCommentStart == -1 && multiLineCommentEnd == -1) // Multi comment around #include.
+                    continue;
+                if (multiLineCommentEnd > includeOccurence) // Multi line comment ended in same line but after #include.
+                    continue;
+                if (multiLineCommentStart > -1 && multiLineCommentStart < includeOccurence) // Multi line comment started in same line, but before #include.
                     continue;
 
-                outInfo[line].Delimiter0 = lines[line].IndexOf('\"', occurence + "#include".Length);
+
+                outInfo[line].Delimiter0 = lines[line].IndexOf('\"', includeOccurence + "#include".Length);
                 if (outInfo[line].Delimiter0 == -1)
                 {
-                    outInfo[line].Delimiter0 = lines[line].IndexOf('<', occurence + "#include".Length);
+                    outInfo[line].Delimiter0 = lines[line].IndexOf('<', includeOccurence + "#include".Length);
                     if (outInfo[line].Delimiter0 == -1)
                         continue;
                     outInfo[line].Delimiter1 = lines[line].IndexOf('>', outInfo[line].Delimiter0 + 1);
@@ -51,19 +71,21 @@ namespace IncludeToolbox.IncludeFormatter
                 outInfo[line].includeContent = lines[line].Substring(outInfo[line].Delimiter0 + 1, outInfo[line].Delimiter1 - outInfo[line].Delimiter0 - 1);
 
                 // Try to resolve include path to an existing file.
-                foreach (string dir in includeDirectories)
+                if (includeDirectories != null)
                 {
-                    string candidate = Path.Combine(dir, outInfo[line].IncludeContent);
-                    if (File.Exists(candidate))
+                    foreach (string dir in includeDirectories)
                     {
-                        outInfo[line].AbsoluteIncludePath = Utils.GetExactPathName(candidate);
-                        break;
+                        string candidate = Path.Combine(dir, outInfo[line].IncludeContent);
+                        if (File.Exists(candidate))
+                        {
+                            outInfo[line].AbsoluteIncludePath = Utils.GetExactPathName(candidate);
+                            break;
+                        }
                     }
-                }
-
-                if (outInfo[line].AbsoluteIncludePath == null)
-                {
-                    Output.Instance.WriteLine("Unabled to resolve include: {0}", outInfo[line].IncludeContent);
+                    if (outInfo[line].AbsoluteIncludePath == null)
+                    {
+                        Output.Instance.WriteLine("Unabled to resolve include: {0}", outInfo[line].IncludeContent);
+                    }
                 }
             }
 
