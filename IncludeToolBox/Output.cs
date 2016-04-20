@@ -1,4 +1,5 @@
 ﻿using EnvDTE;
+using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -16,13 +17,12 @@ namespace IncludeToolbox
 
         public void Init()
         {
-            EnvDTE.DTE dte = (EnvDTE.DTE)Package.GetGlobalService(typeof(EnvDTE.DTE));
-            if (dte?.Windows.Count > 0)
-            {
-                Window window = dte.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
-                OutputWindow outputWindow = (OutputWindow) window.Object;
-                outputWindowPane = outputWindow.OutputWindowPanes.Add("IncludeToolBox");
-            }
+            DTE2 dte = Package.GetGlobalService(typeof(EnvDTE.DTE)) as DTE2;
+            if (dte == null)
+                return;
+
+            OutputWindow outputWindow = dte.ToolWindows.OutputWindow;
+            outputWindowPane = outputWindow.OutputWindowPanes.Add("IncludeToolBox");
         }
 
         public void Clear()
