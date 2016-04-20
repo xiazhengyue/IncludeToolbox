@@ -54,6 +54,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Commands\TryAndErrorRemoval.cs" />
     <Compile Include="Commands\MenuCommandSet.cs" />
     <Compile Include="Commands\IncludeViewerToolWindowCommand.cs" />
     <Compile Include="Commands\IncludeWhatYouUse.cs" />

@@ -118,7 +118,7 @@ namespace IncludeToolbox
             return pathStrings;
         }
 
-        public static IWpfTextViewHost GetCurrentViewHost()
+        public static IWpfTextViewHost GetCurrentTextViewHost()
         {
             IVsTextManager textManager = Package.GetGlobalService(typeof (SVsTextManager)) as IVsTextManager;
 

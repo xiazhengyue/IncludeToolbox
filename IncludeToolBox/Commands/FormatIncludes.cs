@@ -117,7 +117,7 @@ namespace IncludeToolbox.Commands
                 includeDirectories.Insert(0, PathUtil.Normalize(document.Path) + Path.DirectorySeparatorChar);
 
                 // Read.
-                var viewHost = Utils.GetCurrentViewHost();
+                var viewHost = Utils.GetCurrentTextViewHost();
                 var selectionSpan = GetSelectionSpan(viewHost);
                 var lines = IncludeFormatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(),
                     settings.RemoveEmptyLines, includeDirectories);

@@ -201,7 +201,7 @@ namespace IncludeToolbox.Commands
                 }
                 fileWindow.Activate();
 
-                var viewHost = Utils.GetCurrentViewHost();                
+                var viewHost = Utils.GetCurrentTextViewHost();                
                 using (var edit = viewHost.TextView.TextBuffer.CreateEdit())
                 {
                     var originalLines = edit.Snapshot.Lines.ToArray();
