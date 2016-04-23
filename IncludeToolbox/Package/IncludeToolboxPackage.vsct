@@ -36,12 +36,11 @@
          group as the part of a menu contained between two lines. The parent of a group
          must be a menu. -->
     <Groups>
-      <Group guid="guidIncludeFormatterCmdSet" id="EditMenuGroup" priority="0x0600">
+      <Group guid="guidCodeMenuCmdSet" id="EditMenuGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN" />
       </Group>
-      <Group guid="guidIncludeViewerToolWindowPackageCmdSet" id="ToolMenuGroup" priority="0x0600">
-        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_TOOLS" />
-      </Group>
+      <Group guid="guidIncludeViewerToolWindowCmdSet" id="IncludeViewerToolWindowGroup" priority="0x8000"/>
+      <Group guid="guidProjectMenuCmdSet" id="ProjectMenuGroup" priority="0x8000"/>
     </Groups>
 
     <!--Buttons section. -->
@@ -56,16 +55,16 @@
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node /> -->
 
-      <Button guid="guidIncludeFormatterCmdSet" id="FormatIncludesId" priority="0x0100" type="Button">
-        <Parent guid="guidIncludeFormatterCmdSet" id="EditMenuGroup" />
+      <Button guid="guidCodeMenuCmdSet" id="FormatIncludesId" priority="0x0100" type="Button">
+        <Parent guid="guidCodeMenuCmdSet" id="EditMenuGroup" />
         <Icon guid="guidImages" id="toolIcon" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Format Selected Includes</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidIncludeFormatterCmdSet" id="IncludeWhatYouUseId" priority="0x0101" type="Button">
-        <Parent guid="guidIncludeFormatterCmdSet" id="EditMenuGroup" />
+      <Button guid="guidCodeMenuCmdSet" id="IncludeWhatYouUseId" priority="0x0101" type="Button">
+        <Parent guid="guidCodeMenuCmdSet" id="EditMenuGroup" />
         <Icon guid="guidImages" id="toolIcon" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
@@ -73,8 +72,8 @@
         </Strings>
         
       </Button>
-      <Button guid="guidIncludeFormatterCmdSet" id="TryAndErrorRemovalId" priority="0x0102" type="Button">
-        <Parent guid="guidIncludeFormatterCmdSet" id="EditMenuGroup" />
+      <Button guid="guidCodeMenuCmdSet" id="TryAndErrorRemovalId" priority="0x0102" type="Button">
+        <Parent guid="guidCodeMenuCmdSet" id="EditMenuGroup" />
         <Icon guid="guidImages" id="toolIcon" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
@@ -82,7 +81,16 @@
         </Strings>
       </Button>
 
-      <Button guid="guidIncludeViewerToolWindowPackageCmdSet" id="IncludeViewerToolWindowCommandId" priority="0x0100" type="Button">
+      <Button guid="guidProjectMenuCmdSet" id="ProjectWideTryAndErrorRemovalId" priority="0x2000" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD" />
+        <Icon guid="guidImages" id="toolIcon" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Try and Error Include Removal</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidIncludeViewerToolWindowCmdSet" id="IncludeViewerToolWindowCommandId" priority="0x2000" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
         <Icon guid="guidImages" id="toolIcon" />
         <Strings>
@@ -100,7 +108,7 @@
             bitmap strip containing the bitmaps and then there are the numeric ids of the elements used
             inside a button definition. An important aspect of this declaration is that the element id
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <Bitmap guid="guidImages" href="Resources\IncludeFormatter16.png" usedList="toolIcon" />
+      <Bitmap guid="guidImages" href="..\Resources\IncludeFormatter16.png" usedList="toolIcon" />
     </Bitmaps>
   </Commands>
 
@@ -108,16 +116,21 @@
     <!-- This is the package guid. -->
     <GuidSymbol name="guidIncludeToolboxPackage" value="{5c2743c4-1b3f-4edd-b6a0-4379f867d47f}" />
     
-    <GuidSymbol name="guidIncludeFormatterCmdSet" value="{aef3a531-8af4-4b7b-800a-e32503dfc6e2}">
+    <GuidSymbol name="guidCodeMenuCmdSet" value="{aef3a531-8af4-4b7b-800a-e32503dfc6e2}">
       <IDSymbol name="EditMenuGroup" value="0x1020" />
       <IDSymbol name="FormatIncludesId" value="0x0100" />
       <IDSymbol name="IncludeWhatYouUseId" value="0x0103" />
       <IDSymbol name="TryAndErrorRemovalId" value="0x0104" />
     </GuidSymbol>
 
-    <GuidSymbol name="guidIncludeViewerToolWindowPackageCmdSet" value="{032eb795-1f1c-440d-af98-43cdc1de7a8b}">
-      <IDSymbol value="4128" name="ToolMenuGroup" />
+    <GuidSymbol name="guidIncludeViewerToolWindowCmdSet" value="{032eb795-1f1c-440d-af98-43cdc1de7a8b}">
+      <IDSymbol name="IncludeViewerToolWindowGroup" value="0x1000" />
       <IDSymbol name="IncludeViewerToolWindowCommandId" value="0x0102" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidProjectMenuCmdSet" value="{1970ECF3-6C03-4CCF-B422-8DD07F774ED8}">
+      <IDSymbol name="ProjectMenuGroup" value="0x1000" />
+      <IDSymbol name="ProjectWideTryAndErrorRemovalId" value="0x0100" />
     </GuidSymbol>
     
     <GuidSymbol name="guidImages" value="{dd14909e-b406-4cfa-b492-08b8127679df}">

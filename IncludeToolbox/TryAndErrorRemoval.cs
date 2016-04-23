@@ -1,6 +1,4 @@
 ﻿using System;
-using System.ComponentModel.Design;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows;
@@ -10,38 +8,23 @@ using Microsoft.VisualStudio.VCProjectEngine;
 using EnvDTE;
 using Microsoft.VisualStudio.Text;
 
-namespace IncludeToolbox.Commands
+namespace IncludeToolbox
 {
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class TryAndErrorRemoval : CommandBase<TryAndErrorRemoval>
+    internal sealed class TryAndErrorRemoval
     {
-        public override CommandID CommandID => new CommandID(CommandSetGuids.MenuGroup, 0x0104);
+        public delegate void FinishedEvent(int numRemovedIncludes);
+        public event FinishedEvent OnFileFinished;
 
-        public TryAndErrorRemoval()
-        {
-        }
-
-        protected override void SetupMenuCommand()
-        {
-            base.SetupMenuCommand();
-            menuCommand.BeforeQueryStatus += UpdateVisibility;
-        }
+        public static bool WorkInProgress { get; private set; }
 
         private volatile bool lastBuildSuccessful;
         private AutoResetEvent outputWaitEvent = new AutoResetEvent(false);
         private const int timeoutMS = 30000; // 30 seconds
 
-        private void UpdateVisibility(object sender, EventArgs e)
-        {
-            string reason;
-            bool isHeader;
-            var config = GetFileConfig(VSUtils.GetDTE().ActiveDocument, out reason, out isHeader);
-            menuCommand.Visible = (config != null) && !isHeader;
-        }
-
-        private static VCFileConfiguration GetFileConfig(EnvDTE.Document document, out string reasonForFailure, out bool isHeader)
+        public static VCFileConfiguration GetFileConfig(EnvDTE.Document document, out string reasonForFailure, out bool isHeader)
         {
             isHeader = false;
 
@@ -81,7 +64,7 @@ namespace IncludeToolbox.Commands
         }
 
 
-        private void PerformTryAndErrorRemoval(EnvDTE.Document document)
+        public void PerformTryAndErrorRemoval(EnvDTE.Document document)
         {
             if (document == null)
                 return;
@@ -100,10 +83,25 @@ namespace IncludeToolbox.Commands
                 return;
             }
 
+            PerformTryAndErrorRemoval(document, fileConfig);
+        }
+
+        public void PerformTryAndErrorRemoval(EnvDTE.Document document, VCFileConfiguration fileConfig)
+        {
+            if (document == null || fileConfig == null)
+                return;
+
+            if (WorkInProgress)
+            {
+                Output.Instance.ErrorMsg("Try and error include removal already in progress!");
+                return;
+            }
+            WorkInProgress = true;
+
             // Start wait dialog.
             IVsThreadedWaitDialog2 progressDialog = null;
             {
-                var dialogFactory = ServiceProvider.GetService(typeof(SVsThreadedWaitDialogFactory)) as IVsThreadedWaitDialogFactory;
+                var dialogFactory = Package.GetGlobalService(typeof(SVsThreadedWaitDialogFactory)) as IVsThreadedWaitDialogFactory;
                 if (dialogFactory == null)
                 {
                     Output.Instance.WriteLine("Failed to get Dialog Factory for wait dialog.");
@@ -115,15 +113,16 @@ namespace IncludeToolbox.Commands
                     Output.Instance.WriteLine("Failed to get create wait dialog.");
                     return;
                 }
+                string waitMessage = $"Parsing '{document.Name}' ... ";
                 progressDialog.StartWaitDialogWithPercentageProgress(
-                    szWaitCaption: "Include Toolbox",
-                    szWaitMessage: "Running Try & Error Removal - Parsing",
+                    szWaitCaption: "Include Toolbox - Running Try & Error Include Removal",
+                    szWaitMessage: waitMessage,
                     szProgressText: null,
                     varStatusBmpAnim: null,
-                    szStatusBarText: "Running Try & Error Removal",
+                    szStatusBarText: "Running Try & Error Removal - " + waitMessage,
                     fIsCancelable: true,
                     iDelayToShowDialog: 0,
-                    iTotalSteps: 10,    // Will be replaced.
+                    iTotalSteps: 20,    // Will be replaced.
                     iCurrentStep: 0);
             }
 
@@ -158,6 +157,8 @@ namespace IncludeToolbox.Commands
             outputWaitEvent.Reset();
             new System.Threading.Thread(() =>
             {
+                int numRemovedIncludes = 0;
+
                 try
                 {
                     int currentStep = 0;
@@ -169,12 +170,13 @@ namespace IncludeToolbox.Commands
                             continue;
 
                         // Update progress.
-                        string waitMessage = string.Format("Trying to remove '{0}'", documentLines[line].IncludeContent);
+                        string waitMessage = $"Removing #includes from '{document.Name}'";
+                        string progressText = $"Trying to remove '{documentLines[line].IncludeContent}' ...";
                         bool canceled = false;
                         progressDialog.UpdateProgress(
-                            szUpdatedWaitMessage: "Running Try & Error Removal - Removing Includes",
-                            szProgressText: waitMessage,
-                            szStatusBarText: waitMessage,
+                            szUpdatedWaitMessage: waitMessage,
+                            szProgressText: progressText,
+                            szStatusBarText: "Running Try & Error Removal - " + waitMessage + " - " + progressText,
                             iCurrentStep: currentStep + 1,
                             iTotalSteps: numIncludes + 1,
                             fDisableCancel: false,
@@ -202,7 +204,7 @@ namespace IncludeToolbox.Commands
                         {
                             const int maxNumCompileAttempts = 3;
                             bool fail = false;
-                            for (int numCompileFails = 0; numCompileFails < maxNumCompileAttempts; ++ numCompileFails)
+                            for (int numCompileFails = 0; numCompileFails < maxNumCompileAttempts; ++numCompileFails)
                             {
                                 try
                                 {
@@ -244,6 +246,7 @@ namespace IncludeToolbox.Commands
                         else
                         {
                             Output.Instance.WriteLine("Successfully removed #include: '{0}'", documentLines[line].IncludeContent);
+                            ++numRemovedIncludes;
                         }
                     }
                 }
@@ -257,9 +260,17 @@ namespace IncludeToolbox.Commands
                     {
                         // Close Progress bar.
                         progressDialog.EndWaitDialog();
+
                         // Remove build hook again.
                         document.DTE.Events.BuildEvents.OnBuildDone -= OnBuildFinished;
                         document.DTE.Events.BuildEvents.OnBuildProjConfigDone -= OnBuildConfigFinished;
+
+                        // Message.
+                        Output.Instance.WriteLine("Removed {0} #include directives from '{1}'", numRemovedIncludes, document.Name);
+
+                        // Notify that we are done.
+                        WorkInProgress = false;
+                        OnFileFinished?.Invoke(numRemovedIncludes);
                     });
                 }
             }).Start();
@@ -273,30 +284,6 @@ namespace IncludeToolbox.Commands
         private void OnBuildConfigFinished(string project, string projectConfig, string platform, string solutionConfig, bool success)
         {
             lastBuildSuccessful = success;
-        }
-
-
-        /// <summary>
-        /// This function is the callback used to execute the command when the menu item is clicked.
-        /// See the constructor to see how the menu item is associated with this function using
-        /// OleMenuCommandService service and MenuCommand class.
-        /// </summary>
-        /// <param name="sender">Event sender.</param>
-        /// <param name="e">Event args.</param>
-        protected override void MenuItemCallback(object sender, EventArgs e)
-        {
-            var document = VSUtils.GetDTE().ActiveDocument;
-            if (document != null)
-            {
-                try
-                {
-                    PerformTryAndErrorRemoval(document);
-                }
-                catch (Exception ex)
-                {
-                    Output.Instance.WriteLine("Unexpected error: {0}", ex);
-                }
-            }
         }
     }
 }

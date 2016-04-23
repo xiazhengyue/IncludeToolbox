@@ -22,7 +22,7 @@ namespace IncludeToolbox
                 return;
 
             OutputWindow outputWindow = dte.ToolWindows.OutputWindow;
-            outputWindowPane = outputWindow.OutputWindowPanes.Add("IncludeToolBox");
+            outputWindowPane = outputWindow.OutputWindowPanes.Add("IncludeToolbox");
         }
 
         public void Clear()
@@ -70,7 +70,7 @@ namespace IncludeToolbox
             WriteLine(output);
             VsShellUtilities.ShowMessageBox(ServiceProvider.GlobalProvider, output, "Include Toolbox", OLEMSGICON.OLEMSGICON_CRITICAL, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
         }
-
+            
 
         public void InfoMsg(string message, params object[] stringParams)
         {

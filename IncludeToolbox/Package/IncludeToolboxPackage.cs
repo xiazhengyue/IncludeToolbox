@@ -48,7 +48,8 @@ namespace IncludeToolbox
             Commands.IncludeViewerToolWindowCommand.Initialize(this);
             Commands.FormatIncludes.Initialize(this);
             Commands.IncludeWhatYouUse.Initialize(this);
-            Commands.TryAndErrorRemoval.Initialize(this);
+            Commands.TryAndErrorRemoval_CodeWindow.Initialize(this);
+            Commands.TryAndErrorRemoval_Project.Initialize(this);
 
             base.Initialize();            
         }
