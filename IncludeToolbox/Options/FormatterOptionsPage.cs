@@ -9,10 +9,6 @@ using IncludeToolbox.IncludeFormatter;
 
 namespace IncludeToolbox
 {
-    /// <summary>
-    /// Option page.
-    /// Settings are automatically persisted, since this class is registered with ProvideProfile at the package.
-    /// </summary>
     [Guid("B822F53B-32C0-4560-9A84-2F9DA7AB0E4C")]
     public class FormatterOptionsPage : DialogPage
     {

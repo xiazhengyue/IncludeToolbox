@@ -11,10 +11,8 @@ namespace IncludeToolbox
     [ProvideMenuResource("Menus.ctmenu", 1)]
 
     [ProvideOptionPage(typeof(FormatterOptionsPage), Options.Constants.Category, FormatterOptionsPage.SubCategory, 1000, 1001, true)]
-    [ProvideProfile(typeof(FormatterOptionsPage), Options.Constants.Category, FormatterOptionsPage.SubCategory, 1000, 1001, true)]
-
     [ProvideOptionPage(typeof(IncludeWhatYouUseOptionsPage), Options.Constants.Category, IncludeWhatYouUseOptionsPage.SubCategory, 1000, 1002, true)]
-    [ProvideProfile(typeof(IncludeWhatYouUseOptionsPage), Options.Constants.Category, IncludeWhatYouUseOptionsPage.SubCategory, 1000, 1002, true)]
+    [ProvideOptionPage(typeof(TryAndErrorRemovalOptionsPage), Options.Constants.Category, TryAndErrorRemovalOptionsPage.SubCategory, 1000, 1003, true)]
 
     [ProvideToolWindow(typeof(IncludeViewerToolWindow))]
     [Guid(IncludeToolboxPackage.PackageGuidString)]

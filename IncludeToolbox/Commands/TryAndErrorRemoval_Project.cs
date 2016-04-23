@@ -20,6 +20,8 @@ namespace IncludeToolbox.Commands
         public override CommandID CommandID => new CommandID(CommandSetGuids.ProjectGroup, 0x0100);
 
         private TryAndErrorRemoval impl;
+        private TryAndErrorRemovalOptionsPage settings;
+
         private IVCCollection fileCollection = null;
         private int fileIdx = 0;
         private int numTotalRemovedIncludes = 0;
@@ -36,6 +38,8 @@ namespace IncludeToolbox.Commands
             impl = new TryAndErrorRemoval();
             impl.OnFileFinished += OnDocumentIncludeRemovalFinished;
             menuCommand.BeforeQueryStatus += UpdateVisibility;
+
+            settings = (TryAndErrorRemovalOptionsPage)Package.GetDialogPage(typeof(TryAndErrorRemovalOptionsPage));
         }
 
         private void OnDocumentIncludeRemovalFinished(int removedIncludes)
@@ -114,7 +118,7 @@ namespace IncludeToolbox.Commands
                 if (isHeader && fileConfig != null)
                     continue;
 
-                impl.PerformTryAndErrorRemoval(document);
+                impl.PerformTryAndErrorRemoval(document, settings);
                 ++fileIdx;
                 return true;
             }

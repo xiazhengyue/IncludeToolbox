@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.VCProjectEngine;
 using EnvDTE;
+using IncludeToolbox.IncludeFormatter;
 using Microsoft.VisualStudio.Text;
 
 namespace IncludeToolbox
@@ -64,7 +65,7 @@ namespace IncludeToolbox
         }
 
 
-        public void PerformTryAndErrorRemoval(EnvDTE.Document document)
+        public void PerformTryAndErrorRemoval(EnvDTE.Document document, TryAndErrorRemovalOptionsPage settings)
         {
             if (document == null)
                 return;
@@ -83,10 +84,10 @@ namespace IncludeToolbox
                 return;
             }
 
-            PerformTryAndErrorRemoval(document, fileConfig);
+            PerformTryAndErrorRemoval(document, fileConfig, settings);
         }
 
-        public void PerformTryAndErrorRemoval(EnvDTE.Document document, VCFileConfiguration fileConfig)
+        public void PerformTryAndErrorRemoval(EnvDTE.Document document, VCFileConfiguration fileConfig, TryAndErrorRemovalOptionsPage settings)
         {
             if (document == null || fileConfig == null)
                 return;
@@ -127,24 +128,42 @@ namespace IncludeToolbox
             }
 
             // Extract all includes.
-            IncludeFormatter.IncludeLineInfo[] documentLines = null;
             ITextBuffer textBuffer = null;
-            try
-            {
-                document.Activate();
-                var documentTextView = VSUtils.GetCurrentTextViewHost();
-                textBuffer = documentTextView.TextView.TextBuffer;
-                string documentText = documentTextView.TextView.TextSnapshot.GetText();
-                documentLines = IncludeFormatter.IncludeLineInfo.ParseIncludes(documentText, false, null);
-            }
-            catch (Exception ex)
-            {
-                Output.Instance.WriteLine("Unexpected error: {0}", ex);
-                progressDialog.EndWaitDialog();
-                return;
-            }
-            int numIncludes = documentLines.Count(x => x.LineType != IncludeFormatter.IncludeLineInfo.Type.NoInclude);
+            Tuple<int, IncludeFormatter.IncludeLineInfo>[] includeLines;
+            { 
+                // Parsing.
+                IncludeFormatter.IncludeLineInfo[] documentLines = null;
+                try
+                {
+                    document.Activate();
+                    var documentTextView = VSUtils.GetCurrentTextViewHost();
+                    textBuffer = documentTextView.TextView.TextBuffer;
+                    string documentText = documentTextView.TextView.TextSnapshot.GetText();
+                    documentLines = IncludeFormatter.IncludeLineInfo.ParseIncludes(documentText, false, null);
+                }
+                catch (Exception ex)
+                {
+                    Output.Instance.WriteLine("Unexpected error: {0}", ex);
+                    progressDialog.EndWaitDialog();
+                    return;
+                }
 
+                // Filter lines for actual includes.
+                var includeLinesEnumberable = documentLines.Select((line, order) => new Tuple<int, IncludeFormatter.IncludeLineInfo>(order, line))
+                                                           .Where(x => x.Item2.LineType != IncludeFormatter.IncludeLineInfo.Type.NoInclude);
+                // Optionally skip top most include.
+                if (settings.IgnoreFirstInclude)
+                    includeLinesEnumberable = includeLinesEnumberable.Skip(1);
+                // Apply filter ignore regex.
+                includeLinesEnumberable = includeLinesEnumberable.Where(line => !settings.IgnoreList.Any(regexPattern => 
+                                                          new System.Text.RegularExpressions.Regex(regexPattern).Match(line.Item2.IncludeContent).Success));
+                // Reverse order if necessary.
+                if (settings.RemovalOrder == TryAndErrorRemovalOptionsPage.IncludeRemovalOrder.BottomToTop)
+                    includeLinesEnumberable = includeLinesEnumberable.Reverse();
+
+                includeLines = includeLinesEnumberable.ToArray();
+            }
+            int numIncludes = includeLines.Count();
 
 
             // Hook into build events.
@@ -161,33 +180,34 @@ namespace IncludeToolbox
 
                 try
                 {
-                    int currentStep = 0;
+                    int currentProgressStep = 0;
 
                     // For ever include line..
-                    for (int line = documentLines.Length - 1; line >= 0; --line)
+                    foreach(Tuple<int, IncludeFormatter.IncludeLineInfo> line in includeLines)
                     {
-                        if (documentLines[line].LineType == IncludeFormatter.IncludeLineInfo.Type.NoInclude)
-                            continue;
+                        // If we are working from top to bottom, the line number may have changed!
+                        int currentLine = line.Item1;
+                        if (settings.RemovalOrder == TryAndErrorRemovalOptionsPage.IncludeRemovalOrder.TopToBottom)
+                            currentLine -= numRemovedIncludes;
 
                         // Update progress.
                         string waitMessage = $"Removing #includes from '{document.Name}'";
-                        string progressText = $"Trying to remove '{documentLines[line].IncludeContent}' ...";
+                        string progressText = $"Trying to remove '{line.Item2.IncludeContent}' ...";
                         bool canceled = false;
                         progressDialog.UpdateProgress(
                             szUpdatedWaitMessage: waitMessage,
                             szProgressText: progressText,
                             szStatusBarText: "Running Try & Error Removal - " + waitMessage + " - " + progressText,
-                            iCurrentStep: currentStep + 1,
+                            iCurrentStep: currentProgressStep + 1,
                             iTotalSteps: numIncludes + 1,
                             fDisableCancel: false,
                             pfCanceled: out canceled);
                         if (canceled)
                             break;
 
-                        ++currentStep;
+                        ++currentProgressStep;
 
                         // Remove include - this needs to be done on the main thread.
-                        int currentLine = line;
                         Application.Current.Dispatcher.Invoke(() =>
                         {
                             using (var edit = textBuffer.CreateEdit())
@@ -235,7 +255,7 @@ namespace IncludeToolbox
                         // Undo removal if compilation failed.
                         if (!noTimeout || !lastBuildSuccessful)
                         {
-                            Output.Instance.WriteLine("Could not remove #include: '{0}'", documentLines[line].IncludeContent);
+                            Output.Instance.WriteLine("Could not remove #include: '{0}'", line.Item2.IncludeContent);
                             document.Undo();
                             if (!noTimeout)
                             {
@@ -245,7 +265,7 @@ namespace IncludeToolbox
                         }
                         else
                         {
-                            Output.Instance.WriteLine("Successfully removed #include: '{0}'", documentLines[line].IncludeContent);
+                            Output.Instance.WriteLine("Successfully removed #include: '{0}'", line.Item2.IncludeContent);
                             ++numRemovedIncludes;
                         }
                     }

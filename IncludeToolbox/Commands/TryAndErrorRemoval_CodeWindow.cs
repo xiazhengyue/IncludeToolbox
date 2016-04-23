@@ -57,7 +57,7 @@ namespace IncludeToolbox.Commands
             {
                 try
                 {
-                    impl.PerformTryAndErrorRemoval(document);
+                    impl.PerformTryAndErrorRemoval(document, (TryAndErrorRemovalOptionsPage)Package.GetDialogPage(typeof(TryAndErrorRemovalOptionsPage)));
                 }
                 catch (Exception ex)
                 {

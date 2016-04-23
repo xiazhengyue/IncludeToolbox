@@ -163,5 +163,7 @@ namespace IncludeToolbox.IncludeFormatter
 
         public int Delimiter0 { get; private set; } = -1;
         public int Delimiter1 { get; private set; } = -1;
+
+        public int OriginalLineNumber { get; private set; }
     }
 }

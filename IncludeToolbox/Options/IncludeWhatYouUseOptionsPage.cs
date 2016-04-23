@@ -8,10 +8,6 @@ using System.Runtime.InteropServices;
 
 namespace IncludeToolbox
 {
-    /// <summary>
-    /// Option page.
-    /// Settings are automatically persisted, since this class is registered with ProvideProfile at the package.
-    /// </summary>
     [Guid("69CFD797-2E2B-497E-9231-334BCDC41407")]
     public class IncludeWhatYouUseOptionsPage : DialogPage
     {

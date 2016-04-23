@@ -58,6 +58,9 @@
     <Compile Include="Commands\CommandSetGuids.cs" />
     <Compile Include="Commands\IncludeViewerToolWindowCommand.cs" />
     <Compile Include="Commands\IncludeWhatYouUse.cs" />
+    <Compile Include="Options\IncludeWhatYouUseOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TryAndErrorRemoval.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_CodeWindow.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_Project.cs" />
@@ -68,7 +71,7 @@
     <Compile Include="Package\IncludeToolboxPackage.cs" />
     <Compile Include="IncludeFormatter\IncludeLineInfo.cs" />
     <Compile Include="Options\Constants.cs" />
-    <Compile Include="Options\IncludeWhatYouUseOptionsPage.cs">
+    <Compile Include="Options\TryAndErrorRemovalOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="ToolWindows\IncludeViewerToolWindow.cs" />
