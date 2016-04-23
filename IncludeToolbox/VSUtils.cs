@@ -51,11 +51,17 @@ namespace IncludeToolbox
 
         public static List<string> GetProjectIncludeDirectories(EnvDTE.Project project, bool endWithSeparator = true)
         {
+            List<string> pathStrings = new List<string>();
+            if (project == null)
+            {
+                return pathStrings;
+            }
+
             VCCLCompilerTool compilerTool = GetVCppCompilerTool(project);
             string projectPath = Path.GetDirectoryName(Path.GetFullPath(project.FileName));
 
             // According to documentation FullIncludePath has resolved macros.
-            List<string> pathStrings = new List<string>();
+            
             pathStrings.AddRange(compilerTool.FullIncludePath.Split(new[] {';'}, StringSplitOptions.RemoveEmptyEntries));
 
             for (int i = pathStrings.Count - 1; i >= 0; --i)

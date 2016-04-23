@@ -26,9 +26,10 @@ namespace IncludeToolbox.Commands
         protected virtual void SetupMenuCommand()
         {
             OleMenuCommandService commandService = ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            menuCommand = new MenuCommand(this.MenuItemCallback, CommandID);
+            menuCommand = new OleMenuCommand(this.MenuItemCallback, CommandID);
             commandService.AddCommand(menuCommand);
         }
+
 
         /// <summary>
         /// Gets the instance of the command.
@@ -46,7 +47,7 @@ namespace IncludeToolbox.Commands
 
         protected IServiceProvider ServiceProvider => Package;
 
-        protected MenuCommand menuCommand;
+        protected OleMenuCommand menuCommand;
 
         public abstract CommandID CommandID { get; }
 

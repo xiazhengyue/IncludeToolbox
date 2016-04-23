@@ -51,11 +51,10 @@ namespace IncludeToolbox.Commands
 
                 // Try to find absolute paths
                 var document = VSUtils.GetDTE().ActiveDocument;
-                var project = document.ProjectItem.ContainingProject;
+                var project = document.ProjectItem?.ContainingProject;
                 if (project == null)
                 {
                     Output.Instance.WriteLine("The document {0} is not part of a project.", document.Name);
-                    return;
                 }
                 var includeDirectories = VSUtils.GetProjectIncludeDirectories(project);
                 includeDirectories.Insert(0, PathUtil.Normalize(document.Path) + Path.DirectorySeparatorChar);

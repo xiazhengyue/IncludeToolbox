@@ -59,6 +59,7 @@
       <Button guid="guidIncludeFormatterCmdSet" id="FormatIncludesId" priority="0x0100" type="Button">
         <Parent guid="guidIncludeFormatterCmdSet" id="EditMenuGroup" />
         <Icon guid="guidImages" id="toolIcon" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Format Selected Includes</ButtonText>
         </Strings>
@@ -66,13 +67,16 @@
       <Button guid="guidIncludeFormatterCmdSet" id="IncludeWhatYouUseId" priority="0x0101" type="Button">
         <Parent guid="guidIncludeFormatterCmdSet" id="EditMenuGroup" />
         <Icon guid="guidImages" id="toolIcon" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Run Include-What-You-Use</ButtonText>
         </Strings>
+        
       </Button>
       <Button guid="guidIncludeFormatterCmdSet" id="TryAndErrorRemovalId" priority="0x0102" type="Button">
         <Parent guid="guidIncludeFormatterCmdSet" id="EditMenuGroup" />
         <Icon guid="guidImages" id="toolIcon" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Try and Error Include Removal</ButtonText>
         </Strings>

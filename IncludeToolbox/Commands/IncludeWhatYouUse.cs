@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudio.VCProjectEngine;
 
 namespace IncludeToolbox.Commands
 {
@@ -20,6 +21,20 @@ namespace IncludeToolbox.Commands
 
         public IncludeWhatYouUse()
         {
+        }
+
+        protected override void SetupMenuCommand()
+        {
+            base.SetupMenuCommand();
+            menuCommand.BeforeQueryStatus += UpdateVisibility;
+        }
+
+        private void UpdateVisibility(object sender, EventArgs e)
+        {
+            // Needs to be part of a VCProject to be aplicable.
+            var document = VSUtils.GetDTE()?.ActiveDocument;
+            var project = document?.ProjectItem?.ContainingProject?.Object as VCProject;
+            menuCommand.Visible = project != null;
         }
 
         class FormatTask

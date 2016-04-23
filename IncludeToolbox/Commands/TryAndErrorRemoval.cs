@@ -23,12 +23,28 @@ namespace IncludeToolbox.Commands
         {
         }
 
+        protected override void SetupMenuCommand()
+        {
+            base.SetupMenuCommand();
+            menuCommand.BeforeQueryStatus += UpdateVisibility;
+        }
+
         private volatile bool lastBuildSuccessful;
         private AutoResetEvent outputWaitEvent = new AutoResetEvent(false);
         private const int timeoutMS = 30000; // 30 seconds
 
-        private static VCFileConfiguration GetFileConfig(EnvDTE.Document document, out string reasonForFailure)
+        private void UpdateVisibility(object sender, EventArgs e)
         {
+            string reason;
+            bool isHeader;
+            var config = GetFileConfig(VSUtils.GetDTE().ActiveDocument, out reason, out isHeader);
+            menuCommand.Visible = (config != null) && !isHeader;
+        }
+
+        private static VCFileConfiguration GetFileConfig(EnvDTE.Document document, out string reasonForFailure, out bool isHeader)
+        {
+            isHeader = false;
+
             if (document == null)
             {
                 reasonForFailure = "No document.";
@@ -49,7 +65,10 @@ namespace IncludeToolbox.Commands
                 reasonForFailure = "The given document is not a VC++ file.";
                 return null;
             }
-            IVCCollection fileConfigCollection = vcFile?.FileConfigurations;
+
+            isHeader = vcFile.FileType == Microsoft.VisualStudio.VCProjectEngine.eFileType.eFileTypeCppHeader;
+
+            IVCCollection fileConfigCollection = vcFile.FileConfigurations;
             VCFileConfiguration fileConfig = fileConfigCollection?.Item(vcProject.ActiveConfiguration.Name);
             if (fileConfig == null)
             {
@@ -68,10 +87,16 @@ namespace IncludeToolbox.Commands
                 return;
 
             string errorMessage;
-            var fileConfig = GetFileConfig(document, out errorMessage);
+            bool isHeader;
+            var fileConfig = GetFileConfig(document, out errorMessage, out isHeader);
             if (fileConfig == null)
             {
                 Output.Instance.WriteLine(errorMessage);
+                return;
+            }
+            if (isHeader)
+            {
+                Output.Instance.WriteLine("Try and error include removal does not work on Headers.");
                 return;
             }
 

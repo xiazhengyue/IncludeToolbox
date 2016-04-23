@@ -2,11 +2,14 @@
 using System.Runtime.InteropServices;
 using IncludeViewer;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace IncludeToolbox
 {
     [PackageRegistration(UseManagedResourcesOnly = true)]
+    [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
+
     [ProvideOptionPage(typeof(FormatterOptionsPage), Options.Constants.Category, FormatterOptionsPage.SubCategory, 1000, 1001, true)]
     [ProvideProfile(typeof(FormatterOptionsPage), Options.Constants.Category, FormatterOptionsPage.SubCategory, 1000, 1001, true)]
 
