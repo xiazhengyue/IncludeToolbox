@@ -14,68 +14,12 @@ namespace IncludeToolbox.Commands
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class IncludeWhatYouUse
+    internal sealed class IncludeWhatYouUse : CommandBase<IncludeWhatYouUse>
     {
-        /// <summary>
-        /// Command ID.
-        /// </summary>
-        public const int CommandId = 0x0103;
+        public override CommandID CommandID => new CommandID(CommandSetGuids.MenuGroup, 0x0103);
 
-        /// <summary>
-        /// VS Package that provides this command, not null.
-        /// </summary>
-        private readonly Package package;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="IncludeWhatYouUse"/> class.
-        /// Adds our command handlers for menu (commands must exist in the command table file)
-        /// </summary>
-        /// <param name="package">Owner package, not null.</param>
-        private IncludeWhatYouUse(Package package)
+        public IncludeWhatYouUse()
         {
-            if (package == null)
-            {
-                throw new ArgumentNullException("package");
-            }
-
-            this.package = package;
-
-            OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (commandService != null)
-            {
-                var menuCommandID = new CommandID(MenuCommandSet.Guid, CommandId);
-                var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
-                commandService.AddCommand(menuItem);
-            }
-        }
-
-        /// <summary>
-        /// Gets the instance of the command.
-        /// </summary>
-        public static IncludeWhatYouUse Instance
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Gets the service provider from the owner package.
-        /// </summary>
-        private IServiceProvider ServiceProvider
-        {
-            get
-            {
-                return this.package;
-            }
-        }
-
-        /// <summary>
-        /// Initializes the singleton instance of the command.
-        /// </summary>
-        /// <param name="package">Owner package, not null.</param>
-        public static void Initialize(Package package)
-        {
-            Instance = new IncludeWhatYouUse(package);
         }
 
         class FormatTask
@@ -92,8 +36,8 @@ namespace IncludeToolbox.Commands
                 return stringBuilder.ToString();
             }
 
-            public HashSet<int> linesToRemove = new HashSet<int>();
-            public List<string> linesToAdd = new List<string>();
+            public readonly HashSet<int> linesToRemove = new HashSet<int>();
+            public readonly List<string> linesToAdd = new List<string>();
         };
 
 
@@ -201,7 +145,7 @@ namespace IncludeToolbox.Commands
                 }
                 fileWindow.Activate();
 
-                var viewHost = Utils.GetCurrentTextViewHost();                
+                var viewHost = VSUtils.GetCurrentTextViewHost();                
                 using (var edit = viewHost.TextView.TextBuffer.CreateEdit())
                 {
                     var originalLines = edit.Snapshot.Lines.ToArray();
@@ -258,7 +202,7 @@ namespace IncludeToolbox.Commands
 
         private string RunIncludeWhatYouUse(string fullFileName, EnvDTE.Project project, IncludeWhatYouUseOptionsPage settings)
         {
-            var compilerTool = Utils.GetVCppCompilerTool(project);
+            var compilerTool = VSUtils.GetVCppCompilerTool(project);
             if (compilerTool == null)
                 return "";
 
@@ -273,7 +217,7 @@ namespace IncludeToolbox.Commands
                 process.StartInfo.Arguments = "";
 
                 // Includes and Preprocessor.
-                var includeEntries = Utils.GetProjectIncludeDirectories(project, false);
+                var includeEntries = VSUtils.GetProjectIncludeDirectories(project, false);
                 process.StartInfo.Arguments = includeEntries.Aggregate("", (current, inc) => current + ("-I \"" + inc + "\" "));
                 process.StartInfo.Arguments = compilerTool.PreprocessorDefinitions.
                     Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).
@@ -347,12 +291,12 @@ namespace IncludeToolbox.Commands
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        private void MenuItemCallback(object sender, EventArgs e)
+        protected override void MenuItemCallback(object sender, EventArgs e)
         {
-            var settings = (IncludeWhatYouUseOptionsPage)package.GetDialogPage(typeof(IncludeWhatYouUseOptionsPage));
+            var settings = (IncludeWhatYouUseOptionsPage)Package.GetDialogPage(typeof(IncludeWhatYouUseOptionsPage));
             Output.Instance.Clear();
 
-            var document = Utils.GetActiveDocument();
+            var document = VSUtils.GetDTE().ActiveDocument;
             if (document == null)
             {
                 Output.Instance.WriteLine("No active document!");

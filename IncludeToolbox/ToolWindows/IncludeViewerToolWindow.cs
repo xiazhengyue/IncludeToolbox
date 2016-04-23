@@ -128,11 +128,11 @@ namespace IncludeViewer
                     return;
                 }
 
-                var compilerTool = Utils.GetVCppCompilerTool(project);
+                var compilerTool = VSUtils.GetVCppCompilerTool(project);
                 if (compilerTool == null)
                     return;
 
-                string includeDirs = Utils.GetProjectIncludeDirectories(project)
+                string includeDirs = VSUtils.GetProjectIncludeDirectories(project)
                     .Aggregate("", (current, def) => current + (def + ";"));
 
                 string preprocessorDefinitions = GetPreprocessorDefinitions(compilerTool);

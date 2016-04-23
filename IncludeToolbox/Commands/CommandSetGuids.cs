@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace IncludeToolbox.Commands
+{
+    static class CommandSetGuids
+    {
+        /// <summary>
+        /// Command menu group (command set GUID) for document menu.
+        /// </summary>
+        public static readonly Guid MenuGroup = new Guid("aef3a531-8af4-4b7b-800a-e32503dfc6e2");
+
+        /// <summary>
+        /// Command menu group (command set GUID) for tool menu.
+        /// </summary>
+        public static readonly Guid ToolGroup = new Guid("032eb795-1f1c-440d-af98-43cdc1de7a8b");
+    }
+}

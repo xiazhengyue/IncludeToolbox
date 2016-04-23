@@ -1,21 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Linq;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.VCProjectEngine;
 using EnvDTE;
-using EnvDTE80;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Text;
 
 namespace IncludeToolbox.Commands
@@ -23,94 +15,64 @@ namespace IncludeToolbox.Commands
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class TryAndErrorRemoval
+    internal sealed class TryAndErrorRemoval : CommandBase<TryAndErrorRemoval>
     {
-        /// <summary>
-        /// Command ID.
-        /// </summary>
-        public const int CommandId = 0x0104;
+        public override CommandID CommandID => new CommandID(CommandSetGuids.MenuGroup, 0x0104);
 
-        /// <summary>
-        /// VS Package that provides this command, not null.
-        /// </summary>
-        private readonly Package package;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="IncludeWhatYouUse"/> class.
-        /// Adds our command handlers for menu (commands must exist in the command table file)
-        /// </summary>
-        /// <param name="package">Owner package, not null.</param>
-        private TryAndErrorRemoval(Package package)
+        public TryAndErrorRemoval()
         {
-            if (package == null)
-            {
-                throw new ArgumentNullException("package");
-            }
-
-            this.package = package;
-
-            OleMenuCommandService commandService =
-                this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (commandService != null)
-            {
-                var menuCommandID = new CommandID(MenuCommandSet.Guid, CommandId);
-                var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
-                commandService.AddCommand(menuItem);
-            }
         }
-
-        /// <summary>
-        /// Gets the instance of the command.
-        /// </summary>
-        public static TryAndErrorRemoval Instance { get; private set; }
-
-
-        /// <summary>
-        /// Gets the service provider from the owner package.
-        /// </summary>
-        private IServiceProvider ServiceProvider => this.package;
 
         private volatile bool lastBuildSuccessful;
         private AutoResetEvent outputWaitEvent = new AutoResetEvent(false);
         private const int timeoutMS = 30000; // 30 seconds
 
-        /// <summary>
-        /// Initializes the singleton instance of the command.
-        /// </summary>
-        /// <param name="package">Owner package, not null.</param>
-        public static void Initialize(Package package)
+        private static VCFileConfiguration GetFileConfig(EnvDTE.Document document, out string reasonForFailure)
         {
-            Instance = new TryAndErrorRemoval(package);
+            if (document == null)
+            {
+                reasonForFailure = "No document.";
+                return null;
+            }
+
+            var project = document.ProjectItem?.ContainingProject;
+            VCProject vcProject = project.Object as VCProject;
+            if (vcProject == null)
+            {
+                reasonForFailure = "The given document does not belong to a VC++ Project.";
+                return null;
+            }
+
+            VCFile vcFile = document.ProjectItem?.Object as VCFile;
+            if (vcFile == null)
+            {
+                reasonForFailure = "The given document is not a VC++ file.";
+                return null;
+            }
+            IVCCollection fileConfigCollection = vcFile?.FileConfigurations;
+            VCFileConfiguration fileConfig = fileConfigCollection?.Item(vcProject.ActiveConfiguration.Name);
+            if (fileConfig == null)
+            {
+                reasonForFailure = "Failed to retrieve file config from document.";
+                return null;
+            }
+
+            reasonForFailure = "";
+            return fileConfig;
         }
+
 
         private void PerformTryAndErrorRemoval(EnvDTE.Document document)
         {
             if (document == null)
                 return;
 
-            VCFileConfiguration fileConfig = null;
+            string errorMessage;
+            var fileConfig = GetFileConfig(document, out errorMessage);
+            if (fileConfig == null)
             {
-                var project = document.ProjectItem?.ContainingProject;
-                VCProject vcProject = project.Object as VCProject;
-                if (vcProject == null)
-                {
-                    Output.Instance.WriteLine("The given document does not belong to a VC++ Project.");
-                    return;
-                }
-
-                VCFile vcFile = document.ProjectItem?.Object as VCFile;
-                if (vcFile == null)
-                {
-                    Output.Instance.WriteLine("The given document is not a VC++ file.");
-                    return;
-                }
-                IVCCollection fileConfigCollection = vcFile?.FileConfigurations;
-                fileConfig = fileConfigCollection?.Item(vcProject.ActiveConfiguration.Name);
-                if (fileConfig == null)
-                {
-                    Output.Instance.WriteLine("Failed to retrieve file config from document.");
-                    return;
-                }
+                Output.Instance.WriteLine(errorMessage);
+                return;
             }
 
             // Start wait dialog.
@@ -146,7 +108,7 @@ namespace IncludeToolbox.Commands
             try
             {
                 document.Activate();
-                var documentTextView = Utils.GetCurrentTextViewHost();
+                var documentTextView = VSUtils.GetCurrentTextViewHost();
                 textBuffer = documentTextView.TextView.TextBuffer;
                 string documentText = documentTextView.TextView.TextSnapshot.GetText();
                 documentLines = IncludeFormatter.IncludeLineInfo.ParseIncludes(documentText, false, null);
@@ -296,9 +258,9 @@ namespace IncludeToolbox.Commands
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        private void MenuItemCallback(object sender, EventArgs e)
+        protected override void MenuItemCallback(object sender, EventArgs e)
         {
-            var document = Utils.GetActiveDocument();
+            var document = VSUtils.GetDTE().ActiveDocument;
             if (document != null)
             {
                 try

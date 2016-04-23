@@ -16,68 +16,12 @@ namespace IncludeToolbox.Commands
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class FormatIncludes
+    internal sealed class FormatIncludes : CommandBase<FormatIncludes>
     {
-        /// <summary>
-        /// Command ID.
-        /// </summary>
-        public const int CommandId = 0x0100;
+        public override CommandID CommandID => new CommandID(CommandSetGuids.MenuGroup, 0x0100);
 
-        /// <summary>
-        /// VS Package that provides this command, not null.
-        /// </summary>
-        private readonly Package package;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="FormatIncludes"/> class.
-        /// Adds our command handlers for menu (commands must exist in the command table file)
-        /// </summary>
-        /// <param name="package">Owner package, not null.</param>
-        private FormatIncludes(Package package)
+        public FormatIncludes()
         {
-            if (package == null)
-            {
-                throw new ArgumentNullException("package");
-            }
-
-            this.package = package;
-
-            OleMenuCommandService commandService = this.ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (commandService != null)
-            {
-                var menuCommandID = new CommandID(MenuCommandSet.Guid, CommandId);
-                var menuItem = new MenuCommand(this.MenuItemCallback, menuCommandID);
-                commandService.AddCommand(menuItem);
-            }
-        }
-
-        /// <summary>
-        /// Gets the instance of the command.
-        /// </summary>
-        public static FormatIncludes Instance
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-        /// Gets the service provider from the owner package.
-        /// </summary>
-        private IServiceProvider ServiceProvider
-        {
-            get
-            {
-                return this.package;
-            }
-        }
-
-        /// <summary>
-        /// Initializes the singleton instance of the command.
-        /// </summary>
-        /// <param name="package">Owner package, not null.</param>
-        public static void Initialize(Package package)
-        {
-            Instance = new FormatIncludes(package);
         }
 
         /// <summary>
@@ -99,25 +43,25 @@ namespace IncludeToolbox.Commands
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        private void MenuItemCallback(object sender, EventArgs e)
+        protected override void MenuItemCallback(object sender, EventArgs e)
         {
             try
             {
-                var settings = (FormatterOptionsPage) package.GetDialogPage(typeof (FormatterOptionsPage));
+                var settings = (FormatterOptionsPage) Package.GetDialogPage(typeof (FormatterOptionsPage));
 
                 // Try to find absolute paths
-                var document = Utils.GetActiveDocument();
+                var document = VSUtils.GetDTE().ActiveDocument;
                 var project = document.ProjectItem.ContainingProject;
                 if (project == null)
                 {
                     Output.Instance.WriteLine("The document {0} is not part of a project.", document.Name);
                     return;
                 }
-                var includeDirectories = Utils.GetProjectIncludeDirectories(project);
+                var includeDirectories = VSUtils.GetProjectIncludeDirectories(project);
                 includeDirectories.Insert(0, PathUtil.Normalize(document.Path) + Path.DirectorySeparatorChar);
 
                 // Read.
-                var viewHost = Utils.GetCurrentTextViewHost();
+                var viewHost = VSUtils.GetCurrentTextViewHost();
                 var selectionSpan = GetSelectionSpan(viewHost);
                 var lines = IncludeFormatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(),
                     settings.RemoveEmptyLines, includeDirectories);
