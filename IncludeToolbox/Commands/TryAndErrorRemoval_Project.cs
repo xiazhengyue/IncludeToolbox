@@ -42,10 +42,10 @@ namespace IncludeToolbox.Commands
             settings = (TryAndErrorRemovalOptionsPage)Package.GetDialogPage(typeof(TryAndErrorRemovalOptionsPage));
         }
 
-        private void OnDocumentIncludeRemovalFinished(int removedIncludes)
+        private void OnDocumentIncludeRemovalFinished(int removedIncludes, bool canceled)
         {
             numTotalRemovedIncludes += removedIncludes;
-            if (!ProcessNextFile())
+            if (canceled || !ProcessNextFile())
             {
                 Output.Instance.InfoMsg("Removed total of {0} #include directives from project.", numTotalRemovedIncludes);
                 fileIdx = 0;

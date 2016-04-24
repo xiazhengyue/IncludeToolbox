@@ -16,7 +16,7 @@ namespace IncludeToolbox
     /// </summary>
     internal sealed class TryAndErrorRemoval
     {
-        public delegate void FinishedEvent(int numRemovedIncludes);
+        public delegate void FinishedEvent(int numRemovedIncludes, bool canceled);
         public event FinishedEvent OnFileFinished;
 
         public static bool WorkInProgress { get; private set; }
@@ -177,6 +177,7 @@ namespace IncludeToolbox
             new System.Threading.Thread(() =>
             {
                 int numRemovedIncludes = 0;
+                bool canceled = false;
 
                 try
                 {
@@ -193,7 +194,6 @@ namespace IncludeToolbox
                         // Update progress.
                         string waitMessage = $"Removing #includes from '{document.Name}'";
                         string progressText = $"Trying to remove '{line.Item2.IncludeContent}' ...";
-                        bool canceled = false;
                         progressDialog.UpdateProgress(
                             szUpdatedWaitMessage: waitMessage,
                             szProgressText: progressText,
@@ -223,7 +223,6 @@ namespace IncludeToolbox
                         // As a workaround we just try again a few times.
                         {
                             const int maxNumCompileAttempts = 3;
-                            bool fail = false;
                             for (int numCompileFails = 0; numCompileFails < maxNumCompileAttempts; ++numCompileFails)
                             {
                                 try
@@ -235,18 +234,19 @@ namespace IncludeToolbox
                                     if (numCompileFails == maxNumCompileAttempts - 1)
                                     {
                                         Output.Instance.WriteLine("Compile Failed:\n{0}", e);
-                                        fail = true;
+
+                                        document.Undo();
+                                        throw e;
                                     }
                                     else
                                     {
                                         // Try again.
-                                        System.Threading.Thread.Sleep(1);
+                                        System.Threading.Thread.Sleep(100);
                                         continue;
                                     }
                                 }
                                 break;
                             }
-                            if (fail) break;
                         }
 
                         // Wait till woken.
@@ -290,7 +290,7 @@ namespace IncludeToolbox
 
                         // Notify that we are done.
                         WorkInProgress = false;
-                        OnFileFinished?.Invoke(numRemovedIncludes);
+                        OnFileFinished?.Invoke(numRemovedIncludes, canceled);
                     });
                 }
             }).Start();
