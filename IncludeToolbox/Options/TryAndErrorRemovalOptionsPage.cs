@@ -25,7 +25,7 @@ namespace IncludeToolbox
         public IncludeRemovalOrder RemovalOrder { get; set; } = IncludeRemovalOrder.BottomToTop;
 
         [Category("Try And Error Include Removal")]
-        [DisplayName("Include First Include")]
+        [DisplayName("Ignore First Include")]
         [Description("If true, the first include of a file will never be removed (useful for ignoring PCH).")]
         public bool IgnoreFirstInclude { get; set; } = true;
 
