@@ -76,7 +76,7 @@ namespace IncludeToolbox.Commands
                     line.UpdateTextWithIncludeContent();
 
                 // Sorting. Ignores non-include lines.
-                IncludeFormatter.IncludeFormatter.SortIncludes(lines, settings.PrecedenceRegexes, document.Name);
+                IncludeFormatter.IncludeFormatter.SortIncludes(lines, settings.SortByType, settings.PrecedenceRegexes, document.Name);
 
                 // Overwrite.
                 string replaceText = string.Join(Environment.NewLine, lines.Select(x => x.Text));

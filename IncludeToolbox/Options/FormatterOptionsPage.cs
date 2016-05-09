@@ -51,7 +51,7 @@ namespace IncludeToolbox
         }
         [Category("Formatting")]
         [DisplayName("Delimiter Mode")]
-        [Description("Changes all delimiters to the given type.")]
+        [Description("Optionally changes all delimiters to either angle brackets <...> or quotes \"...\".")]
         public DelimiterMode DelimiterFormatting { get; set; } = DelimiterMode.Unchanged;
 
         public enum SlashMode
@@ -83,6 +83,17 @@ namespace IncludeToolbox
         }
         private string[] precedenceRegexes = new string[] { "$(currentFilename)\\.(?i)(h|hpp|hxx|inl|c|cpp|cxx)(?-i)$" };
 
+        public enum TypeSorting
+        {
+            None,
+            AngleBracketsFirst,
+            QuotedFirst,
+        }
+        [Category("Sorting")]
+        [DisplayName("Sort by Include Type")]
+        [Description("Optionally put either includes with angle brackets <...> or quotes \"...\" first.")]
+        public TypeSorting SortByType { get; set; } = TypeSorting.QuotedFirst;
+
         #endregion
 
         // In theory the whole save/load mechanism should be done automatically.
@@ -112,6 +123,7 @@ namespace IncludeToolbox
 
             var value = string.Join("\n", PrecedenceRegexes);
             settingsStore.SetString(collectionName, nameof(PrecedenceRegexes), value);
+            settingsStore.SetInt32(collectionName, nameof(SortByType), (int)SortByType);
         }
 
         public override void LoadSettingsFromStorage()
@@ -135,6 +147,8 @@ namespace IncludeToolbox
                 var value = settingsStore.GetString(collectionName, nameof(PrecedenceRegexes));
                 PrecedenceRegexes = value.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
             }
+            if (settingsStore.PropertyExists(collectionName, nameof(SortByType)))
+                SortByType = (TypeSorting) settingsStore.GetInt32(collectionName, nameof(SortByType));
         }
     }
 }

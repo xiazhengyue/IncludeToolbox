@@ -94,16 +94,23 @@ namespace IncludeToolbox.IncludeFormatter
             }
         }
 
-        public static void SortIncludes(IncludeLineInfo[] lines, string[] precedenceRegexes, string documentName)
+        public static void SortIncludes(IncludeLineInfo[] lines, FormatterOptionsPage.TypeSorting typeSorting, string[] precedenceRegexes, string documentName)
         {
             var comparer = new IncludeComparer(precedenceRegexes, documentName);
-            var sortedIncludes = lines.Where(x => x.LineType != IncludeLineInfo.Type.NoInclude).OrderBy(x => x.IncludeContent, comparer).ToArray();
+            var sortedIncludes = lines.Where(x => x.LineType != IncludeLineInfo.Type.NoInclude).OrderBy(x => x.IncludeContent, comparer);
+
+            if (typeSorting == FormatterOptionsPage.TypeSorting.AngleBracketsFirst)
+                sortedIncludes = sortedIncludes.OrderBy(x => x.LineType == IncludeLineInfo.Type.AngleBrackets ? 0 : 1);
+            else if (typeSorting == FormatterOptionsPage.TypeSorting.QuotedFirst)
+                sortedIncludes = sortedIncludes.OrderBy(x => x.LineType == IncludeLineInfo.Type.Quotes ? 0 : 1);
+
             int incIdx = 0;
-            for (int allIdx = 0; allIdx < lines.Length && incIdx < sortedIncludes.Length; ++allIdx)
+            var sortedIncludesArray = sortedIncludes.ToArray();
+            for (int allIdx = 0; allIdx < lines.Length && incIdx < sortedIncludesArray.Length; ++allIdx)
             {
                 if (lines[allIdx].LineType != IncludeLineInfo.Type.NoInclude)
                 {
-                    lines[allIdx] = sortedIncludes[incIdx];
+                    lines[allIdx] = sortedIncludesArray[incIdx];
                     ++incIdx;
                 }
             }
