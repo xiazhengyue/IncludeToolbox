@@ -62,12 +62,15 @@ namespace IncludeToolbox.Commands
                 // Read.
                 var viewHost = VSUtils.GetCurrentTextViewHost();
                 var selectionSpan = GetSelectionSpan(viewHost);
-                var lines = IncludeFormatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(),
-                    settings.RemoveEmptyLines, includeDirectories);
+                var lines = IncludeFormatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), settings.RemoveEmptyLines, includeDirectories);
 
                 // Format.
-                IncludeFormatter.IncludeFormatter.FormatPaths(lines, settings.PathFormat, settings.IgnoreFileRelative,
-                    includeDirectories);
+                IEnumerable<string> formatingDirs = includeDirectories;
+                if (settings.IgnoreFileRelative)
+                {
+                    formatingDirs = formatingDirs.Skip(1);
+                }
+                IncludeFormatter.IncludeFormatter.FormatPaths(lines, settings.PathFormat, formatingDirs);
                 IncludeFormatter.IncludeFormatter.FormatDelimiters(lines, settings.DelimiterFormatting);
                 IncludeFormatter.IncludeFormatter.FormatSlashes(lines, settings.SlashFormatting);
 

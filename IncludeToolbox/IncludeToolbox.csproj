@@ -67,7 +67,6 @@
     <Compile Include="IncludeFormatter\IncludeComparer.cs" />
     <Compile Include="Commands\FormatIncludes.cs" />
     <Compile Include="IncludeFormatter\IncludeFormatter.cs" />
-    <Compile Include="IncludeParser.cs" />
     <Compile Include="Package\IncludeToolboxPackage.cs" />
     <Compile Include="IncludeFormatter\IncludeLineInfo.cs" />
     <Compile Include="Options\Constants.cs" />
@@ -298,16 +297,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ezEngine_preprocessor\ezEngine_preprocessor.vcxproj">
-      <Project>{6ab9c4a5-f99f-4ec0-a789-3b261383af75}</Project>
-      <Name>ezEngine_preprocessor</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\IncludeParser\IncludeParser.vcxproj">
-      <Project>{628fda0d-6357-4ff6-bd39-6057188bd514}</Project>
-      <Name>IncludeParser</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />

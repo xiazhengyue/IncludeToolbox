@@ -6,61 +6,53 @@ namespace IncludeToolbox.IncludeFormatter
 {
     static class IncludeFormatter
     {
+        public static string FormatPath(string absoluteIncludeFilename, FormatterOptionsPage.PathMode pathformat, IEnumerable<string> includeDirectories)
+        {
+            if (pathformat == FormatterOptionsPage.PathMode.Absolute)
+            {
+                return absoluteIncludeFilename;
+            }
+            else
+            {
+                // todo: Treat std library files special?
+                if (absoluteIncludeFilename != null)
+                {
+                    int bestLength = Int32.MaxValue;
+                    string bestCandidate = null;
+
+                    foreach (string includeDirectory in includeDirectories)
+                    {
+                        string proposal = Utils.MakeRelative(includeDirectory, absoluteIncludeFilename);
+
+                        if (proposal.Length < bestLength)
+                        {
+                            if (pathformat == FormatterOptionsPage.PathMode.Shortest ||
+                                (proposal.IndexOf("../") < 0 && proposal.IndexOf("..\\") < 0))
+                            {
+                                bestCandidate = proposal;
+                                bestLength = proposal.Length;
+                            }
+                        }
+                    }
+
+                    return bestCandidate;
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Formats the paths of a given list of include line info.
         /// </summary>
-        /// <param name="pathformat"></param>
-        /// <param name="ignoreFileRelative"></param>
-        /// <param name="lines"></param>
-        /// <param name="includeDirectories"></param>
-        public static void FormatPaths(IncludeLineInfo[] lines, FormatterOptionsPage.PathMode pathformat, bool ignoreFileRelative, List<string> includeDirectories)
+        public static void FormatPaths(IEnumerable<IncludeLineInfo> lines, FormatterOptionsPage.PathMode pathformat, IEnumerable<string> includeDirectories)
         {
             if (pathformat == FormatterOptionsPage.PathMode.Unchanged)
                 return;
 
-            if (pathformat == FormatterOptionsPage.PathMode.Absolute)
+            foreach (var line in lines)
             {
-                foreach (var line in lines)
-                {
-                    // todo: Treat std library files special?
-                    if (line.AbsoluteIncludePath != null)
-                    {
-                        line.IncludeContent = line.AbsoluteIncludePath;
-                    }
-                }
-            }
-            else
-            {
-                foreach (var line in lines)
-                {
-                    // todo: Treat std library files special?
-                    if (line.AbsoluteIncludePath != null)
-                    {
-                        int bestLength = Int32.MaxValue;
-                        string bestCandidate = null;
-
-                        int i = ignoreFileRelative ? 1 : 0; // Ignore first one which is always the local dir.
-                        for (; i < includeDirectories.Count; ++i)
-                        {
-                            string proposal = Utils.MakeRelative(includeDirectories[i], line.AbsoluteIncludePath);
-
-                            if (proposal.Length < bestLength)
-                            {
-                                if (pathformat == FormatterOptionsPage.PathMode.Shortest ||
-                                    (proposal.IndexOf("../") < 0 && proposal.IndexOf("..\\") < 0))
-                                {
-                                    bestCandidate = proposal;
-                                    bestLength = proposal.Length;
-                                }
-                            }
-                        }
-
-                        if (bestCandidate != null)
-                        {
-                            line.IncludeContent = bestCandidate;
-                        }
-                    }
-                }
+                line.IncludeContent = FormatPath(line.AbsoluteIncludePath, pathformat, includeDirectories) ?? line.IncludeContent;
             }
         }
 

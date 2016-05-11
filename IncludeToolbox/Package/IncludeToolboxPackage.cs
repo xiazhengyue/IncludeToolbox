@@ -41,8 +41,6 @@ namespace IncludeToolbox
         /// </summary>
         protected override void Initialize()
         {
-            IncludeParser.Init();
-
             Commands.IncludeViewerToolWindowCommand.Initialize(this);
             Commands.FormatIncludes.Initialize(this);
             Commands.IncludeWhatYouUse.Initialize(this);
@@ -55,8 +53,6 @@ namespace IncludeToolbox
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-
-            IncludeParser.Exit();
         }
 
         #endregion
