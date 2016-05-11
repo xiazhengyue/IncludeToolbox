@@ -287,6 +287,7 @@ namespace IncludeToolbox
 
                         // Message.
                         Output.Instance.WriteLine("Removed {0} #include directives from '{1}'", numRemovedIncludes, document.Name);
+                        Output.Instance.OutputToForeground();
 
                         // Notify that we are done.
                         WorkInProgress = false;
