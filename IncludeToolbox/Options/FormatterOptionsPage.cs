@@ -75,13 +75,18 @@ namespace IncludeToolbox
         #region Sorting
 
         [Category("Sorting")]
+        [DisplayName("Include delimiters in precedence regexes")]
+        [Description("If true, precedence regexes will consider delimiters (angle brackets or quotes.)")]
+        public bool RegexIncludeDelimiter { get; set; } = false;
+
+        [Category("Sorting")]
         [DisplayName("Precedence Regexes")]
         [Description("Earlier match means higher sorting priority.\n\" " + IncludeComparer.CurrentFileNameKey + "\" will be replaced with the current file name without extension.")]
         public string[] PrecedenceRegexes {
             get { return precedenceRegexes; }
             set { precedenceRegexes = value.Where(x => x.Length > 0).ToArray(); } // Remove empty lines.
         }
-        private string[] precedenceRegexes = new string[] { "$(currentFilename)\\.(?i)(h|hpp|hxx|inl|c|cpp|cxx)(?-i)$" };
+        private string[] precedenceRegexes = new string[] { "(?i)$(currentFilename)\\.(h|hpp|hxx|inl|c|cpp|cxx)(?-i)" };
 
         public enum TypeSorting
         {
@@ -121,6 +126,7 @@ namespace IncludeToolbox
             settingsStore.SetInt32(collectionName, nameof(SlashFormatting), (int)SlashFormatting);
             settingsStore.SetBoolean(collectionName, nameof(RemoveEmptyLines), RemoveEmptyLines);
 
+            settingsStore.SetBoolean(collectionName, nameof(RegexIncludeDelimiter), RegexIncludeDelimiter);
             var value = string.Join("\n", PrecedenceRegexes);
             settingsStore.SetString(collectionName, nameof(PrecedenceRegexes), value);
             settingsStore.SetInt32(collectionName, nameof(SortByType), (int)SortByType);
@@ -142,6 +148,8 @@ namespace IncludeToolbox
             if (settingsStore.PropertyExists(collectionName, nameof(RemoveEmptyLines)))
                 RemoveEmptyLines = settingsStore.GetBoolean(collectionName, nameof(RemoveEmptyLines));
 
+            if (settingsStore.PropertyExists(collectionName, nameof(RegexIncludeDelimiter)))
+                RegexIncludeDelimiter = settingsStore.GetBoolean(collectionName, nameof(RegexIncludeDelimiter));
             if (settingsStore.PropertyExists(collectionName, nameof(PrecedenceRegexes)))
             {
                 var value = settingsStore.GetString(collectionName, nameof(PrecedenceRegexes));

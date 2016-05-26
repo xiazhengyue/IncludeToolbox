@@ -146,6 +146,21 @@ namespace IncludeToolbox.IncludeFormatter
             Delimiter1 = Delimiter0 + includeContent.Length + 1;
         }
 
+        public string IncludeContentForRegex(bool regexIncludeDelimiter)
+        {
+            if (!regexIncludeDelimiter || lineType == Type.NoInclude)
+                return includeContent;
+
+            char[] delimiters = { '"', '"' };
+            if (lineType == Type.AngleBrackets)
+            {
+                delimiters[0] = '<';
+                delimiters[1] = '>';
+            }
+
+            return String.Format("{0}{1}{2}", delimiters[0], includeContent, delimiters[1]);
+        }
+
         public string Text
         {
             get { return text; }
