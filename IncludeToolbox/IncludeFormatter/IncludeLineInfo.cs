@@ -92,12 +92,10 @@ namespace IncludeToolbox.IncludeFormatter
             return outInfo;
         }
 
-
         public enum Type
         {
             Quotes,
             AngleBrackets,
-
             NoInclude
         }
 
@@ -164,8 +162,9 @@ namespace IncludeToolbox.IncludeFormatter
         public string Text
         {
             get { return text; }
+            set { text = value; }
         }
-        private string text;
+        private string text = "";
 
         public string IncludeContent
         {
@@ -180,5 +179,7 @@ namespace IncludeToolbox.IncludeFormatter
         public int Delimiter1 { get; private set; } = -1;
 
         public int OriginalLineNumber { get; private set; }
+
+        public bool PrependNewline { get; set; } = false;
     }
 }
