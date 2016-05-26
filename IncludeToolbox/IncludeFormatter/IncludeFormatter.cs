@@ -86,10 +86,10 @@ namespace IncludeToolbox.IncludeFormatter
             }
         }
 
-        public static void SortIncludes(IncludeLineInfo[] lines, FormatterOptionsPage.TypeSorting typeSorting, string[] precedenceRegexes, string documentName)
+        public static void SortIncludes(IncludeLineInfo[] lines, FormatterOptionsPage.TypeSorting typeSorting, bool regexIncludeDelimiter, string[] precedenceRegexes, string documentName)
         {
             var comparer = new IncludeComparer(precedenceRegexes, documentName);
-            var sortedIncludes = lines.Where(x => x.LineType != IncludeLineInfo.Type.NoInclude).OrderBy(x => x.IncludeContent, comparer);
+            var sortedIncludes = lines.Where(x => x.LineType != IncludeLineInfo.Type.NoInclude).OrderBy(x => x.IncludeContentForRegex(regexIncludeDelimiter), comparer);
 
             if (typeSorting == FormatterOptionsPage.TypeSorting.AngleBracketsFirst)
                 sortedIncludes = sortedIncludes.OrderBy(x => x.LineType == IncludeLineInfo.Type.AngleBrackets ? 0 : 1);
