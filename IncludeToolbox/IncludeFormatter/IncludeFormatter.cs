@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace IncludeToolbox.IncludeFormatter
 {
@@ -86,24 +87,86 @@ namespace IncludeToolbox.IncludeFormatter
             }
         }
 
-        public static void SortIncludes(IncludeLineInfo[] lines, FormatterOptionsPage.TypeSorting typeSorting, bool regexIncludeDelimiter, string[] precedenceRegexes, string documentName)
-        {
-            var comparer = new IncludeComparer(precedenceRegexes, documentName);
-            var sortedIncludes = lines.Where(x => x.LineType != IncludeLineInfo.Type.NoInclude).OrderBy(x => x.IncludeContentForRegex(regexIncludeDelimiter), comparer);
+        public const string CurrentFileNameKey = "$(currentFilename)";
 
+        private static string[] FixupRegexes(string[] precedenceRegexes, string documentName)
+        {
+            string currentFilename = documentName.Substring(0, documentName.LastIndexOf('.'));
+
+            string[] regexes = new string[precedenceRegexes.Length];
+            for (int i = 0; i < precedenceRegexes.Length; ++i)
+            {
+                regexes[i] = precedenceRegexes[i].Replace(CurrentFileNameKey, currentFilename);
+            }
+            return regexes;
+        }
+
+        public static void SortIncludes(IncludeLineInfo[] lines, FormatterOptionsPage settings, string documentName)
+        {
+            FormatterOptionsPage.TypeSorting typeSorting = settings.SortByType;
+            bool regexIncludeDelimiter = settings.RegexIncludeDelimiter;
+            bool blankAfterRegexGroupMatch = settings.BlankAfterRegexGroupMatch;
+            bool removeEmptyLines = settings.RemoveEmptyLines;
+
+            string[] precedenceRegexes = FixupRegexes(settings.PrecedenceRegexes, documentName);
+
+            // Select only valid include lines and sort them. They'll stay in this relative sorted
+            // order when rearranged by regex precedence groups.
+            var includeLines = lines
+                .Where(x => x.LineType != IncludeLineInfo.Type.NoInclude)
+                .OrderBy(x => x.IncludeContent);
+
+            // Group the includes by the index of the precedence regex they match, or
+            // precedenceRegexes.Length for no match, and sort the groups by index.
+            var includeGroups = includeLines
+                .GroupBy(x =>
+                {
+                    var includeContent = x.IncludeContentForRegex(regexIncludeDelimiter);
+                    for (int precedence = 0; precedence < precedenceRegexes.Count(); ++precedence)
+                    {
+                        if (Regex.Match(includeContent, precedenceRegexes[precedence]).Success)
+                            return precedence;
+                    }
+
+                    return precedenceRegexes.Length;
+                }, x => x)
+                .OrderBy(x => x.Key);
+
+            // Optional newlines between regex match groups
+            if (blankAfterRegexGroupMatch && precedenceRegexes.Length > 0 && includeLines.Count() > 1)
+            {
+                // Set flag to prepend a newline to each group's first include
+                foreach (var grouping in includeGroups)
+                    grouping.First().PrependNewline = true;
+            }
+
+            // Flatten the groups
+            var sortedIncludes = includeGroups.SelectMany(x => x.Select(y => y));
+
+            // Sort by angle or quoted delimiters if either of those options were selected
             if (typeSorting == FormatterOptionsPage.TypeSorting.AngleBracketsFirst)
                 sortedIncludes = sortedIncludes.OrderBy(x => x.LineType == IncludeLineInfo.Type.AngleBrackets ? 0 : 1);
             else if (typeSorting == FormatterOptionsPage.TypeSorting.QuotedFirst)
                 sortedIncludes = sortedIncludes.OrderBy(x => x.LineType == IncludeLineInfo.Type.Quotes ? 0 : 1);
 
-            int incIdx = 0;
-            var sortedIncludesArray = sortedIncludes.ToArray();
-            for (int allIdx = 0; allIdx < lines.Length && incIdx < sortedIncludesArray.Length; ++allIdx)
+            // Finally, update the actual lines
             {
-                if (lines[allIdx].LineType != IncludeLineInfo.Type.NoInclude)
+                var sortedIncludesArray = sortedIncludes.ToArray();
+                int sortedIndex = 0;
+                for (int i = 0; i < lines.Length; ++i)
                 {
-                    lines[allIdx] = sortedIncludesArray[incIdx];
-                    ++incIdx;
+                    if (lines[i].LineType != IncludeLineInfo.Type.NoInclude)
+                    {
+                        lines[i] = sortedIncludesArray[sortedIndex++];
+
+                        // Handle prepending a newline if requested, as long as:
+                        // - It's not the first line, and
+                        // - We'll remove empty lines or the previous line isn't already a NoInclude
+                        if (lines[i].PrependNewline && i > 0 && (removeEmptyLines || lines[i - 1].LineType != IncludeLineInfo.Type.NoInclude))
+                        {
+                            lines[i].Text = String.Format("{0}{1}", Environment.NewLine, lines[i].Text);
+                        }
+                    }
                 }
             }
         }
