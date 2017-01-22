@@ -9,7 +9,7 @@ namespace IncludeToolbox.IncludeFormatter
 {
     public class IncludeLineInfo
     {
-        public static IncludeLineInfo[] ParseIncludes(string text, bool removeEmptyLines, List<string> includeDirectories)
+        public static IncludeLineInfo[] ParseIncludes(string text, bool removeEmptyLines, IEnumerable<string> includeDirectories = null)
         {
             var lines = Regex.Split(text, "\r\n|\r|\n");
             if (removeEmptyLines)
@@ -84,7 +84,7 @@ namespace IncludeToolbox.IncludeFormatter
                     }
                     if (outInfo[line].AbsoluteIncludePath == null)
                     {
-                        Output.Instance.WriteLine("Unabled to resolve include: {0}", outInfo[line].IncludeContent);
+                        Output.Instance.WriteLine("Unabled to resolve include: '{0}'", outInfo[line].IncludeContent);
                     }
                 }
             }

@@ -27,7 +27,7 @@ namespace IncludeToolbox
             VCProject vcProject = project?.Object as VCProject;
             if (vcProject == null)
             {
-                Output.Instance.WriteLine("Given Project is not a VCProject.");
+                Output.Instance.WriteLine("Failed to retrieve VCCLCompilerTool since project is not a VCProject.");
                 return null;
             }
             VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
@@ -49,15 +49,20 @@ namespace IncludeToolbox
             return compilerTool;
         }
 
+        /// <summary>
+        /// Tries to retrieve include directories from a project.
+        /// For each encountered path it will try to resolve the paths to absolute paths.
+        /// </summary>
+        /// <returns>Empty list if include directory retrieval failed.</returns>
         public static List<string> GetProjectIncludeDirectories(EnvDTE.Project project, bool endWithSeparator = true)
         {
             List<string> pathStrings = new List<string>();
             if (project == null)
-            {
                 return pathStrings;
-            }
 
             VCCLCompilerTool compilerTool = GetVCppCompilerTool(project);
+            if (compilerTool == null)
+                return pathStrings;
             string projectPath = Path.GetDirectoryName(Path.GetFullPath(project.FileName));
 
             // According to documentation FullIncludePath has resolved macros.

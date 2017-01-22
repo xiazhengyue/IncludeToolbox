@@ -24,6 +24,22 @@ namespace IncludeToolbox.Commands
         {
         }
 
+        protected override void SetupMenuCommand()
+        {
+            base.SetupMenuCommand();
+            menuCommand.BeforeQueryStatus += UpdateVisibility;
+        }
+
+        private void UpdateVisibility(object sender, EventArgs e)
+        {
+            // Check whether any includes are selected.
+            var viewHost = VSUtils.GetCurrentTextViewHost();
+            var selectionSpan = GetSelectionSpan(viewHost);
+            var lines = IncludeFormatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), true);
+
+            menuCommand.Visible = lines.Any(x => x.LineType != IncludeFormatter.IncludeLineInfo.Type.NoInclude);
+        }
+
         /// <summary>
         /// Returns process selection range - whole lines!
         /// </summary>
@@ -54,7 +70,7 @@ namespace IncludeToolbox.Commands
                 var project = document.ProjectItem?.ContainingProject;
                 if (project == null)
                 {
-                    Output.Instance.WriteLine("The document {0} is not part of a project.", document.Name);
+                    Output.Instance.WriteLine("The document '{0}' is not part of a project.", document.Name);
                 }
                 var includeDirectories = VSUtils.GetProjectIncludeDirectories(project);
                 includeDirectories.Insert(0, PathUtil.Normalize(document.Path) + Path.DirectorySeparatorChar);
