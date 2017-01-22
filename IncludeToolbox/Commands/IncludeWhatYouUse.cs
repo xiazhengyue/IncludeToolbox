@@ -240,7 +240,7 @@ namespace IncludeToolbox.Commands
                 process.StartInfo.Arguments += " -DM_X64 -DM_AMD64 ";// TODO!!!
 
                 // Clang options
-                process.StartInfo.Arguments += "-w -x c++ -std=c++14 -fcxx-exceptions -fexceptions -fms-compatibility -fms-extensions -fmsc-version=1900 -Wno-invalid-token-paste "; // todo fmsc-version!
+                process.StartInfo.Arguments += "-w -x c++ -std=c++14 -fcxx-exceptions -fexceptions -fms-compatibility -fms-extensions -fmsc-version=1900 -ferror-limit=0 -Wno-invalid-token-paste "; // todo fmsc-version!
                 // icwyu options
                 {
                     process.StartInfo.Arguments += "-Xiwyu --verbose=" + settings.LogVerbosity + " ";
