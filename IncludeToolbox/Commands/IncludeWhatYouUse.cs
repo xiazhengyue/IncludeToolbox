@@ -116,7 +116,7 @@ namespace IncludeToolbox.Commands
                                 int.TryParse(match.Groups[3].Value, out removeEnd))
                             {
                                 for (int lineIdx = removeStart; lineIdx <= removeEnd; ++lineIdx)
-                                    currentTask.linesToRemove.Add(lineIdx);
+                                    currentTask.linesToRemove.Add(lineIdx - 1);
                             }
                         }
                         else if (lastLineWasEmpty)
