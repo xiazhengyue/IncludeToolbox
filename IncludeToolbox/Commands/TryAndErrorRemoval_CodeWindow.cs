@@ -38,9 +38,7 @@ namespace IncludeToolbox.Commands
         private void UpdateVisibility(object sender, EventArgs e)
         {
             string reason;
-            bool isHeader;
-            var config = TryAndErrorRemoval.GetFileConfig(VSUtils.GetDTE().ActiveDocument, out reason, out isHeader);
-            menuCommand.Visible = (config != null) && !isHeader;
+            menuCommand.Visible = VSUtils.VCUtils.IsCompilableFile(VSUtils.GetDTE().ActiveDocument, out reason);
         }
 
         /// <summary>

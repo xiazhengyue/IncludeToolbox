@@ -25,72 +25,19 @@ namespace IncludeToolbox
         private AutoResetEvent outputWaitEvent = new AutoResetEvent(false);
         private const int timeoutMS = 30000; // 30 seconds
 
-        public static VCFileConfiguration GetFileConfig(EnvDTE.Document document, out string reasonForFailure, out bool isHeader)
-        {
-            isHeader = false;
-
-            if (document == null)
-            {
-                reasonForFailure = "No document.";
-                return null;
-            }
-
-            var project = document.ProjectItem?.ContainingProject;
-            VCProject vcProject = project.Object as VCProject;
-            if (vcProject == null)
-            {
-                reasonForFailure = "The given document does not belong to a VC++ Project.";
-                return null;
-            }
-
-            VCFile vcFile = document.ProjectItem?.Object as VCFile;
-            if (vcFile == null)
-            {
-                reasonForFailure = "The given document is not a VC++ file.";
-                return null;
-            }
-
-            isHeader = vcFile.FileType == Microsoft.VisualStudio.VCProjectEngine.eFileType.eFileTypeCppHeader;
-
-            IVCCollection fileConfigCollection = vcFile.FileConfigurations;
-            VCFileConfiguration fileConfig = fileConfigCollection?.Item(vcProject.ActiveConfiguration.Name);
-            if (fileConfig == null)
-            {
-                reasonForFailure = "Failed to retrieve file config from document.";
-                return null;
-            }
-
-            reasonForFailure = "";
-            return fileConfig;
-        }
-
 
         public void PerformTryAndErrorRemoval(EnvDTE.Document document, TryAndErrorRemovalOptionsPage settings)
         {
             if (document == null)
                 return;
 
-            string errorMessage;
-            bool isHeader;
-            var fileConfig = GetFileConfig(document, out errorMessage, out isHeader);
-            if (fileConfig == null)
+            string reasonForFailure;
+           
+            if (VSUtils.VCUtils.IsCompilableFile(document, out reasonForFailure) == false)
             {
-                Output.Instance.WriteLine(errorMessage);
+                Output.Instance.WriteLine("Can't compile file: {0}", reasonForFailure);
                 return;
             }
-            if (isHeader)
-            {
-                Output.Instance.WriteLine("Try and error include removal does not work on Headers.");
-                return;
-            }
-
-            PerformTryAndErrorRemoval(document, fileConfig, settings);
-        }
-
-        public void PerformTryAndErrorRemoval(EnvDTE.Document document, VCFileConfiguration fileConfig, TryAndErrorRemovalOptionsPage settings)
-        {
-            if (document == null || fileConfig == null)
-                return;
 
             if (WorkInProgress)
             {
@@ -227,7 +174,7 @@ namespace IncludeToolbox
                             {
                                 try
                                 {
-                                    fileConfig.Compile(true, false); // WaitOnBuild==true always fails.    
+                                    VSUtils.VCUtils.CompileSingleFile(document);
                                 }
                                 catch (Exception e)
                                 {

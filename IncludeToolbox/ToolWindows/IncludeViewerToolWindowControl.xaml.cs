@@ -86,23 +86,9 @@ namespace IncludeViewer
             currentDocument = dte?.ActiveDocument;
 
             string reasonForFailure;
-            bool isHeader;
-            var fileConfig = TryAndErrorRemoval.GetFileConfig(currentDocument, out reasonForFailure, out isHeader);
-            if (fileConfig == null)
+            if (VSUtils.VCUtils.IsCompilableFile(currentDocument, out reasonForFailure) == false)
             {
-                Output.Instance.ErrorMsg("Can't refresh: {0}", reasonForFailure);
-                return;
-            }
-            if (isHeader)
-            {
-                Output.Instance.ErrorMsg("Can't refresh: File is a header.");
-                return;
-            }
-
-            var compilerTool = VSUtils.GetVCppCompilerTool(currentDocument.ProjectItem.ContainingProject);
-            if (compilerTool == null)
-            {
-                Output.Instance.ErrorMsg("Can't refresh: Failed to retrieve compiler tool.");
+                Output.Instance.ErrorMsg("Can't refresh since current file can't be compiled: {0}.", reasonForFailure);
                 return;
             }
 
@@ -113,8 +99,23 @@ namespace IncludeViewer
                 IncludeTree.Items.Clear();
             }
 
-            showIncludeSettingBefore = compilerTool.ShowIncludes;
-            compilerTool.ShowIncludes = true;
+            {
+                bool? setting = VSUtils.VCUtils.GetCompilerSetting_ShowIncludes(currentDocument.ProjectItem?.ContainingProject, out reasonForFailure);
+                if (!setting.HasValue)
+                {
+                    Output.Instance.ErrorMsg("Can't compile with show includes: {0}.", reasonForFailure);
+                    return;
+                }
+                else
+                    showIncludeSettingBefore = setting.Value;
+
+                VSUtils.VCUtils.SetCompilerSetting_ShowIncludes(currentDocument.ProjectItem?.ContainingProject, true, out reasonForFailure);
+                if (!string.IsNullOrEmpty(reasonForFailure))
+                {
+                    Output.Instance.ErrorMsg("Can't compile with show includes: {0}.", reasonForFailure);
+                    return;
+                }
+            }
 
             // Even with having the config changed and having compile force==true, we still need to make a dummy change in order to enforce recompilation of this file.
             {
@@ -138,14 +139,14 @@ namespace IncludeViewer
 
             try
             {
-                fileConfig.Compile(true, false); // WaitOnBuild==true always fails.
+                VSUtils.VCUtils.CompileSingleFile(currentDocument);
             }
             catch (System.Exception)
             {
                 dte.Events.BuildEvents.OnBuildProjConfigDone -= OnBuildConfigFinished;
                 RefreshButton.IsEnabled = true;
                 ProgressBar.Visibility = Visibility.Hidden;
-                compilerTool.ShowIncludes = showIncludeSettingBefore;
+                VSUtils.VCUtils.SetCompilerSetting_ShowIncludes(currentDocument.ProjectItem?.ContainingProject, showIncludeSettingBefore, out reasonForFailure);
             }
         }
 
@@ -153,12 +154,8 @@ namespace IncludeViewer
         {
             var dte = VSUtils.GetDTE();
             dte.Events.BuildEvents.OnBuildProjConfigDone -= OnBuildConfigFinished;
-            var compilerTool = VSUtils.GetVCppCompilerTool(currentDocument.ProjectItem.ContainingProject);
-            if (compilerTool != null)
-            {
-                compilerTool.ShowIncludes = showIncludeSettingBefore;
-            }
-
+            string reasonForFailure;
+            VSUtils.VCUtils.SetCompilerSetting_ShowIncludes(currentDocument.ProjectItem?.ContainingProject, showIncludeSettingBefore, out reasonForFailure);
 
             try
             { 

@@ -22,7 +22,7 @@ namespace IncludeToolbox.Commands
         private TryAndErrorRemoval impl;
         private TryAndErrorRemovalOptionsPage settings;
 
-        private IVCCollection fileCollection = null;
+        private ProjectItems projectItems = null;
         private int fileIdx = 0;
         private int numTotalRemovedIncludes = 0;
 
@@ -60,7 +60,7 @@ namespace IncludeToolbox.Commands
             menuCommand.Visible = project != null;
         }
 
-        static VCProject GetSelectedCppProject(out string reasonForFailure)
+        static Project GetSelectedCppProject(out string reasonForFailure)
         {
             reasonForFailure = "";
 
@@ -74,8 +74,8 @@ namespace IncludeToolbox.Commands
             // Reading .Item(object) behaves weird, but iterating works.
             foreach (SelectedItem item in selectedItems)
             {
-                VCProject vcProject = item?.Project?.Object as VCProject;
-                if (vcProject != null)
+                Project vcProject = item?.Project;
+                if (VSUtils.VCUtils.IsVCProject(vcProject))
                 {
                     return vcProject;
                 }
@@ -87,23 +87,20 @@ namespace IncludeToolbox.Commands
 
         private bool ProcessNextFile()
         {
-            if (fileCollection == null)
+            if (projectItems == null)
                 return false;
 
-            for (; fileIdx < fileCollection.Count; ++fileIdx)
+            for (; fileIdx < projectItems.Count; ++fileIdx)
             {
-                var vcFile = fileCollection.Item(fileIdx) as VCFile;
-                if (vcFile == null)
+                var item = projectItems.Item(fileIdx);
+                if (item == null)
                     continue;
 
-                var projectItem = vcFile.Object as ProjectItem;
+                var projectItem = item.Object as ProjectItem;
                 if (projectItem == null)
                     continue;
 
-                bool isHeader;
-                string reason;
-
-                EnvDTE.Document document = null;
+                Document document = null;
                 try
                 {
                     document = projectItem.Open().Document;
@@ -114,29 +111,20 @@ namespace IncludeToolbox.Commands
                 if (document == null)
                     continue;
 
-                var fileConfig = TryAndErrorRemoval.GetFileConfig(document, out reason, out isHeader);
-                if (isHeader && fileConfig != null)
-                    continue;
-
                 impl.PerformTryAndErrorRemoval(document, settings);
                 ++fileIdx;
                 return true;
             }
 
-            fileCollection = null;
+            projectItems = null;
             return false;
         }
 
-        private void PerformTryAndErrorRemoval(VCProject project)
+        private void PerformTryAndErrorRemoval(Project project)
         {
-            fileCollection = project.Files as IVCCollection;
-            if (fileCollection == null)
-            {
-                Output.Instance.WriteLine("Project has no file collection.");
-                return;
-            }
+            projectItems = project.ProjectItems;
 
-            if (fileCollection.Count > 2)
+            if (projectItems.Count > 2)
             {
                 int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider, 
                                             "Attention! Try and error include removal on large projects make take up to several hours! In this time you will not be able to use Visual Studio. Are you sure you want to continue?",
@@ -171,7 +159,7 @@ namespace IncludeToolbox.Commands
             try
             {
                 string reasonForFailure;
-                VCProject project = GetSelectedCppProject(out reasonForFailure);
+                Project project = GetSelectedCppProject(out reasonForFailure);
                 if (project == null)
                 {
                     Output.Instance.WriteLine(reasonForFailure);
@@ -183,7 +171,7 @@ namespace IncludeToolbox.Commands
             catch (Exception ex)
             {
                 Output.Instance.WriteLine("Unexpected error: {0}", ex);
-                fileCollection = null;
+                projectItems = null;
             }
         }
     }

@@ -6,6 +6,8 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace IncludeToolbox
 {
+    [ProvideBindingPath(SubPath="")]   // Necessary to find packaged assemblies.
+
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
     [ProvideMenuResource("Menus.ctmenu", 1)]

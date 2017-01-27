@@ -33,8 +33,7 @@ namespace IncludeToolbox.Commands
         {
             // Needs to be part of a VCProject to be aplicable.
             var document = VSUtils.GetDTE()?.ActiveDocument;
-            var project = document?.ProjectItem?.ContainingProject?.Object as VCProject;
-            menuCommand.Visible = project != null;
+            menuCommand.Visible = VSUtils.VCUtils.IsVCProject(document?.ProjectItem?.ContainingProject);
         }
 
         class FormatTask
@@ -217,9 +216,13 @@ namespace IncludeToolbox.Commands
 
         private string RunIncludeWhatYouUse(string fullFileName, EnvDTE.Project project, IncludeWhatYouUseOptionsPage settings)
         {
-            var compilerTool = VSUtils.GetVCppCompilerTool(project);
-            if (compilerTool == null)
-                return "";
+            string reasonForFailure;
+            string preprocessorDefintions = VSUtils.VCUtils.GetCompilerSetting_PreprocessorDefinitions(project, out reasonForFailure);
+            if (preprocessorDefintions == null)
+            {
+                Output.Instance.ErrorMsg("Can't run IWYU: {0}", reasonForFailure);
+                return null;
+            }
 
             string output = "";
             using (var process = new System.Diagnostics.Process())
@@ -234,7 +237,7 @@ namespace IncludeToolbox.Commands
                 // Includes and Preprocessor.
                 var includeEntries = VSUtils.GetProjectIncludeDirectories(project, false);
                 process.StartInfo.Arguments = includeEntries.Aggregate("", (current, inc) => current + ("-I \"" + inc + "\" "));
-                process.StartInfo.Arguments = compilerTool.PreprocessorDefinitions.
+                process.StartInfo.Arguments = preprocessorDefintions.
                     Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).
                     Aggregate(process.StartInfo.Arguments, (current, def) => current + ("-D" + def + " "));
                 process.StartInfo.Arguments += " -DM_X64 -DM_AMD64 ";// TODO!!!
@@ -337,7 +340,7 @@ namespace IncludeToolbox.Commands
             dialog?.StartWaitDialog("Include Toolbox", "Running Include-What-You-Use", null, null, "Running Include-What-You-Use", 0, false, true);
 
             string output = RunIncludeWhatYouUse(document.FullName, project, settings);
-            if (settings.ApplyProposal)
+            if (settings.ApplyProposal && output != null)
             {
                 var tasks = ParseOutput(output);
                 ApplyTasks(tasks);
