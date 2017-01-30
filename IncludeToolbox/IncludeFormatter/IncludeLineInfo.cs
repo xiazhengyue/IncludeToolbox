@@ -20,6 +20,7 @@ namespace IncludeToolbox.IncludeFormatter
 
             // Simplistic parsing.
             int openMultiLineComments = 0;
+            int openIfdefs = 0;
             for (int line = 0; line < lines.Length; ++line)
             {
                 outInfo[line] = new IncludeLineInfo();
@@ -30,16 +31,57 @@ namespace IncludeToolbox.IncludeFormatter
                 int singleLineComment = lines[line].IndexOf("//");
                 if (singleLineComment == -1)
                     singleLineComment = int.MaxValue;
+
                 // Check for multi line comments.
                 int multiLineCommentEnd = lines[line].IndexOf("*/");
                 if (multiLineCommentEnd > -1 && multiLineCommentEnd < singleLineComment)
                     --openMultiLineComments;
+                else
+                    multiLineCommentEnd = -1;
                 int multiLineCommentStart = lines[line].IndexOf("/*");
                 if (multiLineCommentStart > -1 && multiLineCommentStart < singleLineComment)
                     ++openMultiLineComments;
+                else
+                    multiLineCommentStart = -1;
+
+                // Check for #if / #ifdefs.
+                int ifdefStart = lines[line].IndexOf("#if");
+                int ifdefEnd = lines[line].IndexOf("#endif");
+                if (ifdefStart > -1 && ifdefStart < singleLineComment)
+                {
+                    if (multiLineCommentStart > -1)
+                    {
+                        if (openMultiLineComments == 1 && ifdefStart < multiLineCommentStart)
+                            ++openIfdefs;
+                    }
+                    if (multiLineCommentEnd > -1)
+                    {
+                        if (openMultiLineComments == 0 && multiLineCommentEnd < ifdefStart)
+                            ++openIfdefs;
+                    }
+                    else if (openMultiLineComments == 0)
+                        ++openIfdefs;
+                }
+                else if (ifdefEnd > -1 && ifdefEnd < singleLineComment)
+                {
+                    if (multiLineCommentStart > -1)
+                    {
+                        if (openMultiLineComments == 1 && ifdefEnd < multiLineCommentStart)
+                            --openIfdefs;
+                    }
+                    if (multiLineCommentEnd > -1)
+                    {
+                        if (openMultiLineComments == 0 && multiLineCommentEnd < ifdefEnd)
+                            --openIfdefs;
+                    }
+                    else if (openMultiLineComments == 0)
+                        --openIfdefs;
+                }
 
                 int includeOccurence = lines[line].IndexOf("#include");
                 if (includeOccurence == -1) // No include found
+                    continue;
+                if (openIfdefs != 0)
                     continue;
                 if (includeOccurence > singleLineComment) // Single line before #include
                     continue;
