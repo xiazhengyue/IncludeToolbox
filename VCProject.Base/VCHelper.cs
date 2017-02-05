@@ -41,6 +41,12 @@ namespace VCProjectUtils.VS15
                 return null;
             }
 
+            if (vcFile.FileType == eFileType.eFileTypeCppHeader)
+            {
+                reasonForFailure = ""; // Empty string == skip output for it.
+                return null;
+            }
+
             if (vcFile.FileType != eFileType.eFileTypeCppCode && vcFile.FileType == eFileType.eFileTypeCppClass)
             {
                 reasonForFailure = "The given document is not a compileable VC++ file.";

@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.VCProjectEngine;
 using EnvDTE;
 using Microsoft.VisualStudio.Text;
+using System.Collections.Generic;
 
 namespace IncludeToolbox.Commands
 {
@@ -23,12 +24,12 @@ namespace IncludeToolbox.Commands
         private TryAndErrorRemovalOptionsPage settings;
 
         private ProjectItems projectItems = null;
-        private int fileIdx = 0;
         private int numTotalRemovedIncludes = 0;
-
+        private Queue<ProjectItem> projectFiles;
 
         public TryAndErrorRemoval_Project()
         {
+            projectFiles = new Queue<ProjectItem>();
         }
 
         protected override void SetupMenuCommand()
@@ -48,7 +49,6 @@ namespace IncludeToolbox.Commands
             if (canceled || !ProcessNextFile())
             {
                 Output.Instance.InfoMsg("Removed total of {0} #include directives from project.", numTotalRemovedIncludes);
-                fileIdx = 0;
                 numTotalRemovedIncludes = 0;
             }
         }
@@ -87,18 +87,9 @@ namespace IncludeToolbox.Commands
 
         private bool ProcessNextFile()
         {
-            if (projectItems == null)
-                return false;
-
-            for (; fileIdx < projectItems.Count; ++fileIdx)
+            while (projectFiles.Count > 0)
             {
-                var item = projectItems.Item(fileIdx);
-                if (item == null)
-                    continue;
-
-                var projectItem = item.Object as ProjectItem;
-                if (projectItem == null)
-                    continue;
+                ProjectItem projectItem = projectFiles.Dequeue();
 
                 Document document = null;
                 try
@@ -112,19 +103,39 @@ namespace IncludeToolbox.Commands
                     continue;
 
                 impl.PerformTryAndErrorRemoval(document, settings);
-                ++fileIdx;
                 return true;
             }
-
-            projectItems = null;
             return false;
+        }
+
+        static void RecursiveFindFilesInProject(ProjectItems items, ref Queue<ProjectItem> projectFiles)
+        {
+            var e = items.GetEnumerator();
+            while (e.MoveNext())
+            {
+                var item = e.Current;
+                if (item == null)
+                    continue;
+                var projectItem = item as ProjectItem;
+                if (projectItem == null)
+                    continue;
+                if (projectItem.FileCount > 1)
+                    RecursiveFindFilesInProject(projectItem.ProjectItems, ref projectFiles);
+                else if (projectItem.FileCount == 1)
+                {
+                    projectFiles.Enqueue(projectItem);
+                }
+            }
         }
 
         private void PerformTryAndErrorRemoval(Project project)
         {
             projectItems = project.ProjectItems;
 
-            if (projectItems.Count > 2)
+            projectFiles.Clear();
+            RecursiveFindFilesInProject(projectItems, ref projectFiles);
+
+            if (projectFiles.Count > 10)
             {
                 int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider, 
                                             "Attention! Try and error include removal on large projects make take up to several hours! In this time you will not be able to use Visual Studio. Are you sure you want to continue?",
@@ -135,7 +146,6 @@ namespace IncludeToolbox.Commands
                 }
             }
 
-            fileIdx = 0;
             numTotalRemovedIncludes = 0;
             ProcessNextFile();
         }

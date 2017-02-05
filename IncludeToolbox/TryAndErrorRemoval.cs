@@ -35,7 +35,8 @@ namespace IncludeToolbox
            
             if (VSUtils.VCUtils.IsCompilableFile(document, out reasonForFailure) == false)
             {
-                Output.Instance.WriteLine("Can't compile file: {0}", reasonForFailure);
+                if (reasonForFailure.Length > 0)    // Don't spam for header files.
+                    Output.Instance.WriteLine("Can't compile file: {0}", reasonForFailure);
                 return;
             }
 
@@ -131,7 +132,7 @@ namespace IncludeToolbox
                     int currentProgressStep = 0;
 
                     // For ever include line..
-                    foreach(Tuple<int, IncludeFormatter.IncludeLineInfo> line in includeLines)
+                    foreach (Tuple<int, IncludeFormatter.IncludeLineInfo> line in includeLines)
                     {
                         // If we are working from top to bottom, the line number may have changed!
                         int currentLine = line.Item1;
