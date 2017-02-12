@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using EnvDTE;
+﻿using EnvDTE;
 using Microsoft.VisualStudio.VCProjectEngine;
 
 #if VC14
@@ -38,12 +33,6 @@ namespace VCProjectUtils.VS15
             if (vcFile == null)
             {
                 reasonForFailure = "The given document is not a VC++ file.";
-                return null;
-            }
-
-            if (vcFile.FileType == eFileType.eFileTypeCppHeader)
-            {
-                reasonForFailure = ""; // Empty string == skip output for it.
                 return null;
             }
 

@@ -1,14 +1,9 @@
 ﻿using System;
 using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Windows;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.VCProjectEngine;
 using EnvDTE;
-using Microsoft.VisualStudio.Text;
 using System.Collections.Generic;
 
 namespace IncludeToolbox.Commands
@@ -123,7 +118,20 @@ namespace IncludeToolbox.Commands
                     RecursiveFindFilesInProject(projectItem.ProjectItems, ref projectFiles);
                 else if (projectItem.FileCount == 1)
                 {
-                    projectFiles.Enqueue(projectItem);
+                    Guid projectItemKind = new Guid(projectItem.Kind);
+                    if (projectItemKind == VSConstants.GUID_ItemType_VirtualFolder ||
+                        projectItemKind == VSConstants.GUID_ItemType_PhysicalFolder)
+                    {
+                        RecursiveFindFilesInProject(projectItem.ProjectItems, ref projectFiles);
+                    }
+                    else if (projectItemKind == VSConstants.GUID_ItemType_PhysicalFile)
+                    {
+                        projectFiles.Enqueue(projectItem);
+                    }
+                    else
+                    {
+                        Output.Instance.WriteLine("Unexpected Error: Unknown projectItem {0} of Kind {1}", projectItem.Name, projectItem.Kind);
+                    }
                 }
             }
         }
@@ -135,7 +143,7 @@ namespace IncludeToolbox.Commands
             projectFiles.Clear();
             RecursiveFindFilesInProject(projectItems, ref projectFiles);
 
-            if (projectFiles.Count > 10)
+            if (projectFiles.Count > 2)
             {
                 int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider, 
                                             "Attention! Try and error include removal on large projects make take up to several hours! In this time you will not be able to use Visual Studio. Are you sure you want to continue?",

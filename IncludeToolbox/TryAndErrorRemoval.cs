@@ -35,8 +35,7 @@ namespace IncludeToolbox
            
             if (VSUtils.VCUtils.IsCompilableFile(document, out reasonForFailure) == false)
             {
-                if (reasonForFailure.Length > 0)    // Don't spam for header files.
-                    Output.Instance.WriteLine("Can't compile file: {0}", reasonForFailure);
+                Output.Instance.WriteLine("Can't compile file: {0}", reasonForFailure);
                 return;
             }
 
