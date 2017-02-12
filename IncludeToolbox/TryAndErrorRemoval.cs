@@ -131,7 +131,7 @@ namespace IncludeToolbox
                     int currentProgressStep = 0;
 
                     // For ever include line..
-                    foreach(Tuple<int, IncludeFormatter.IncludeLineInfo> line in includeLines)
+                    foreach (Tuple<int, IncludeFormatter.IncludeLineInfo> line in includeLines)
                     {
                         // If we are working from top to bottom, the line number may have changed!
                         int currentLine = line.Item1;
