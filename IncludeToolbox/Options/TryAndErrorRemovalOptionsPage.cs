@@ -32,7 +32,7 @@ namespace IncludeToolbox
         [Category("Try And Error Include Removal")]
         [DisplayName("Ignore List")]
         [Description("List of regexes. If the content of a #include directive match with any of these, it will be ignored.")]
-        public string[] IgnoreList { get; set; } = new string[0];
+        public string[] IgnoreList { get; set; } = new string[] { ".inl", "_inl.h" };
 
 
         // In theory the whole save/load mechanism should be done automatically.
