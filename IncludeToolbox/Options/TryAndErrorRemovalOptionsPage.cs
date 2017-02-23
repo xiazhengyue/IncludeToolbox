@@ -34,6 +34,11 @@ namespace IncludeToolbox
         [Description("List of regexes. If the content of a #include directive match with any of these, it will be ignored.")]
         public string[] IgnoreList { get; set; } = new string[] { ".inl", "_inl.h" };
 
+        [Category("Try And Error Include Removal")]
+        [DisplayName("Keep Line Breaks")]
+        [Description("If true, removed includes will leave an empty line.")]
+        public bool KeepLineBreaks { get; set; } = false;
+
 
         // In theory the whole save/load mechanism should be done automatically.
         // But *something* is broken there.
@@ -58,6 +63,8 @@ namespace IncludeToolbox
 
             var value = string.Join("\n", IgnoreList);
             settingsStore.SetString(collectionName, nameof(IgnoreList), value);
+
+            settingsStore.SetBoolean(collectionName, nameof(KeepLineBreaks), KeepLineBreaks);
         }
 
         public override void LoadSettingsFromStorage()
@@ -74,6 +81,9 @@ namespace IncludeToolbox
                 var value = settingsStore.GetString(collectionName, nameof(IgnoreList));
                 IgnoreList = value.Split(new[] { "\n" }, StringSplitOptions.RemoveEmptyEntries);
             }
+
+            if (settingsStore.PropertyExists(collectionName, nameof(KeepLineBreaks)))
+                KeepLineBreaks = settingsStore.GetBoolean(collectionName, nameof(KeepLineBreaks));
         }
     }
 }
