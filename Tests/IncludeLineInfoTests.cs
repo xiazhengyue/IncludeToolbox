@@ -59,7 +59,7 @@ int main () {}";
             // Technically some of the code here has C++ compile errors since preprocessor must always start before any whitespace.
             // But we want to handle this gracefully!
 
-            string sourceCode = "/* test */ #include <there>";
+            string sourceCode = "/* test // */ #include <there>";
             var parse = IncludeLineInfo.ParseIncludes(sourceCode, true);
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
 
@@ -72,7 +72,7 @@ int main () {}";
 @"#include <there0> /* <commented0>
 /* #include <commented1>
 sdfsdf // #include <commented2>
-dfdf */ #include <there1>";
+dfdf // */ #include <there1>";
 
             parse = IncludeLineInfo.ParseIncludes(sourceCode, true);
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
@@ -94,6 +94,9 @@ dfdf */ #include <there1>";
 #else
 #include <commented2>
 //#endif
+/*
+#endif
+*/
 #include <commented3>
 #endif
 #include <there1>";

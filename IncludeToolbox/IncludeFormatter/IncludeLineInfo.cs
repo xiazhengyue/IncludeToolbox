@@ -41,76 +41,62 @@ namespace IncludeToolbox.IncludeFormatter
                 outInfo[line].text = lines[line];
                 outInfo[line].lineType = Type.NoInclude;
 
+                int commentedSectionStart = int.MaxValue;
+                int commentedSectionEnd = int.MaxValue;
+
                 // Check for single line comment.
-                int singleLineCommentStart = lines[line].IndexOf("//");
-                if (singleLineCommentStart == -1)
-                    singleLineCommentStart = int.MaxValue;
+                {
+                    int singleLineCommentStart = lines[line].IndexOf("//");
+                    if (singleLineCommentStart != -1)
+                        commentedSectionStart = singleLineCommentStart;
+                }
 
                 // Check for multi line comments.
-                int multiLineCommentStart = lines[line].IndexOf("/*");
-                if (multiLineCommentStart > -1 && multiLineCommentStart < singleLineCommentStart)
-                    ++openMultiLineComments;
-                else
-                    multiLineCommentStart = -1;
-                int multiLineCommentEnd = lines[line].IndexOf("*/");
-                if (multiLineCommentEnd > -1 && multiLineCommentEnd < singleLineCommentStart)
-                    --openMultiLineComments;
-                else
-                    multiLineCommentEnd = -1;
+                {
+                    int multiLineCommentStart = lines[line].IndexOf("/*");
+                    if (multiLineCommentStart > -1 && multiLineCommentStart < commentedSectionStart)
+                    {
+                        ++openMultiLineComments;
+                        commentedSectionStart = multiLineCommentStart;
+                    }
+                    
+                    int multiLineCommentEnd = lines[line].IndexOf("*/");
+                    if (multiLineCommentEnd > -1)
+                    {
+                        --openMultiLineComments;
+                        commentedSectionEnd = multiLineCommentEnd;
+                    }
+                }
+
+                Func<int, bool> isCommented = pos => (commentedSectionStart == int.MaxValue && openMultiLineComments > 0) || 
+                                                     (pos > commentedSectionStart && pos < commentedSectionEnd);
 
                 // Check for #if / #ifdefs.
                 if (ignoreIncludesInPreprocessorConditionals)
                 {
                     int ifdefStart = lines[line].IndexOf("#if");
                     int ifdefEnd = lines[line].IndexOf("#endif");
-                    if (ifdefStart > -1 && ifdefStart < singleLineCommentStart)
+                    if (ifdefStart > -1 && !isCommented(ifdefStart))
                     {
-                        if (multiLineCommentStart > -1)
-                        {
-                            if (openMultiLineComments == 1 && ifdefStart < multiLineCommentStart)
-                                ++openIfdefs;
-                        }
-                        if (multiLineCommentEnd > -1)
-                        {
-                            if (openMultiLineComments == 0 && multiLineCommentEnd < ifdefStart)
-                                ++openIfdefs;
-                        }
-                        else if (openMultiLineComments == 0)
-                            ++openIfdefs;
+                        ++openIfdefs;
+                        continue; // There can be only a single preprocessor directive per line.
                     }
-                    else if (ifdefEnd > -1 && ifdefEnd < singleLineCommentStart)
+                    else if (ifdefEnd > -1 && !isCommented(ifdefEnd))
                     {
-                        if (multiLineCommentStart > -1)
-                        {
-                            if (openMultiLineComments == 1 && ifdefEnd < multiLineCommentStart)
-                                --openIfdefs;
-                        }
-                        if (multiLineCommentEnd > -1)
-                        {
-                            if (openMultiLineComments == 0 && multiLineCommentEnd < ifdefEnd)
-                                --openIfdefs;
-                        }
-                        else if (openMultiLineComments == 0)
-                            --openIfdefs;
+                        --openIfdefs;
+                        continue; // There can be only a single preprocessor directive per line.
                     }
                 }
 
                 int includeOccurence = lines[line].IndexOf("#include");
                 if (includeOccurence == -1) // No include found
                     continue;
-                if (openIfdefs != 0)
+                if (isCommented(includeOccurence)) // Include commented out
                     continue;
-                if (includeOccurence > singleLineCommentStart) // Single line before #include
-                    continue;
-                if (openMultiLineComments > 0 && multiLineCommentStart == -1 && multiLineCommentEnd == -1) // Multi comment around #include.
-                    continue;
-                if (multiLineCommentEnd > includeOccurence) // Multi line comment ended in same line but after #include.
-                    continue;
-                if (multiLineCommentStart > -1 && multiLineCommentStart < includeOccurence && // Multi line comment started in same line, but before #include.
-                    (multiLineCommentEnd == -1 || multiLineCommentEnd > includeOccurence))  // (and hasn't already ended again)
+                if (openIfdefs > 0)  // Inside an #ifdef block.
                     continue;
 
-
+                // Parse include content.
                 outInfo[line].delimiter0 = lines[line].IndexOf('\"', includeOccurence + "#include".Length);
                 if (outInfo[line].delimiter0 == -1)
                 {
