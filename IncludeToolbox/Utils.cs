@@ -10,14 +10,8 @@ using Microsoft.VisualStudio.VCProjectEngine;
 
 namespace IncludeToolbox
 {
-    internal static class Utils
+    public static class Utils
     {
-        public static string NormalizePath(string path)
-        {
-            return Path.GetFullPath(new Uri(path).LocalPath)
-                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        }
-
         public static string MakeRelative(string absoluteRoot, string absoluteTarget)
         {
             Uri rootUri = new Uri(absoluteRoot);
