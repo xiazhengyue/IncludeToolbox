@@ -78,7 +78,7 @@ namespace IncludeToolbox.Commands
                 // Read.
                 var viewHost = VSUtils.GetCurrentTextViewHost();
                 var selectionSpan = GetSelectionSpan(viewHost);
-                var lines = IncludeFormatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), settings.RemoveEmptyLines, includeDirectories);
+                var lines = IncludeFormatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), settings.RemoveEmptyLines);
 
                 // Format.
                 IEnumerable<string> formatingDirs = includeDirectories;
@@ -92,13 +92,13 @@ namespace IncludeToolbox.Commands
 
                 // Apply changes so far.
                 foreach (var line in lines)
-                    line.UpdateTextWithIncludeContent();
+                    line.UpdateRawLineWithIncludeContentChanges();
 
                 // Sorting. Ignores non-include lines.
                 IncludeFormatter.IncludeFormatter.SortIncludes(lines, settings, document.Name);
 
                 // Overwrite.
-                string replaceText = string.Join(Environment.NewLine, lines.Select(x => x.Text));
+                string replaceText = string.Join(Environment.NewLine, lines.Select(x => x.RawLine));
                 using (var edit = viewHost.TextView.TextBuffer.CreateEdit())
                 {
                     edit.Replace(selectionSpan, replaceText);

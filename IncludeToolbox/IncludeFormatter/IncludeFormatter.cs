@@ -53,7 +53,9 @@ namespace IncludeToolbox.IncludeFormatter
 
             foreach (var line in lines)
             {
-                line.IncludeContent = FormatPath(line.AbsoluteIncludePath, pathformat, includeDirectories) ?? line.IncludeContent;
+                string absoluteIncludeDir = line.TryResolveInclude(includeDirectories);
+                if (!string.IsNullOrEmpty(absoluteIncludeDir))
+                    line.IncludeContent = FormatPath(absoluteIncludeDir, pathformat, includeDirectories) ?? line.IncludeContent;
             }
         }
 
@@ -121,7 +123,7 @@ namespace IncludeToolbox.IncludeFormatter
             var includeGroups = includeLines
                 .GroupBy(x =>
                 {
-                    var includeContent = x.IncludeContentForRegex(regexIncludeDelimiter);
+                    var includeContent = regexIncludeDelimiter ? x.GetIncludeContentWithDelimiters() : x.IncludeContent;
                     for (int precedence = 0; precedence < precedenceRegexes.Count(); ++precedence)
                     {
                         if (Regex.Match(includeContent, precedenceRegexes[precedence]).Success)
@@ -164,7 +166,7 @@ namespace IncludeToolbox.IncludeFormatter
                         // - We'll remove empty lines or the previous line isn't already a NoInclude
                         if (lines[i].PrependNewline && i > 0 && (removeEmptyLines || lines[i - 1].LineType != IncludeLineInfo.Type.NoInclude))
                         {
-                            lines[i].Text = String.Format("{0}{1}", Environment.NewLine, lines[i].Text);
+                            lines[i].RawLine = String.Format("{0}{1}", Environment.NewLine, lines[i].RawLine);
                         }
                     }
                 }

@@ -7,14 +7,28 @@ using System.Text.RegularExpressions;
 
 namespace IncludeToolbox.IncludeFormatter
 {
+    /// <summary>
+    /// A line of text + information about the include directive in this line if any.
+    /// Allows for manipulation of the former.
+    /// </summary>
+    /// <remarks>
+    /// This is obviously not a high performance representation of text, but very easy to use for our purposes here.
+    /// </remarks>
     public class IncludeLineInfo
     {
-        public static IncludeLineInfo[] ParseIncludes(string text, bool removeEmptyLines, IEnumerable<string> includeDirectories = null)
+        /// <summary>
+        /// Parses a given text into IncludeLineInfo objects.
+        /// </summary>
+        /// <param name="text">A piece of code.</param>
+        /// <param name="removeEmptyLines">Whether IncludeLineInfo objects should be created for empty lines.</param>
+        /// <param name="ignoreIncludesInPreprocessorConditionals">If true, ignores all includes that are within preprocessor conditionals.</param>
+        /// <returns>An array of parsed lines.</returns>
+        public static IncludeLineInfo[] ParseIncludes(string text, bool removeEmptyLines, bool ignoreIncludesInPreprocessorConditionals = false)
         {
             var lines = Regex.Split(text, "\r\n|\r|\n");
             if (removeEmptyLines)
             {
-                lines = lines.Where(x => x.Length > 0).ToArray();
+                lines = lines.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
             }
             var outInfo = new IncludeLineInfo[lines.Length];
 
@@ -25,57 +39,60 @@ namespace IncludeToolbox.IncludeFormatter
             {
                 outInfo[line] = new IncludeLineInfo();
                 outInfo[line].text = lines[line];
-                outInfo[line].lineType = IncludeLineInfo.Type.NoInclude;
+                outInfo[line].lineType = Type.NoInclude;
 
                 // Check for single line comment.
-                int singleLineComment = lines[line].IndexOf("//");
-                if (singleLineComment == -1)
-                    singleLineComment = int.MaxValue;
+                int singleLineCommentStart = lines[line].IndexOf("//");
+                if (singleLineCommentStart == -1)
+                    singleLineCommentStart = int.MaxValue;
 
                 // Check for multi line comments.
-                int multiLineCommentEnd = lines[line].IndexOf("*/");
-                if (multiLineCommentEnd > -1 && multiLineCommentEnd < singleLineComment)
-                    --openMultiLineComments;
-                else
-                    multiLineCommentEnd = -1;
                 int multiLineCommentStart = lines[line].IndexOf("/*");
-                if (multiLineCommentStart > -1 && multiLineCommentStart < singleLineComment)
+                if (multiLineCommentStart > -1 && multiLineCommentStart < singleLineCommentStart)
                     ++openMultiLineComments;
                 else
                     multiLineCommentStart = -1;
+                int multiLineCommentEnd = lines[line].IndexOf("*/");
+                if (multiLineCommentEnd > -1 && multiLineCommentEnd < singleLineCommentStart)
+                    --openMultiLineComments;
+                else
+                    multiLineCommentEnd = -1;
 
                 // Check for #if / #ifdefs.
-                int ifdefStart = lines[line].IndexOf("#if");
-                int ifdefEnd = lines[line].IndexOf("#endif");
-                if (ifdefStart > -1 && ifdefStart < singleLineComment)
+                if (ignoreIncludesInPreprocessorConditionals)
                 {
-                    if (multiLineCommentStart > -1)
+                    int ifdefStart = lines[line].IndexOf("#if");
+                    int ifdefEnd = lines[line].IndexOf("#endif");
+                    if (ifdefStart > -1 && ifdefStart < singleLineCommentStart)
                     {
-                        if (openMultiLineComments == 1 && ifdefStart < multiLineCommentStart)
+                        if (multiLineCommentStart > -1)
+                        {
+                            if (openMultiLineComments == 1 && ifdefStart < multiLineCommentStart)
+                                ++openIfdefs;
+                        }
+                        if (multiLineCommentEnd > -1)
+                        {
+                            if (openMultiLineComments == 0 && multiLineCommentEnd < ifdefStart)
+                                ++openIfdefs;
+                        }
+                        else if (openMultiLineComments == 0)
                             ++openIfdefs;
                     }
-                    if (multiLineCommentEnd > -1)
+                    else if (ifdefEnd > -1 && ifdefEnd < singleLineCommentStart)
                     {
-                        if (openMultiLineComments == 0 && multiLineCommentEnd < ifdefStart)
-                            ++openIfdefs;
-                    }
-                    else if (openMultiLineComments == 0)
-                        ++openIfdefs;
-                }
-                else if (ifdefEnd > -1 && ifdefEnd < singleLineComment)
-                {
-                    if (multiLineCommentStart > -1)
-                    {
-                        if (openMultiLineComments == 1 && ifdefEnd < multiLineCommentStart)
+                        if (multiLineCommentStart > -1)
+                        {
+                            if (openMultiLineComments == 1 && ifdefEnd < multiLineCommentStart)
+                                --openIfdefs;
+                        }
+                        if (multiLineCommentEnd > -1)
+                        {
+                            if (openMultiLineComments == 0 && multiLineCommentEnd < ifdefEnd)
+                                --openIfdefs;
+                        }
+                        else if (openMultiLineComments == 0)
                             --openIfdefs;
                     }
-                    if (multiLineCommentEnd > -1)
-                    {
-                        if (openMultiLineComments == 0 && multiLineCommentEnd < ifdefEnd)
-                            --openIfdefs;
-                    }
-                    else if (openMultiLineComments == 0)
-                        --openIfdefs;
                 }
 
                 int includeOccurence = lines[line].IndexOf("#include");
@@ -83,52 +100,35 @@ namespace IncludeToolbox.IncludeFormatter
                     continue;
                 if (openIfdefs != 0)
                     continue;
-                if (includeOccurence > singleLineComment) // Single line before #include
+                if (includeOccurence > singleLineCommentStart) // Single line before #include
                     continue;
                 if (openMultiLineComments > 0 && multiLineCommentStart == -1 && multiLineCommentEnd == -1) // Multi comment around #include.
                     continue;
                 if (multiLineCommentEnd > includeOccurence) // Multi line comment ended in same line but after #include.
                     continue;
-                if (multiLineCommentStart > -1 && multiLineCommentStart < includeOccurence) // Multi line comment started in same line, but before #include.
+                if (multiLineCommentStart > -1 && multiLineCommentStart < includeOccurence && // Multi line comment started in same line, but before #include.
+                    (multiLineCommentEnd == -1 || multiLineCommentEnd > includeOccurence))  // (and hasn't already ended again)
                     continue;
 
 
-                outInfo[line].Delimiter0 = lines[line].IndexOf('\"', includeOccurence + "#include".Length);
-                if (outInfo[line].Delimiter0 == -1)
+                outInfo[line].delimiter0 = lines[line].IndexOf('\"', includeOccurence + "#include".Length);
+                if (outInfo[line].delimiter0 == -1)
                 {
-                    outInfo[line].Delimiter0 = lines[line].IndexOf('<', includeOccurence + "#include".Length);
-                    if (outInfo[line].Delimiter0 == -1)
+                    outInfo[line].delimiter0 = lines[line].IndexOf('<', includeOccurence + "#include".Length);
+                    if (outInfo[line].delimiter0 == -1)
                         continue;
-                    outInfo[line].Delimiter1 = lines[line].IndexOf('>', outInfo[line].Delimiter0 + 1);
+                    outInfo[line].delimiter1 = lines[line].IndexOf('>', outInfo[line].delimiter0 + 1);
                     outInfo[line].lineType = IncludeLineInfo.Type.AngleBrackets;
                 }
                 else
                 {
-                    outInfo[line].Delimiter1 = lines[line].IndexOf('\"', outInfo[line].Delimiter0 + 1);
+                    outInfo[line].delimiter1 = lines[line].IndexOf('\"', outInfo[line].delimiter0 + 1);
                     outInfo[line].lineType = IncludeLineInfo.Type.Quotes;
                 }
-                if (outInfo[line].Delimiter1 == -1)
+                if (outInfo[line].delimiter1 == -1)
                     continue;
 
-                outInfo[line].includeContent = lines[line].Substring(outInfo[line].Delimiter0 + 1, outInfo[line].Delimiter1 - outInfo[line].Delimiter0 - 1);
-
-                // Try to resolve include path to an existing file.
-                if (includeDirectories != null)
-                {
-                    foreach (string dir in includeDirectories)
-                    {
-                        string candidate = Path.Combine(dir, outInfo[line].IncludeContent);
-                        if (File.Exists(candidate))
-                        {
-                            outInfo[line].AbsoluteIncludePath = Utils.GetExactPathName(candidate);
-                            break;
-                        }
-                    }
-                    if (outInfo[line].AbsoluteIncludePath == null)
-                    {
-                        Output.Instance.WriteLine("Unabled to resolve include: '{0}'", outInfo[line].IncludeContent);
-                    }
-                }
+                outInfo[line].includeContent = lines[line].Substring(outInfo[line].delimiter0 + 1, outInfo[line].delimiter1 - outInfo[line].delimiter0 - 1);
             }
 
             return outInfo;
@@ -147,26 +147,35 @@ namespace IncludeToolbox.IncludeFormatter
         }
         private Type lineType;
 
+        /// <summary>
+        /// Changes the type of this line.
+        /// </summary>
+        /// <param name="newLineType">Type.NoInclude won't have any effect.</param>
         public void SetLineType(Type newLineType)
         {
             if (lineType != newLineType)
             {
                 lineType = newLineType;
-                if(Delimiter0 >= 0 && Delimiter1 >= 0)
+                if(delimiter0 >= 0 && delimiter1 >= 0)
                 {
                     if (lineType == Type.AngleBrackets)
                     {
                         StringBuilder sb = new StringBuilder(text);
-                        sb[Delimiter0] = '<';
-                        sb[Delimiter1] = '>';
+                        sb[delimiter0] = '<';
+                        sb[delimiter1] = '>';
                         text = sb.ToString();
                     }
                     else if (lineType == Type.Quotes)
                     {
                         StringBuilder sb = new StringBuilder(text);
-                        sb[Delimiter0] = '"';
-                        sb[Delimiter1] = '"';
+                        sb[delimiter0] = '"';
+                        sb[delimiter1] = '"';
                         text = sb.ToString();
+                    }
+                    else
+                    {
+                        // shouldn't happen. Don't do anything
+                        // (remove include? Assert?)
                     }
                 }
                 else
@@ -176,38 +185,72 @@ namespace IncludeToolbox.IncludeFormatter
             }
         }
 
-        public void UpdateTextWithIncludeContent()
+        /// <summary>
+        /// Applies changes in include content to the internal raw text.
+        /// </summary>
+        public void UpdateRawLineWithIncludeContentChanges()
         {
             if (lineType == Type.NoInclude)
                 return;
 
-            text = text.Remove(Delimiter0 + 1, Delimiter1 - Delimiter0 - 1);
-            text = text.Insert(Delimiter0 + 1, includeContent);
-            Delimiter1 = Delimiter0 + includeContent.Length + 1;
+            text = text.Remove(delimiter0 + 1, delimiter1 - delimiter0 - 1);
+            text = text.Insert(delimiter0 + 1, includeContent);
+            delimiter1 = delimiter0 + includeContent.Length + 1;
         }
 
-        public string IncludeContentForRegex(bool regexIncludeDelimiter)
+        /// <summary>
+        /// Tries to resolve the include (if any) using a list of directories.
+        /// </summary>
+        /// <param name="includeDirectories">Include directories.</param>
+        /// <returns>Empty string if this is not an include, absolute include path if possible or raw include if not.</returns>
+        public string TryResolveInclude(IEnumerable<string> includeDirectories)
         {
-            if (!regexIncludeDelimiter || lineType == Type.NoInclude)
-                return includeContent;
+            if (lineType == Type.NoInclude)
+                return "";
 
-            char[] delimiters = { '"', '"' };
-            if (lineType == Type.AngleBrackets)
+            foreach (string dir in includeDirectories)
             {
-                delimiters[0] = '<';
-                delimiters[1] = '>';
+                string candidate = Path.Combine(dir, includeContent);
+                if (File.Exists(candidate))
+                {
+                    return Utils.GetExactPathName(candidate);
+                }
             }
 
-            return String.Format("{0}{1}{2}", delimiters[0], includeContent, delimiters[1]);
+            Output.Instance.WriteLine("Unable to resolve include: '{0}'", includeContent);
+            return includeContent;
         }
 
-        public string Text
+        /// <summary>
+        /// Include content with added delimiters.
+        /// </summary>
+        public string GetIncludeContentWithDelimiters()
+        {
+            switch (lineType)
+            {
+                case Type.AngleBrackets:
+                    return $"<{includeContent}>";
+                case Type.Quotes:
+                    return $"\"{includeContent}\"";
+                default:
+                    return includeContent;
+            }
+        }
+
+        /// <summary>
+        /// Raw line text as found.
+        /// </summary>
+        public string RawLine
         {
             get { return text; }
             set { text = value; }
         }
         private string text = "";
 
+        /// <summary>
+        /// Changes in the include content will NOT be reflected immediately in the raw line text. 
+        /// </summary>
+        /// <see cref="UpdateRawLineWithIncludeContentChanges"/>
         public string IncludeContent
         {
             get { return includeContent; }
@@ -215,13 +258,12 @@ namespace IncludeToolbox.IncludeFormatter
         }
         private string includeContent = "";
 
-        public string AbsoluteIncludePath { get; private set; } = null;
+        private int delimiter0 = -1;
+        private int delimiter1 = -1;
 
-        public int Delimiter0 { get; private set; } = -1;
-        public int Delimiter1 { get; private set; } = -1;
-
-        public int OriginalLineNumber { get; private set; }
-
+        /// <summary>
+        /// Flag used by formatting to signal that a line should be added before this one.
+        /// </summary>
         public bool PrependNewline { get; set; } = false;
     }
 }

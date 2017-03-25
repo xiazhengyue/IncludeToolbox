@@ -86,7 +86,7 @@ namespace IncludeToolbox
                     var documentTextView = VSUtils.GetCurrentTextViewHost();
                     textBuffer = documentTextView.TextView.TextBuffer;
                     string documentText = documentTextView.TextView.TextSnapshot.GetText();
-                    documentLines = IncludeFormatter.IncludeLineInfo.ParseIncludes(documentText, false, null);
+                    documentLines = IncludeFormatter.IncludeLineInfo.ParseIncludes(documentText, false, true);
                 }
                 catch (Exception ex)
                 {
