@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
+﻿using IncludeToolbox.IncludeWhatYouUse;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudio.VCProjectEngine;
+using System;
+using System.ComponentModel.Design;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace IncludeToolbox.Commands
 {
@@ -18,6 +14,11 @@ namespace IncludeToolbox.Commands
     internal sealed class IncludeWhatYouUse : CommandBase<IncludeWhatYouUse>
     {
         public override CommandID CommandID => new CommandID(CommandSetGuids.MenuGroup, 0x0103);
+
+        /// <summary>
+        /// Whether we already checked for updates.
+        /// </summary>
+        private bool checkedForUpdatesThisSession = false;
 
         public IncludeWhatYouUse()
         {
@@ -31,9 +32,64 @@ namespace IncludeToolbox.Commands
 
         private void UpdateVisibility(object sender, EventArgs e)
         {
-            // Needs to be part of a VCProject to be aplicable.
+            // Needs to be part of a VCProject to be applicable.
             var document = VSUtils.GetDTE()?.ActiveDocument;
             menuCommand.Visible = VSUtils.VCUtils.IsVCProject(document?.ProjectItem?.ContainingProject);
+        }
+
+        private async Task<bool> DownloadIWYUWithProgressBar(string executablePath, IVsThreadedWaitDialogFactory dialogFactory)
+        {
+            IVsThreadedWaitDialog2 progressDialog;
+            dialogFactory.CreateInstance(out progressDialog);
+            if (progressDialog == null)
+            {
+                Output.Instance.WriteLine("Failed to get create wait dialog.");
+                return false;
+            }
+
+            progressDialog.StartWaitDialogWithPercentageProgress(
+                szWaitCaption: "Include Toolbox - Downloading include-what-you-use",
+                szWaitMessage: "", // comes in later.
+                szProgressText: null,
+                varStatusBmpAnim: null,
+                szStatusBarText: "Downloading include-what-you-use",
+                fIsCancelable: true,
+                iDelayToShowDialog: 0,
+                iTotalSteps: 100,
+                iCurrentStep: 0);
+
+            var cancellationToken = new System.Threading.CancellationTokenSource();
+
+            try
+            {
+                await IWYUDownload.DownloadIWYU(executablePath, (string section, string status, float percentage) =>
+                {
+                    bool canceled;
+                    progressDialog.UpdateProgress(
+                        szUpdatedWaitMessage: section,
+                        szProgressText: status,
+                        szStatusBarText: $"Downloading include-what-you-use - {section} - {status}",
+                        iCurrentStep: (int)(percentage * 100),
+                        iTotalSteps: 100,
+                        fDisableCancel: true,
+                        pfCanceled: out canceled);
+                    if (canceled)
+                    {
+                        cancellationToken.Cancel();
+                    }
+                }, cancellationToken.Token);
+            }
+            catch (Exception e)
+            {
+                Output.Instance.ErrorMsg("Failed to download include-what-you-use: {0}", e);
+                return false;
+            }
+            finally
+            {
+                progressDialog.EndWaitDialog();
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -43,7 +99,7 @@ namespace IncludeToolbox.Commands
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        protected override void MenuItemCallback(object sender, EventArgs e)
+        protected override async void MenuItemCallback(object sender, EventArgs e)
         {
             var settings = (IncludeWhatYouUseOptionsPage)Package.GetDialogPage(typeof(IncludeWhatYouUseOptionsPage));
             Output.Instance.Clear();
@@ -61,26 +117,74 @@ namespace IncludeToolbox.Commands
                 return;
             }
 
+            var dialogFactory = ServiceProvider.GetService(typeof(SVsThreadedWaitDialogFactory)) as IVsThreadedWaitDialogFactory;
+            if (dialogFactory == null)
+            {
+                Output.Instance.WriteLine("Failed to get IVsThreadedWaitDialogFactory service.");
+                return;
+            }
+
+            // Check existence, offer to download if it's not there.
+            if (!File.Exists(settings.ExecutablePath))
+            {
+                int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider,
+                                                $"Can't find include-what-you-use in '{settings.ExecutablePath}'. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?",
+                                                "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                if (result != 6)
+                {
+                    return;
+                }
+
+                bool success = await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
+                if (!success)
+                    return;
+            }
+            else if(settings.AutomaticCheckForUpdates && !checkedForUpdatesThisSession)
+            {
+                IVsThreadedWaitDialog2 dialog = null;
+                dialogFactory.CreateInstance(out dialog);
+                dialog?.StartWaitDialog("Include Toolbox", "Running Include-What-You-Use", null, null, "Checking for Updates for include-what-you-use", 0, false, true);
+                bool newVersionAvailable = await IWYUDownload.IsNewerVersionAvailableOnline(settings.ExecutablePath);
+                dialog?.EndWaitDialog();
+
+                if(newVersionAvailable)
+                {
+                    checkedForUpdatesThisSession = true;
+                    int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider,
+                                    $"There is a new version of include-what-you-use available. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?",
+                                    "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                    if (result != 6)
+                    {
+                        await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
+                    }
+                }
+            }
+
+            // We should really have it now, but just in case our update or download methed screwed up.
+            if (!File.Exists(settings.ExecutablePath))
+            {
+                Output.Instance.ErrorMsg("Unexpected error: Can't find include-what-you-use.exe after download/update.");
+                return;
+            }
+            checkedForUpdatesThisSession = true;
+
             // Save all documents.
             document.DTE.Documents.SaveAll();
 
             // Start wait dialog.
-            var dialogFactory = ServiceProvider.GetService(typeof(SVsThreadedWaitDialogFactory)) as IVsThreadedWaitDialogFactory;
-            IVsThreadedWaitDialog2 dialog = null;
-            if (dialogFactory != null)
             {
+                IVsThreadedWaitDialog2 dialog = null;
                 dialogFactory.CreateInstance(out dialog);
-            }
-            dialog?.StartWaitDialog("Include Toolbox", "Running Include-What-You-Use", null, null, "Running Include-What-You-Use", 0, false, true);
+                dialog?.StartWaitDialog("Include Toolbox", "Running include-what-you-use", null, null, "Running include-what-you-use", 0, false, true);
 
-            var iwyu = new IncludeToolbox.IncludeWhatYouUse();
-            string output = iwyu.RunIncludeWhatYouUse(document.FullName, project, settings);
-            if (settings.ApplyProposal && output != null)
-            {
-                iwyu.Apply(output);
-            }
+                string output = IWYU.RunIncludeWhatYouUse(document.FullName, project, settings);
+                if (settings.ApplyProposal && output != null)
+                {
+                    IWYU.Apply(output);
+                }
 
-            dialog?.EndWaitDialog();
+                dialog?.EndWaitDialog();
+            }
         }
     }
 }
