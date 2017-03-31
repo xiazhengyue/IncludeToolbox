@@ -153,7 +153,7 @@ namespace IncludeToolbox.Commands
                     int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider,
                                     $"There is a new version of include-what-you-use available. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?",
                                     "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                    if (result != 6)
+                    if (result == 6)
                     {
                         await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
                     }
