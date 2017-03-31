@@ -1,3 +1,0 @@
-http://include-what-you-use.org/downloads/
-
-include-what-you-use-0.7-x86-win32.zip (30 October 2016)
