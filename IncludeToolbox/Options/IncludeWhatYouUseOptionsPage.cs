@@ -14,7 +14,27 @@ namespace IncludeToolbox
         public const string SubCategory = "Include-What-You-Use";
         private const string collectionName = "IncludeFormatter";
 
-        #region iwyu
+        #region iwyu source
+
+        [Category("iwyu general")]
+        [DisplayName("Executable Path")]
+        [Description("File path of include-what-you-use.exe. If automatic download is active, this folder will be used.")]
+        public string ExecutablePath { get; set; } = "";
+
+        [Category("iwyu general")]
+        [DisplayName("Automatic Updates")]
+        [Description("If true, automatic check for updates will be done on first use each session. Will download from https://github.com/Wumpf/iwyu_for_vs_includetoolbox. " +
+                     "Set this to false if you want to use your own include-what-you-use version.")]
+        public bool AutomaticCheckForUpdates { get; set; } = true;
+
+        static public string GetDefaultExecutablePath()
+        {
+            return System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "iwyu", "include-what-you-use.exe");
+        }
+
+        #endregion
+
+        #region iwyu options
 
         [Category("iwyu options")]
         [DisplayName("Log Verbosity")]
@@ -58,7 +78,7 @@ namespace IncludeToolbox
 
         [Category("Post Processing")]
         [DisplayName("Apply Proposal")]
-        [Description("Applies iwyu's proposal directly to all files. Reqiures at least Log Verbosity of 1.")]
+        [Description("Applies iwyu's proposal directly to all files. Requires at least Log Verbosity of 1.")]
         public bool ApplyProposal { get; set; } = true;
 
         // Not implemented yet.
@@ -88,6 +108,9 @@ namespace IncludeToolbox
             if (!settingsStore.CollectionExists(collectionName))
                 settingsStore.CreateCollection(collectionName);
 
+            settingsStore.SetString(collectionName, nameof(ExecutablePath), ExecutablePath);
+            settingsStore.SetBoolean(collectionName, nameof(AutomaticCheckForUpdates), AutomaticCheckForUpdates);
+
             settingsStore.SetInt32(collectionName, nameof(LogVerbosity), LogVerbosity);
 
             var value = string.Join("\n", MappingFiles);
@@ -105,6 +128,13 @@ namespace IncludeToolbox
         public override void LoadSettingsFromStorage()
         {
             var settingsStore = GetSettingsStore();
+
+            if (settingsStore.PropertyExists(collectionName, nameof(ExecutablePath)))
+                ExecutablePath = settingsStore.GetString(collectionName, nameof(ExecutablePath));
+            else
+                ExecutablePath = GetDefaultExecutablePath();
+            if (settingsStore.PropertyExists(collectionName, nameof(AutomaticCheckForUpdates)))
+                AutomaticCheckForUpdates = settingsStore.GetBoolean(collectionName, nameof(AutomaticCheckForUpdates));
 
             if (settingsStore.PropertyExists(collectionName, nameof(LogVerbosity)))
                 LogVerbosity = settingsStore.GetInt32(collectionName, nameof(LogVerbosity));
