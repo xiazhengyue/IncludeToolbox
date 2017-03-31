@@ -109,7 +109,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                 client.DownloadProgressChanged += (object sender, DownloadProgressChangedEventArgs e) =>
                 {
                     int kbTodo = (int)System.Math.Ceiling((double)e.TotalBytesToReceive / 1024);
-                    int kbDownloaded = (int)System.Math.Ceiling((double)e.TotalBytesToReceive / 1024);
+                    int kbDownloaded = (int)System.Math.Ceiling((double)e.BytesReceived / 1024);
                     onProgressUpdate("Downloading", kbTodo > 0 ? $"{kbTodo} / {kbDownloaded} kB" : $"{kbDownloaded} kB", e.ProgressPercentage * 0.01f);
                 };
 
