@@ -11,8 +11,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
     /// </summary>
     static public class IWYU
     {
-        private static readonly Regex RegexRemoveLine = new Regex(@"^-\s+#include\s*[""<](.+)["">]\s+\/\/ lines (\d+)-(\d+)$");
-        private static readonly Regex RegexAddLine = new Regex(@"(#include\s*[""<].+["">])|(^class.+;$)|(^struct.+;$)");
+        private static readonly Regex RegexRemoveLine = new Regex(@"^-\s+.+\s+\/\/ lines (\d+)-(\d+)$");
 
         private class FormatTask
         {
@@ -87,8 +86,8 @@ namespace IncludeToolbox.IncludeWhatYouUse
                         if (match.Success)
                         {
                             int removeStart, removeEnd;
-                            if (int.TryParse(match.Groups[2].Value, out removeStart) &&
-                                int.TryParse(match.Groups[3].Value, out removeEnd))
+                            if (int.TryParse(match.Groups[1].Value, out removeStart) &&
+                                int.TryParse(match.Groups[2].Value, out removeEnd))
                             {
                                 for (int lineIdx = removeStart; lineIdx <= removeEnd; ++lineIdx)
                                     currentTask.linesToRemove.Add(lineIdx - 1);
@@ -101,8 +100,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                     }
                     else
                     {
-                        var match = RegexAddLine.Match(line);
-                        if (match.Success)
+                        if(!string.IsNullOrWhiteSpace(line))
                         {
                             currentTask.linesToAdd.Add(line);
                         }
