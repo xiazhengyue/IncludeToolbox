@@ -82,7 +82,7 @@ namespace IncludeToolbox
         [Category("iwyu options")]
         [DisplayName("Transitive Includes Only")]
         [Description("Do not suggest that a file add foo.h unless foo.h is already visible in the file's transitive includes. (--transitive_includes_only)")]
-        public bool TransitiveIncludesOnly { get; set; } = true;
+        public bool TransitiveIncludesOnly { get; set; } = false;
 
         #endregion
 
