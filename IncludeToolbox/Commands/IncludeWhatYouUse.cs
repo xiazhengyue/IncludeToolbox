@@ -92,6 +92,48 @@ namespace IncludeToolbox.Commands
             return true;
         }
 
+        private async System.Threading.Tasks.Task OptionalDownloadOrUpdate(IncludeWhatYouUseOptionsPage settings, IVsThreadedWaitDialogFactory dialogFactory)
+        {
+            // Check existence, offer to download if it's not there.
+            bool downloadedNewIwyu = false;
+            if (!File.Exists(settings.ExecutablePath))
+            {
+                int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider,
+                                                $"Can't find include-what-you-use in '{settings.ExecutablePath}'. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?",
+                                                "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                if (result != Output.MessageBoxResult_Yes)
+                {
+                    return;
+                }
+
+                downloadedNewIwyu = await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
+                if (!downloadedNewIwyu)
+                    return;
+            }
+            else if (settings.AutomaticCheckForUpdates && !checkedForUpdatesThisSession)
+            {
+                IVsThreadedWaitDialog2 dialog = null;
+                dialogFactory.CreateInstance(out dialog);
+                dialog?.StartWaitDialog("Include Toolbox", "Running Include-What-You-Use", null, null, "Checking for Updates for include-what-you-use", 0, false, true);
+                bool newVersionAvailable = await IWYUDownload.IsNewerVersionAvailableOnline(settings.ExecutablePath);
+                dialog?.EndWaitDialog();
+
+                if (newVersionAvailable)
+                {
+                    checkedForUpdatesThisSession = true;
+                    int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider,
+                                    $"There is a new version of include-what-you-use available. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?",
+                                    "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                    if (result == Output.MessageBoxResult_Yes)
+                    {
+                        downloadedNewIwyu = await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
+                    }
+                }
+            }
+            if (downloadedNewIwyu)
+                settings.AddMappingFiles(IWYUDownload.GetMappingFilesNextToIwyuPath(settings.ExecutablePath));
+        }
+
         /// <summary>
         /// This function is the callback used to execute the command when the menu item is clicked.
         /// See the constructor to see how the menu item is associated with this function using
@@ -124,44 +166,7 @@ namespace IncludeToolbox.Commands
                 return;
             }
 
-            // Check existence, offer to download if it's not there.
-            bool downloadedNewIwyu = false;
-            if (!File.Exists(settings.ExecutablePath))
-            {
-                int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider,
-                                                $"Can't find include-what-you-use in '{settings.ExecutablePath}'. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?",
-                                                "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                if (result != Output.MessageBoxResult_Yes)
-                {
-                    return;
-                }
-
-                downloadedNewIwyu = await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
-                if (!downloadedNewIwyu)
-                    return;
-            }
-            else if(settings.AutomaticCheckForUpdates && !checkedForUpdatesThisSession)
-            {
-                IVsThreadedWaitDialog2 dialog = null;
-                dialogFactory.CreateInstance(out dialog);
-                dialog?.StartWaitDialog("Include Toolbox", "Running Include-What-You-Use", null, null, "Checking for Updates for include-what-you-use", 0, false, true);
-                bool newVersionAvailable = await IWYUDownload.IsNewerVersionAvailableOnline(settings.ExecutablePath);
-                dialog?.EndWaitDialog();
-
-                if(newVersionAvailable)
-                {
-                    checkedForUpdatesThisSession = true;
-                    int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider,
-                                    $"There is a new version of include-what-you-use available. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?",
-                                    "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                    if (result == Output.MessageBoxResult_Yes)
-                    {
-                        downloadedNewIwyu = await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
-                    }
-                }
-            }
-            if (downloadedNewIwyu)
-                settings.AddMappingFiles(IWYUDownload.GetMappingFilesNextToIwyuPath(settings.ExecutablePath));
+            await OptionalDownloadOrUpdate(settings, dialogFactory);
 
             // We should really have it now, but just in case our update or download method screwed up.
             if (!File.Exists(settings.ExecutablePath))
