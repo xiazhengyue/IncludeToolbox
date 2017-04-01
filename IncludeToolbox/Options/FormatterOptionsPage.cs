@@ -85,12 +85,12 @@ namespace IncludeToolbox
 
         [Category("Sorting")]
         [DisplayName("Precedence Regexes")]
-        [Description("Earlier match means higher sorting priority.\n\" " + IncludeFormatter.IncludeFormatter.CurrentFileNameKey + "\" will be replaced with the current file name without extension.")]
+        [Description("Earlier match means higher sorting priority.\n\"" + IncludeFormatter.IncludeFormatter.CurrentFileNameKey + "\" will be replaced with the current file name without extension.")]
         public string[] PrecedenceRegexes {
             get { return precedenceRegexes; }
             set { precedenceRegexes = value.Where(x => x.Length > 0).ToArray(); } // Remove empty lines.
         }
-        private string[] precedenceRegexes = new string[] { "(?i)$(currentFilename)\\.(h|hpp|hxx|inl|c|cpp|cxx)(?-i)" };
+        private string[] precedenceRegexes = new string[] { $"(?i){IncludeFormatter.IncludeFormatter.CurrentFileNameKey}\\.(h|hpp|hxx|inl|c|cpp|cxx)(?-i)" };
 
         public enum TypeSorting
         {
