@@ -184,7 +184,10 @@ namespace IncludeToolbox.Commands
             }
             catch (Exception ex)
             {
-                Output.Instance.WriteLine("Unexpected error: {0}", ex);
+                throw ex;
+            }
+            finally
+            {
                 projectItems = null;
             }
         }

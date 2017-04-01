@@ -61,36 +61,29 @@ namespace IncludeToolbox.Commands
         /// <param name="e">Event args.</param>
         protected override void MenuItemCallback(object sender, EventArgs e)
         {
-            try
+            var settings = (FormatterOptionsPage)Package.GetDialogPage(typeof(FormatterOptionsPage));
+
+            // Try to find absolute paths
+            var document = VSUtils.GetDTE().ActiveDocument;
+            var project = document.ProjectItem?.ContainingProject;
+            if (project == null)
             {
-                var settings = (FormatterOptionsPage)Package.GetDialogPage(typeof(FormatterOptionsPage));
-
-                // Try to find absolute paths
-                var document = VSUtils.GetDTE().ActiveDocument;
-                var project = document.ProjectItem?.ContainingProject;
-                if (project == null)
-                {
-                    Output.Instance.WriteLine("The document '{0}' is not part of a project.", document.Name);
-                }
-                var includeDirectories = VSUtils.GetProjectIncludeDirectories(project);
-
-                // Read.
-                var viewHost = VSUtils.GetCurrentTextViewHost();
-                var selectionSpan = GetSelectionSpan(viewHost);
-
-                // Format
-                string formatedText = IncludeFormatter.IncludeFormatter.FormatIncludes(selectionSpan.GetText(), document.FullName, includeDirectories, settings);
-
-                // Overwrite.
-                using (var edit = viewHost.TextView.TextBuffer.CreateEdit())
-                {
-                    edit.Replace(selectionSpan, formatedText);
-                    edit.Apply();
-                }
+                Output.Instance.WriteLine("The document '{0}' is not part of a project.", document.Name);
             }
-            catch (Exception exception)
+            var includeDirectories = VSUtils.GetProjectIncludeDirectories(project);
+
+            // Read.
+            var viewHost = VSUtils.GetCurrentTextViewHost();
+            var selectionSpan = GetSelectionSpan(viewHost);
+
+            // Format
+            string formatedText = IncludeFormatter.IncludeFormatter.FormatIncludes(selectionSpan.GetText(), document.FullName, includeDirectories, settings);
+
+            // Overwrite.
+            using (var edit = viewHost.TextView.TextBuffer.CreateEdit())
             {
-                Output.Instance.ErrorMsg("Unexpected Error: {0}", exception.ToString());
+                edit.Replace(selectionSpan, formatedText);
+                edit.Apply();
             }
         }
     }

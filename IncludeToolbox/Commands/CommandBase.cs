@@ -26,7 +26,20 @@ namespace IncludeToolbox.Commands
         protected virtual void SetupMenuCommand()
         {
             OleMenuCommandService commandService = ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            menuCommand = new OleMenuCommand(this.MenuItemCallback, CommandID);
+
+            EventHandler callback = (sender, e) =>
+            {
+                try
+                {
+                    this.MenuItemCallback(sender, e);
+                }
+                catch (Exception exception)
+                {
+                    Output.Instance.ErrorMsg("Unexpected Error: {0}", exception.ToString());
+                }
+            };
+
+            menuCommand = new OleMenuCommand(callback, CommandID);
             commandService.AddCommand(menuCommand);
         }
 

@@ -53,14 +53,7 @@ namespace IncludeToolbox.Commands
             var document = VSUtils.GetDTE().ActiveDocument;
             if (document != null)
             {
-                try
-                {
-                    impl.PerformTryAndErrorRemoval(document, (TryAndErrorRemovalOptionsPage)Package.GetDialogPage(typeof(TryAndErrorRemovalOptionsPage)));
-                }
-                catch (Exception ex)
-                {
-                    Output.Instance.WriteLine("Unexpected error: {0}", ex);
-                }
+                impl.PerformTryAndErrorRemoval(document, (TryAndErrorRemovalOptionsPage)Package.GetDialogPage(typeof(TryAndErrorRemovalOptionsPage)));
             }
         }
     }
