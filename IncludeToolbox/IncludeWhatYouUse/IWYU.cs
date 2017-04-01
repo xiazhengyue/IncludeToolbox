@@ -217,13 +217,12 @@ namespace IncludeToolbox.IncludeWhatYouUse
                 process.StartInfo.FileName = settings.ExecutablePath;
                 process.StartInfo.Arguments = "";
 
-                // Includes and Preprocessor.
+                // Include-paths and Preprocessor.
                 var includeEntries = VSUtils.GetProjectIncludeDirectories(project, false);
                 process.StartInfo.Arguments = includeEntries.Aggregate("", (current, inc) => current + ("-I \"" + inc + "\" "));
                 process.StartInfo.Arguments = preprocessorDefintions.
                     Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).
                     Aggregate(process.StartInfo.Arguments, (current, def) => current + ("-D" + def + " "));
-                process.StartInfo.Arguments += " -DM_X64 -DM_AMD64 ";// TODO!!!
 
                 // Clang options
                 // Disable all diagnostics
