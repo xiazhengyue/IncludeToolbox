@@ -251,7 +251,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
 
                 // Clang options
                 // Disable all diagnostics
-                process.StartInfo.Arguments += "-w";
+                process.StartInfo.Arguments += "-w ";
                 // ... despite of that "invalid token paste" comes through a lot. Disable it.
                 process.StartInfo.Arguments += "-Wno-invalid-token-paste ";
                 // Assume C++14
