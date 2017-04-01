@@ -11,6 +11,9 @@ namespace IncludeToolbox.IncludeWhatYouUse
     /// </summary>
     static public class IWYU
     {
+        private static readonly Regex RegexRemoveLine = new Regex(@"^-\s+#include\s*[""<](.+)["">]\s+\/\/ lines (\d+)-(\d+)$");
+        private static readonly Regex RegexAddLine = new Regex(@"(#include\s*[""<].+["">])|(^class.+;$)|(^struct.+;$)");
+
         private class FormatTask
         {
             public override string ToString()
@@ -36,8 +39,6 @@ namespace IncludeToolbox.IncludeWhatYouUse
             FormatTask currentTask = null;
             bool removeCommands = true;
 
-            var removeRegex = new Regex(@"^-\s+#include\s*[""<](.+)["">]\s+\/\/ lines (\d+)-(\d+)$");
-            var addlineRegex = new Regex(@"(#include\s*[""<].+["">])|(^class.+;$)|(^struct.+;$)");
             //- #include <Core/Basics.h>  // lines 3-3
 
             // Parse what to do.
@@ -82,7 +83,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                 {
                     if (removeCommands)
                     {
-                        var match = removeRegex.Match(line);
+                        var match = RegexRemoveLine.Match(line);
                         if (match.Success)
                         {
                             int removeStart, removeEnd;
@@ -100,7 +101,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                     }
                     else
                     {
-                        var match = addlineRegex.Match(line);
+                        var match = RegexAddLine.Match(line);
                         if (match.Success)
                         {
                             currentTask.linesToAdd.Add(line);
@@ -138,6 +139,17 @@ namespace IncludeToolbox.IncludeWhatYouUse
                 {
                     var originalLines = edit.Snapshot.Lines.ToArray();
 
+                    // Determine which line ending to use by majority.
+                    string lineEndingToBeUsed = "\n";
+                    {
+                        string text = edit.Snapshot.GetText();
+                        int numLineEndingCLRF = text.Count(x => x == '\r'); // For simplicity we're just assuming that every \r has a \n
+                        int numLineEndingLF = originalLines.Length - numLineEndingCLRF - 1;
+                        if (numLineEndingLF < numLineEndingCLRF)
+                            lineEndingToBeUsed = "\r\n";
+                    }
+
+
                     // Add lines.
                     {
                         // Find last include.
@@ -157,7 +169,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                         foreach (string lineToAdd in entry.Value.linesToAdd)
                         {
                             stringToInsertBuilder.Append(lineToAdd);
-                            stringToInsertBuilder.Append("\n"); // todo: Consistent new lines?
+                            stringToInsertBuilder.Append(lineEndingToBeUsed);
                         }
                         string stringToInsert = stringToInsertBuilder.ToString();
 
@@ -170,7 +182,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
 
                             // Add a newline if we removed it.
                             if (formatSettings.RemoveEmptyLines)
-                                stringToInsert += '\n'; // todo: Consistent new lines?
+                                stringToInsert += lineEndingToBeUsed;
                         }
 
                         // Insert.
