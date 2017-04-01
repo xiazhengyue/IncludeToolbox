@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace IncludeToolbox.IncludeFormatter
 {
-    static class IncludeFormatter
+    public static class IncludeFormatter
     {
         public static string FormatPath(string absoluteIncludeFilename, FormatterOptionsPage.PathMode pathformat, IEnumerable<string> includeDirectories)
         {
@@ -46,7 +46,7 @@ namespace IncludeToolbox.IncludeFormatter
         /// <summary>
         /// Formats the paths of a given list of include line info.
         /// </summary>
-        public static void FormatPaths(IEnumerable<IncludeLineInfo> lines, FormatterOptionsPage.PathMode pathformat, IEnumerable<string> includeDirectories)
+        private static void FormatPaths(IEnumerable<IncludeLineInfo> lines, FormatterOptionsPage.PathMode pathformat, IEnumerable<string> includeDirectories)
         {
             if (pathformat == FormatterOptionsPage.PathMode.Unchanged)
                 return;
@@ -59,7 +59,7 @@ namespace IncludeToolbox.IncludeFormatter
             }
         }
 
-        public static void FormatDelimiters(IncludeLineInfo[] lines, FormatterOptionsPage.DelimiterMode delimiterMode)
+        private static void FormatDelimiters(IncludeLineInfo[] lines, FormatterOptionsPage.DelimiterMode delimiterMode)
         {
             switch (delimiterMode)
             {
@@ -74,7 +74,7 @@ namespace IncludeToolbox.IncludeFormatter
             }
         }
 
-        public static void FormatSlashes(IncludeLineInfo[] lines, FormatterOptionsPage.SlashMode slashMode)
+        private static void FormatSlashes(IncludeLineInfo[] lines, FormatterOptionsPage.SlashMode slashMode)
         {
             switch (slashMode)
             {
@@ -103,7 +103,7 @@ namespace IncludeToolbox.IncludeFormatter
             return regexes;
         }
 
-        public static void SortIncludes(IncludeLineInfo[] lines, FormatterOptionsPage settings, string documentName)
+        private static void SortIncludes(IncludeLineInfo[] lines, FormatterOptionsPage settings, string documentName)
         {
             FormatterOptionsPage.TypeSorting typeSorting = settings.SortByType;
             bool regexIncludeDelimiter = settings.RegexIncludeDelimiter;
@@ -171,6 +171,40 @@ namespace IncludeToolbox.IncludeFormatter
                     }
                 }
             }
+        }
+
+
+        /// <summary>
+        /// Formats all includes in a given piece of text.
+        /// </summary>
+        /// <param name="text">Text to be parsed for includes.</param>
+        /// <param name="documentName">Name of the current document (has influence on sorting.</param>
+        /// <param name="includeDirectories">A list of include directories</param>
+        /// <param name="settings">Settings that determine how the formating should be done.</param>
+        /// <returns>Formated text.</returns>
+        public static string FormatIncludes(string text, string documentName, List<string> includeDirectories, FormatterOptionsPage settings)
+        {
+            var lines = IncludeLineInfo.ParseIncludes(text, settings.RemoveEmptyLines);
+
+            // Format.
+            IEnumerable<string> formatingDirs = includeDirectories;
+            if (settings.IgnoreFileRelative)
+            {
+                formatingDirs = formatingDirs.Skip(1);
+            }
+            FormatPaths(lines, settings.PathFormat, formatingDirs);
+            FormatDelimiters(lines, settings.DelimiterFormatting);
+            FormatSlashes(lines, settings.SlashFormatting);
+
+            // Apply changes so far.
+            foreach (var line in lines)
+                line.UpdateRawLineWithIncludeContentChanges();
+
+            // Sorting. Ignores non-include lines.
+            SortIncludes(lines, settings, documentName);
+
+            // Combine again.
+            return string.Join(Environment.NewLine, lines.Select(x => x.RawLine));
         }
     }
 }

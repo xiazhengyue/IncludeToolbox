@@ -63,7 +63,7 @@ namespace IncludeToolbox.Commands
         {
             try
             {
-                var settings = (FormatterOptionsPage) Package.GetDialogPage(typeof (FormatterOptionsPage));
+                var settings = (FormatterOptionsPage)Package.GetDialogPage(typeof(FormatterOptionsPage));
 
                 // Try to find absolute paths
                 var document = VSUtils.GetDTE().ActiveDocument;
@@ -78,30 +78,14 @@ namespace IncludeToolbox.Commands
                 // Read.
                 var viewHost = VSUtils.GetCurrentTextViewHost();
                 var selectionSpan = GetSelectionSpan(viewHost);
-                var lines = IncludeFormatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), settings.RemoveEmptyLines);
 
-                // Format.
-                IEnumerable<string> formatingDirs = includeDirectories;
-                if (settings.IgnoreFileRelative)
-                {
-                    formatingDirs = formatingDirs.Skip(1);
-                }
-                IncludeFormatter.IncludeFormatter.FormatPaths(lines, settings.PathFormat, formatingDirs);
-                IncludeFormatter.IncludeFormatter.FormatDelimiters(lines, settings.DelimiterFormatting);
-                IncludeFormatter.IncludeFormatter.FormatSlashes(lines, settings.SlashFormatting);
-
-                // Apply changes so far.
-                foreach (var line in lines)
-                    line.UpdateRawLineWithIncludeContentChanges();
-
-                // Sorting. Ignores non-include lines.
-                IncludeFormatter.IncludeFormatter.SortIncludes(lines, settings, document.Name);
+                // Format
+                string formatedText = IncludeFormatter.IncludeFormatter.FormatIncludes(selectionSpan.GetText(), document.Name, includeDirectories, settings);
 
                 // Overwrite.
-                string replaceText = string.Join(Environment.NewLine, lines.Select(x => x.RawLine));
                 using (var edit = viewHost.TextView.TextBuffer.CreateEdit())
                 {
-                    edit.Replace(selectionSpan, replaceText);
+                    edit.Replace(selectionSpan, formatedText);
                     edit.Apply();
                 }
             }
