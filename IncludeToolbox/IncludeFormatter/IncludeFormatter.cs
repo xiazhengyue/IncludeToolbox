@@ -108,7 +108,7 @@ namespace IncludeToolbox.IncludeFormatter
             return regexes;
         }
 
-        private static void SortIncludes(IncludeLineInfo[] lines, FormatterOptionsPage settings, string documentName)
+        private static void SortIncludes(IncludeLineInfo[] lines, FormatterOptionsPage settings, string documentName, string newLineChars)
         {
             FormatterOptionsPage.TypeSorting typeSorting = settings.SortByType;
             bool regexIncludeDelimiter = settings.RegexIncludeDelimiter;
@@ -171,7 +171,7 @@ namespace IncludeToolbox.IncludeFormatter
                         // - We'll remove empty lines or the previous line isn't already a NoInclude
                         if (lines[i].PrependNewline && i > 0 && (removeEmptyLines || lines[i - 1].LineType != IncludeLineInfo.Type.NoInclude))
                         {
-                            lines[i].RawLine = String.Format("{0}{1}", Environment.NewLine, lines[i].RawLine);
+                            lines[i].RawLine = String.Format("{0}{1}", newLineChars, lines[i].RawLine);
                         }
                     }
                 }
@@ -194,6 +194,8 @@ namespace IncludeToolbox.IncludeFormatter
 
             includeDirectories = new string[] { Microsoft.VisualStudio.PlatformUI.PathUtil.Normalize(documentDir) + Path.DirectorySeparatorChar }.Concat(includeDirectories);
 
+            string newLineChars = Utils.GetDominantNewLineSeparator(text);
+
             var lines = IncludeLineInfo.ParseIncludes(text, settings.RemoveEmptyLines);
 
             // Format.
@@ -211,10 +213,10 @@ namespace IncludeToolbox.IncludeFormatter
                 line.UpdateRawLineWithIncludeContentChanges();
 
             // Sorting. Ignores non-include lines.
-            SortIncludes(lines, settings, documentName);
+            SortIncludes(lines, settings, documentName, newLineChars);
 
             // Combine again.
-            return string.Join(Environment.NewLine, lines.Select(x => x.RawLine));
+            return string.Join(newLineChars, lines.Select(x => x.RawLine));
         }
     }
 }

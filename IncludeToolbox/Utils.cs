@@ -43,5 +43,21 @@ namespace IncludeToolbox
                 return di.Name.ToUpper();
             }
         }
+
+        /// <summary>
+        /// Retrieves the dominant newline for a given piece of text.
+        /// </summary>
+        public static string GetDominantNewLineSeparator(string text)
+        {
+            string lineEndingToBeUsed = "\n";
+
+            // For simplicity we're just assuming that every \r has a \n
+            int numLineEndingCLRF = text.Count(x => x == '\r');
+            int numLineEndingLF = text.Count(x => x == '\n') - numLineEndingCLRF;
+            if (numLineEndingLF < numLineEndingCLRF)
+                lineEndingToBeUsed = "\r\n";
+
+            return lineEndingToBeUsed;
+        }
     }
 }

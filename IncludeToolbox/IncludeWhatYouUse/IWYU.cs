@@ -140,15 +140,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                     var originalLines = edit.Snapshot.Lines.ToArray();
 
                     // Determine which line ending to use by majority.
-                    string lineEndingToBeUsed = "\n";
-                    {
-                        string text = edit.Snapshot.GetText();
-                        int numLineEndingCLRF = text.Count(x => x == '\r'); // For simplicity we're just assuming that every \r has a \n
-                        int numLineEndingLF = originalLines.Length - numLineEndingCLRF - 1;
-                        if (numLineEndingLF < numLineEndingCLRF)
-                            lineEndingToBeUsed = "\r\n";
-                    }
-
+                    string lineEndingToBeUsed = Utils.GetDominantNewLineSeparator(edit.Snapshot.GetText());
 
                     // Add lines.
                     {
