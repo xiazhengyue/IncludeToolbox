@@ -14,8 +14,18 @@ namespace IncludeToolbox
     {
         public static string MakeRelative(string absoluteRoot, string absoluteTarget)
         {
-            Uri rootUri = new Uri(absoluteRoot);
-            Uri targetUri = new Uri(absoluteTarget);
+            Uri rootUri, targetUri;
+
+            try
+            {
+                rootUri = new Uri(absoluteRoot);
+                targetUri = new Uri(absoluteTarget);
+            }
+            catch(UriFormatException)
+            {
+                return absoluteTarget;
+            }
+
             if (rootUri.Scheme != targetUri.Scheme)
                 return "";
 
