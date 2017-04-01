@@ -125,6 +125,7 @@ namespace IncludeToolbox.Commands
             }
 
             // Check existence, offer to download if it's not there.
+            bool downloadedNewIwyu = false;
             if (!File.Exists(settings.ExecutablePath))
             {
                 int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider,
@@ -135,8 +136,8 @@ namespace IncludeToolbox.Commands
                     return;
                 }
 
-                bool success = await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
-                if (!success)
+                downloadedNewIwyu = await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
+                if (!downloadedNewIwyu)
                     return;
             }
             else if(settings.AutomaticCheckForUpdates && !checkedForUpdatesThisSession)
@@ -155,12 +156,14 @@ namespace IncludeToolbox.Commands
                                     "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
                     if (result == 6)
                     {
-                        await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
+                        downloadedNewIwyu = await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
                     }
                 }
             }
+            if (downloadedNewIwyu)
+                settings.AddMappingFiles(IWYUDownload.GetMappingFilesNextToIwyuPath(settings.ExecutablePath));
 
-            // We should really have it now, but just in case our update or download methed screwed up.
+            // We should really have it now, but just in case our update or download method screwed up.
             if (!File.Exists(settings.ExecutablePath))
             {
                 Output.Instance.ErrorMsg("Unexpected error: Can't find include-what-you-use.exe after download/update.");
