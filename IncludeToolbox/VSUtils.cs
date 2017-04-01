@@ -10,7 +10,7 @@ using VCProjectUtils.Base;
 
 namespace IncludeToolbox
 {
-    internal static class VSUtils
+    public static class VSUtils
     {
         public static EnvDTE80.DTE2 GetDTE()
         {
@@ -44,6 +44,22 @@ namespace IncludeToolbox
                 vcUtils = new VCProjectUtils.VS15.VCHelper();
 
             return vcUtils;
+        }
+
+        /// <summary>
+        /// Returns what the C++ macro _MSC_VER should resolve to.
+        /// </summary>
+        /// <returns></returns>
+        public static string GetMSCVerString()
+        {
+            // See http://stackoverflow.com/questions/70013/how-to-detect-if-im-compiling-code-with-visual-studio-2008
+            var dte = GetDTE();
+            if (dte.Version.StartsWith("14."))
+                return "1900";
+            else if (dte.Version.StartsWith("15."))
+                return "1910";
+            else
+                throw new NotImplementedException("Unknown MSVC version!");
         }
 
         /// <summary>

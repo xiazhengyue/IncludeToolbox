@@ -226,12 +226,22 @@ namespace IncludeToolbox.IncludeWhatYouUse
                 process.StartInfo.Arguments += " -DM_X64 -DM_AMD64 ";// TODO!!!
 
                 // Clang options
-                process.StartInfo.Arguments += "-w -x c++ -std=c++14 -fcxx-exceptions -fexceptions -fms-compatibility -fms-extensions -fmsc-version=1900 -ferror-limit=0 -Wno-invalid-token-paste "; // todo fmsc-version!
+                // Disable all diagnostics
+                process.StartInfo.Arguments += "-w";
+                // ... despite of that "invalid token paste" comes through a lot. Disable it.
+                process.StartInfo.Arguments += "-Wno-invalid-token-paste ";
+                // Assume C++14
+                process.StartInfo.Arguments += "-std=c++14 ";
+                // MSVC specific. See https://clang.llvm.org/docs/UsersManual.html#microsoft-extensions
+                process.StartInfo.Arguments += "-fms-compatibility -fms-extensions -fdelayed-template-parsing ";
+                process.StartInfo.Arguments += $"-fmsc-version={VSUtils.GetMSCVerString()} ";
+
+
                 // icwyu options
                 {
                     process.StartInfo.Arguments += "-Xiwyu --verbose=" + settings.LogVerbosity + " ";
                     for (int i = 0; i < settings.MappingFiles.Length; ++i)
-                        process.StartInfo.Arguments += "-Xiwyu --mapping_file=" + settings.MappingFiles[i] + " ";
+                        process.StartInfo.Arguments += "-Xiwyu --mapping_file=\"" + settings.MappingFiles[i] + "\" ";
                     if (settings.NoDefaultMappings)
                         process.StartInfo.Arguments += "-Xiwyu --no_default_mappings ";
                     if (settings.PCHInCode)
@@ -250,6 +260,12 @@ namespace IncludeToolbox.IncludeWhatYouUse
                     }
                     if (settings.TransitiveIncludesOnly)
                         process.StartInfo.Arguments += "-Xiwyu --transitive_includes_only ";
+
+                    // Set max line length so something large so we don't loose comment information.
+                    // Documentation:
+                    // --max_line_length: maximum line length for includes. Note that this only affects comments and alignment thereof,
+                    // the maximum line length can still be exceeded with long file names(default: 80).
+                    process.StartInfo.Arguments += "-Xiwyu --max_line_length=1024 ";
                 }
 
 
