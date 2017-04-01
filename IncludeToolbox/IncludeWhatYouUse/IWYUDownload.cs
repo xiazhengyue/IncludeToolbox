@@ -168,8 +168,18 @@ namespace IncludeToolbox.IncludeWhatYouUse
         static public IEnumerable<string> GetMappingFilesNextToIwyuPath(string executablePath)
         {
             string targetDirectory = Path.GetDirectoryName(executablePath);
-            return Directory.EnumerateFiles(targetDirectory).
-                    Where(file => Path.GetExtension(file).Equals(".imp", System.StringComparison.InvariantCultureIgnoreCase));
+
+            var impFiles = Directory.EnumerateFiles(targetDirectory).
+                            Where(file => Path.GetExtension(file).Equals(".imp", System.StringComparison.InvariantCultureIgnoreCase));
+            foreach (string dirs in Directory.EnumerateDirectories(targetDirectory))
+            {
+                impFiles.Concat(
+                    Directory.EnumerateFiles(targetDirectory).
+                        Where(file => Path.GetExtension(file).Equals(".imp", System.StringComparison.InvariantCultureIgnoreCase))
+                        );
+            }
+
+            return impFiles;
         }
     }
 }
