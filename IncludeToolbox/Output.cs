@@ -9,6 +9,8 @@ namespace IncludeToolbox
     {
         static public Output Instance { private set; get; } = new Output();
 
+        public const int MessageBoxResult_Yes = 6;
+
         private Output()
         {
         }
