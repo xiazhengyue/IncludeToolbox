@@ -4,15 +4,13 @@ using System.Threading;
 using System.Windows;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.VCProjectEngine;
 using EnvDTE;
-using IncludeToolbox.IncludeFormatter;
 using Microsoft.VisualStudio.Text;
 
 namespace IncludeToolbox
 {
     /// <summary>
-    /// Command handler
+    /// Command handler for try and error include removal
     /// </summary>
     internal sealed class TryAndErrorRemoval
     {
@@ -118,7 +116,7 @@ namespace IncludeToolbox
             document.DTE.Events.BuildEvents.OnBuildDone += OnBuildFinished;
 
 
-            // The rest runs in a separate thread sicne the compile function is non blocking and we want to use BuildEvents
+            // The rest runs in a separate thread since the compile function is non blocking and we want to use BuildEvents
             // We are not using Task, since we want to make use of WaitHandles - using this together with Task is a bit more complicated to get right.
             outputWaitEvent.Reset();
             new System.Threading.Thread(() =>
