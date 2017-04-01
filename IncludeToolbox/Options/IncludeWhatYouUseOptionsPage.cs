@@ -2,7 +2,9 @@
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Settings;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -45,6 +47,16 @@ namespace IncludeToolbox
         [DisplayName("Mapping File")]
         [Description("Gives iwyu a mapping file. (--mapping_file)")]
         public string[] MappingFiles { get; set; } = new string[0];
+
+        /// <summary>
+        /// Adds a list of mapping files and eliminates duplicates.
+        /// </summary>
+        public void AddMappingFiles(IEnumerable<string> mappingFilesPaths)
+        {
+            var resolvedNewFiles = mappingFilesPaths.Select(x => new KeyValuePair<string, string>(Path.GetFullPath(x), x));
+            var resolvedOldFiles = MappingFiles.Select(x => new KeyValuePair<string, string>(Path.GetFullPath(x), x));
+            MappingFiles = resolvedNewFiles.Union(resolvedOldFiles).Select(x => x.Value).ToArray();
+        }
 
         [Category("iwyu options")]
         [DisplayName("No Default Mappings")]

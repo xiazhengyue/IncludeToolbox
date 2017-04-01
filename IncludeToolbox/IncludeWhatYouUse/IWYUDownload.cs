@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
@@ -8,6 +10,9 @@ using System.Threading.Tasks;
 
 namespace IncludeToolbox.IncludeWhatYouUse
 {
+    /// <summary>
+    /// Functions for downloading and versioning of the iwyu installation.
+    /// </summary>
     static public class IWYUDownload
     {
         public const string DisplayRepositorURL = @"https://github.com/Wumpf/iwyu_for_vs_includetoolbox";
@@ -158,6 +163,13 @@ namespace IncludeToolbox.IncludeWhatYouUse
             onProgressUpdate("Saving Version", "", -1.0f);
             string version = await GetCurrentVersionOnline();
             File.WriteAllText(GetVersionFilePath(executablePath), version);
+        }
+
+        static public IEnumerable<string> GetMappingFilesNextToIwyuPath(string executablePath)
+        {
+            string targetDirectory = Path.GetDirectoryName(executablePath);
+            return Directory.EnumerateFiles(targetDirectory).
+                    Where(file => Path.GetExtension(file).Equals(".imp", System.StringComparison.InvariantCultureIgnoreCase));
         }
     }
 }
