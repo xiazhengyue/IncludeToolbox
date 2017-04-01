@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -91,14 +92,18 @@ namespace IncludeToolbox.IncludeFormatter
 
         public const string CurrentFileNameKey = "$(currentFilename)";
 
+        /// <summary>
+        /// Replaces special macros in a precedence regex list.
+        /// </summary>
+        /// <param name="precedenceRegexes"></param>
+        /// <param name="documentName">Name of the current document without extension.</param>
+        /// <returns></returns>
         private static string[] FixupRegexes(string[] precedenceRegexes, string documentName)
         {
-            string currentFilename = documentName.Substring(0, documentName.LastIndexOf('.'));
-
             string[] regexes = new string[precedenceRegexes.Length];
             for (int i = 0; i < precedenceRegexes.Length; ++i)
             {
-                regexes[i] = precedenceRegexes[i].Replace(CurrentFileNameKey, currentFilename);
+                regexes[i] = precedenceRegexes[i].Replace(CurrentFileNameKey, documentName);
             }
             return regexes;
         }
@@ -178,12 +183,17 @@ namespace IncludeToolbox.IncludeFormatter
         /// Formats all includes in a given piece of text.
         /// </summary>
         /// <param name="text">Text to be parsed for includes.</param>
-        /// <param name="documentName">Name of the current document (has influence on sorting.</param>
+        /// <param name="documentName">Path to the document the edit is occuring in.</param>
         /// <param name="includeDirectories">A list of include directories</param>
         /// <param name="settings">Settings that determine how the formating should be done.</param>
         /// <returns>Formated text.</returns>
-        public static string FormatIncludes(string text, string documentName, List<string> includeDirectories, FormatterOptionsPage settings)
+        public static string FormatIncludes(string text, string documentPath, IEnumerable<string> includeDirectories, FormatterOptionsPage settings)
         {
+            string documentDir = Path.GetDirectoryName(documentPath);
+            string documentName = Path.GetFileNameWithoutExtension(documentPath);
+
+            includeDirectories = new string[] { Microsoft.VisualStudio.PlatformUI.PathUtil.Normalize(documentDir) + Path.DirectorySeparatorChar }.Concat(includeDirectories);
+
             var lines = IncludeLineInfo.ParseIncludes(text, settings.RemoveEmptyLines);
 
             // Format.

@@ -118,7 +118,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
             return fileTasks;
         }
 
-        static private void ApplyTasks(Dictionary<string, FormatTask> tasks)
+        static private void ApplyTasks(Dictionary<string, FormatTask> tasks, bool applyFormatting, FormatterOptionsPage formatSettings)
         {
             var dte = VSUtils.GetDTE();
 
@@ -152,23 +152,36 @@ namespace IncludeToolbox.IncludeWhatYouUse
                             }
                         }
 
-                        // Insert lines.
+                        // Build replacement string
+                        StringBuilder stringToInsertBuilder = new StringBuilder();
+                        foreach (string lineToAdd in entry.Value.linesToAdd)
+                        {
+                            stringToInsertBuilder.Append(lineToAdd);
+                            stringToInsertBuilder.Append("\n"); // todo: Consistent new lines?
+                        }
+                        string stringToInsert = stringToInsertBuilder.ToString();
+
+
+                        // optional, format before adding.
+                        if (applyFormatting)
+                        {
+                            var includeDirectories = VSUtils.GetProjectIncludeDirectories(fileWindow.Document.ProjectItem?.ContainingProject);
+                            stringToInsert = IncludeFormatter.IncludeFormatter.FormatIncludes(stringToInsert, fileWindow.Document.FullName, includeDirectories, formatSettings);
+
+                            // Add a newline if we removed it.
+                            if (formatSettings.RemoveEmptyLines)
+                                stringToInsert += '\n'; // todo: Consistent new lines?
+                        }
+
+                        // Insert.
                         int insertPosition = 0;
                         if (lastIncludeLine >= 0 && lastIncludeLine < originalLines.Length)
                         {
                             insertPosition = originalLines[lastIncludeLine].EndIncludingLineBreak;
                         }
-                        StringBuilder stringToInsert = new StringBuilder();
-
-                        foreach (string lineToAdd in entry.Value.linesToAdd)
-                        {
-                            stringToInsert.Clear();
-                            stringToInsert.Append(lineToAdd);
-                            stringToInsert.Append("\n"); // todo: Consistent new lines?
-                            edit.Insert(insertPosition, stringToInsert.ToString());
-                        }
+                        edit.Insert(insertPosition, stringToInsert.ToString());
                     }
-
+                     
                     // Remove lines.
                     // It should safe to do that last since we added includes at the bottom, this way there is no confusion with the text snapshot.
                     {
@@ -188,10 +201,10 @@ namespace IncludeToolbox.IncludeWhatYouUse
             }
         }
 
-        static public void Apply(string iwyuOutput)
+        static public void Apply(string iwyuOutput, bool applyFormatter, FormatterOptionsPage formatOptions)
         {
             var tasks = ParseOutput(iwyuOutput);
-            ApplyTasks(tasks);
+            ApplyTasks(tasks, applyFormatter, formatOptions);
         }
 
         /// <summary>

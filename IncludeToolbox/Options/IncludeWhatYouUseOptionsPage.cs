@@ -93,11 +93,10 @@ namespace IncludeToolbox
         [Description("Applies iwyu's proposal directly to all files. Requires at least Log Verbosity of 1.")]
         public bool ApplyProposal { get; set; } = true;
 
-        // Not implemented yet.
-      //  [Category("Post Processing")]
-      //  [DisplayName("Run Include Formatter on Changes")]
-      //  [Description("Runs the Include Formatter on all changes.")]
-        private bool RunIncludeFormatter { get; set; } = true;
+        [Category("Post Processing")]
+        [DisplayName("Run Include Formatter on Changes")]
+        [Description("Runs the Include Formatter on all changed lines.")]
+        public bool RunIncludeFormatter { get; set; } = true;
 
 
         #endregion

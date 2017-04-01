@@ -143,7 +143,7 @@ namespace IncludeToolbox.Commands
         /// <param name="e">Event args.</param>
         protected override async void MenuItemCallback(object sender, EventArgs e)
         {
-            var settings = (IncludeWhatYouUseOptionsPage)Package.GetDialogPage(typeof(IncludeWhatYouUseOptionsPage));
+            var settingsIwyu = (IncludeWhatYouUseOptionsPage)Package.GetDialogPage(typeof(IncludeWhatYouUseOptionsPage));
             Output.Instance.Clear();
 
             var document = VSUtils.GetDTE().ActiveDocument;
@@ -166,10 +166,10 @@ namespace IncludeToolbox.Commands
                 return;
             }
 
-            await OptionalDownloadOrUpdate(settings, dialogFactory);
+            await OptionalDownloadOrUpdate(settingsIwyu, dialogFactory);
 
             // We should really have it now, but just in case our update or download method screwed up.
-            if (!File.Exists(settings.ExecutablePath))
+            if (!File.Exists(settingsIwyu.ExecutablePath))
             {
                 Output.Instance.ErrorMsg("Unexpected error: Can't find include-what-you-use.exe after download/update.");
                 return;
@@ -177,7 +177,14 @@ namespace IncludeToolbox.Commands
             checkedForUpdatesThisSession = true;
 
             // Save all documents.
-            document.DTE.Documents.SaveAll();
+            try
+            {
+                document.DTE.Documents.SaveAll();
+            }
+            catch(Exception saveException)
+            {
+                Output.Instance.WriteLine("Failed to get save all documents: {0}", saveException);
+            }
 
             // Start wait dialog.
             {
@@ -185,10 +192,11 @@ namespace IncludeToolbox.Commands
                 dialogFactory.CreateInstance(out dialog);
                 dialog?.StartWaitDialog("Include Toolbox", "Running include-what-you-use", null, null, "Running include-what-you-use", 0, false, true);
 
-                string output = IWYU.RunIncludeWhatYouUse(document.FullName, project, settings);
-                if (settings.ApplyProposal && output != null)
+                string output = IWYU.RunIncludeWhatYouUse(document.FullName, project, settingsIwyu);
+                if (settingsIwyu.ApplyProposal && output != null)
                 {
-                    IWYU.Apply(output);
+                    var settingsFormatting = (FormatterOptionsPage)Package.GetDialogPage(typeof(FormatterOptionsPage));
+                    IWYU.Apply(output, settingsIwyu.RunIncludeFormatter, settingsFormatting);
                 }
 
                 dialog?.EndWaitDialog();
