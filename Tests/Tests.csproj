@@ -50,6 +50,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IncludeFormatingTest.cs" />
     <Compile Include="IncludeLineInfoTests.cs" />
     <Compile Include="IncludeWhatYouUseTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
