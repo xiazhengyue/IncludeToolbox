@@ -7,16 +7,6 @@ namespace Tests
     [TestClass]
     public class IncludeFormatingTest
     {
-        public void Path()
-        {
-            // todo
-        }
-
-        public void Formatting()
-        {
-            // todo
-        }
-
         [TestMethod]
         public void Sorting()
         {
