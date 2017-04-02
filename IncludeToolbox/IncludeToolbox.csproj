@@ -286,12 +286,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Resources\IncludeFormatter16.png">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="Resources\IncludeFormatter32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="Resources\IncludeFormatterIcons.png" />
     <Content Include="Resources\IncludeFormatterPackage.png">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
