@@ -66,6 +66,7 @@
     <Compile Include="Commands\CommandSetGuids.cs" />
     <Compile Include="Commands\IncludeViewerToolWindowCommand.cs" />
     <Compile Include="Commands\IncludeWhatYouUse.cs" />
+    <Compile Include="DGMLGraph.cs" />
     <Compile Include="IncludeWhatYouUse\IWYU.cs" />
     <Compile Include="IncludeWhatYouUse\IWYUDownload.cs" />
     <Compile Include="Options\IncludeWhatYouUseOptionsPage.cs">
