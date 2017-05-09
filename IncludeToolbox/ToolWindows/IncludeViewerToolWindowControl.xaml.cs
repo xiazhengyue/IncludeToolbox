@@ -18,6 +18,7 @@ using Microsoft.VisualStudio.VCProjectEngine;
 
 namespace IncludeViewer
 {
+    using System;
     using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Windows;
@@ -45,6 +46,7 @@ namespace IncludeViewer
             public List<IncludeTreeItem> Children;
         }
 
+        private IncludeTreeItem treeRoot = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IncludeViewerToolWindowControl"/> class.
@@ -60,7 +62,7 @@ namespace IncludeViewer
             return new SolidColorBrush(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
         }
 
-        private void AddIncludes(ItemCollection target, IEnumerable<IncludeTreeItem> includes)
+        private void PopulateTreeWidget(ItemCollection target, IEnumerable<IncludeTreeItem> includes)
         {
             foreach (var elem in includes)
             {
@@ -76,11 +78,11 @@ namespace IncludeViewer
                 target.Add(newItem);
                 
                 if (elem.Children != null)
-                    AddIncludes(newItem.Items, elem.Children);
+                    PopulateTreeWidget(newItem.Items, elem.Children);
             }
         }
 
-        private void RefreshButton_Click(object sender, RoutedEventArgs e)
+        private void Click_Refresh(object sender, RoutedEventArgs e)
         {
             var dte = VSUtils.GetDTE();
             currentDocument = dte?.ActiveDocument;
@@ -150,6 +152,74 @@ namespace IncludeViewer
             }
         }
 
+        private void PopulateDGMLGraph(DGMLGraph graph, IncludeTreeItem item, string parentId, HashSet<string> visited)
+        {
+            foreach (var elem in item.Children)
+            {
+                // It's rare, but in theory an include can come up several times in the "tree"
+                if (!visited.Add(item.Filename))
+                    continue;
+
+                graph.Nodes.Add(new DGMLGraph.Node { Id = item.Filename, Label = item.IncludeName });
+                if(parentId != null)
+                    graph.Links.Add(new DGMLGraph.Link {  Source = parentId, Target=item.Filename });
+
+                if (elem.Children != null)
+                    PopulateDGMLGraph(graph, elem, item.Filename, visited);
+            }
+        }
+
+        private void Click_SaveGraph(object sender, RoutedEventArgs e)
+        {
+            if (treeRoot == null)
+            {
+                Output.Instance.ErrorMsg("There is no include tree to save!");
+                return;
+            }
+
+            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+            dlg.FileName = ".dgml";
+            dlg.DefaultExt = ".dgml";
+            dlg.Filter = "Text documents (.dgml)|*.dgml";
+
+            // Show save file dialog box
+            bool? result = dlg.ShowDialog();
+
+            // Process save file dialog box results
+            if (!result ?? false)
+                return;
+
+            DGMLGraph graph = new DGMLGraph();
+            PopulateDGMLGraph(graph, treeRoot, null, new HashSet<string>());
+            graph.Serialize(dlg.FileName);
+        }
+
+        private string GetOutputText()
+        {
+            var dte = VSUtils.GetDTE();
+
+            OutputWindowPane buildOutputPane = null;
+            foreach (OutputWindowPane pane in dte.ToolWindows.OutputWindow.OutputWindowPanes)
+            {
+                if (pane.Guid == VSConstants.OutputWindowPaneGuid.BuildOutputPane_string)
+                {
+                    buildOutputPane = pane;
+                    break;
+                }
+            }
+            if (buildOutputPane == null)
+            {
+                Output.Instance.ErrorMsg("Failed to query for build output pane!");
+                return null;
+            }
+            TextSelection sel = buildOutputPane.TextDocument.Selection;
+
+            sel.StartOfDocument(false);
+            sel.EndOfDocument(true);
+
+            return sel.Text;
+        }
+
         private void OnBuildConfigFinished(string project, string projectConfig, string platform, string solutionConfig, bool success)
         {
             var dte = VSUtils.GetDTE();
@@ -159,29 +229,9 @@ namespace IncludeViewer
 
             try
             { 
-                string outputText = "";
-                {
-                    OutputWindowPane buildOutputPane = null;
-                    foreach (OutputWindowPane pane in dte.ToolWindows.OutputWindow.OutputWindowPanes)
-                    {
-                        if (pane.Guid == VSConstants.OutputWindowPaneGuid.BuildOutputPane_string)
-                        {
-                            buildOutputPane = pane;
-                            break;
-                        }
-                    }
-                    if (buildOutputPane == null)
-                    {
-                        Output.Instance.ErrorMsg("Failed to query for build output pane!");
-                        return;
-                    }
-                    TextSelection sel = buildOutputPane.TextDocument.Selection;
-
-                    sel.StartOfDocument(false);
-                    sel.EndOfDocument(true);
-
-                    outputText = sel.Text;
-                }
+                string outputText = GetOutputText();
+                if (string.IsNullOrEmpty(outputText))
+                    return;
 
                 IncludeTreeItem outTree = new IncludeTreeItem("", "");
                 var includeTreeItemStack = new Stack<IncludeTreeItem>();
@@ -218,8 +268,17 @@ namespace IncludeViewer
                     ++numIncludes;
                 }
 
-                AddIncludes(IncludeTree.Items, outTree.Children);
+                PopulateTreeWidget(IncludeTree.Items, outTree.Children);
                 NumIncludes.Content = numIncludes.ToString();
+                treeRoot = outTree;
+                ButtonSaveGraph.IsEnabled = true;
+            }
+
+            catch
+            {
+                ButtonSaveGraph.IsEnabled = false;
+                treeRoot = null;
+                IncludeTree.Items.Clear();
             }
             finally
             {

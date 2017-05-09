@@ -35,11 +35,12 @@
             <RowDefinition Height="25" />
             <RowDefinition Height="*" MinHeight="80" />
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="150" />
         </Grid.ColumnDefinitions>
-        <Button x:Name="RefreshButton" Content="Refresh" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Height="29" Click="RefreshButton_Click"/>
+        <Button x:Name="RefreshButton" Content="Refresh" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Height="29" Click="Click_Refresh"/>
         <Label x:Name="FileNameLabel" Content="&lt;File&gt;" FontWeight="Bold" FontSize="16" FontFamily="Consolas" Margin="80,0,0,0"/>
         <Label x:Name="IncludeTreeLabel" Content="Includes:" VerticalAlignment="Top" Height="25" Grid.Row="1" FontWeight="Bold"/>
         <TreeView x:Name="IncludeTree" Grid.Row="2"/>
@@ -55,5 +56,6 @@
             <Label x:Name="statLabel0" Content="Num Includes"  Grid.Row="0" Grid.Column="0"/>
             <Label x:Name="NumIncludes" Content="-" Grid.Row="0" Grid.Column="1"/>
         </Grid>
+        <Button x:Name="ButtonSaveGraph" Content="Save Graph..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto" Height="29" Click="Click_SaveGraph" Grid.Row="4" IsEnabled="False"/>
     </Grid>
 </UserControl>
