@@ -38,8 +38,7 @@ namespace IncludeToolbox.IncludeFormatter
             for (int line = 0; line < lines.Length; ++line)
             {
                 outInfo[line] = new IncludeLineInfo();
-                outInfo[line].text = lines[line];
-                outInfo[line].lineType = Type.NoInclude;
+                outInfo[line].lineText = lines[line];
 
                 int commentedSectionStart = int.MaxValue;
                 int commentedSectionEnd = int.MaxValue;
@@ -104,21 +103,18 @@ namespace IncludeToolbox.IncludeFormatter
                     if (outInfo[line].delimiter0 == -1)
                         continue;
                     outInfo[line].delimiter1 = lines[line].IndexOf('>', outInfo[line].delimiter0 + 1);
-                    outInfo[line].lineType = IncludeLineInfo.Type.AngleBrackets;
                 }
                 else
                 {
                     outInfo[line].delimiter1 = lines[line].IndexOf('\"', outInfo[line].delimiter0 + 1);
-                    outInfo[line].lineType = IncludeLineInfo.Type.Quotes;
                 }
                 if (outInfo[line].delimiter1 == -1)
                     continue;
-
-                outInfo[line].includeContent = lines[line].Substring(outInfo[line].delimiter0 + 1, outInfo[line].delimiter1 - outInfo[line].delimiter0 - 1);
             }
 
             return outInfo;
         }
+
 
         public enum Type
         {
@@ -129,9 +125,24 @@ namespace IncludeToolbox.IncludeFormatter
 
         public Type LineType
         {
-            get { return lineType; }
+            get
+            {
+                if (ContainsInclude)
+                {
+                    if (lineText[delimiter0] == '<')
+                        return Type.AngleBrackets;
+                    else if (lineText[delimiter0] == '\"')
+                        return Type.Quotes;
+                }
+
+                return Type.NoInclude;
+            }
         }
-        private Type lineType;
+
+        public bool ContainsInclude
+        {
+            get { return delimiter0 != -1; }
+        }
 
         /// <summary>
         /// Changes the type of this line.
@@ -139,50 +150,25 @@ namespace IncludeToolbox.IncludeFormatter
         /// <param name="newLineType">Type.NoInclude won't have any effect.</param>
         public void SetLineType(Type newLineType)
         {
-            if (lineType != newLineType)
+            if (LineType != newLineType)
             {
-                lineType = newLineType;
-                if(delimiter0 >= 0 && delimiter1 >= 0)
+                if (newLineType == Type.AngleBrackets)
                 {
-                    if (lineType == Type.AngleBrackets)
-                    {
-                        StringBuilder sb = new StringBuilder(text);
-                        sb[delimiter0] = '<';
-                        sb[delimiter1] = '>';
-                        text = sb.ToString();
-                    }
-                    else if (lineType == Type.Quotes)
-                    {
-                        StringBuilder sb = new StringBuilder(text);
-                        sb[delimiter0] = '"';
-                        sb[delimiter1] = '"';
-                        text = sb.ToString();
-                    }
-                    else
-                    {
-                        // shouldn't happen. Don't do anything
-                        // (remove include? Assert?)
-                    }
+                    StringBuilder sb = new StringBuilder(lineText);
+                    sb[delimiter0] = '<';
+                    sb[delimiter1] = '>';
+                    lineText = sb.ToString();
                 }
-                else
+                else if (newLineType == Type.Quotes)
                 {
-                    lineType = Type.NoInclude;
+                    StringBuilder sb = new StringBuilder(lineText);
+                    sb[delimiter0] = '"';
+                    sb[delimiter1] = '"';
+                    lineText = sb.ToString();
                 }
             }
         }
 
-        /// <summary>
-        /// Applies changes in include content to the internal raw text.
-        /// </summary>
-        public void UpdateRawLineWithIncludeContentChanges()
-        {
-            if (lineType == Type.NoInclude)
-                return;
-
-            text = text.Remove(delimiter0 + 1, delimiter1 - delimiter0 - 1);
-            text = text.Insert(delimiter0 + 1, includeContent);
-            delimiter1 = delimiter0 + includeContent.Length + 1;
-        }
 
         /// <summary>
         /// Tries to resolve the include (if any) using a list of directories.
@@ -191,8 +177,10 @@ namespace IncludeToolbox.IncludeFormatter
         /// <returns>Empty string if this is not an include, absolute include path if possible or raw include if not.</returns>
         public string TryResolveInclude(IEnumerable<string> includeDirectories)
         {
-            if (lineType == Type.NoInclude)
+            if (!ContainsInclude)
                 return "";
+
+            string includeContent = IncludeContent;
 
             foreach (string dir in includeDirectories)
             {
@@ -212,14 +200,29 @@ namespace IncludeToolbox.IncludeFormatter
         /// </summary>
         public string GetIncludeContentWithDelimiters()
         {
-            switch (lineType)
+            return lineText.Substring(delimiter0, delimiter1 - delimiter0 + 1);
+        }
+
+
+        /// <summary>
+        /// Changes in the include content will NOT be reflected immediately in the raw line text. 
+        /// </summary>
+        /// <see cref="UpdateRawLineWithIncludeContentChanges"/>
+        public string IncludeContent
+        {
+            get
             {
-                case Type.AngleBrackets:
-                    return $"<{includeContent}>";
-                case Type.Quotes:
-                    return $"\"{includeContent}\"";
-                default:
-                    return includeContent;
+                int length = delimiter1 - delimiter0 - 1;
+                return length > 0 ? RawLine.Substring(delimiter0 + 1, length) : "";
+            }
+            set
+            {
+                if (!ContainsInclude)
+                    return;
+
+                lineText = lineText.Remove(delimiter0 + 1, delimiter1 - delimiter0 - 1);
+                lineText = lineText.Insert(delimiter0 + 1, value);
+                delimiter1 = delimiter0 + value.Length + 1;
             }
         }
 
@@ -228,28 +231,11 @@ namespace IncludeToolbox.IncludeFormatter
         /// </summary>
         public string RawLine
         {
-            get { return text; }
-            set { text = value; }
+            get { return lineText; }
         }
-        private string text = "";
-
-        /// <summary>
-        /// Changes in the include content will NOT be reflected immediately in the raw line text. 
-        /// </summary>
-        /// <see cref="UpdateRawLineWithIncludeContentChanges"/>
-        public string IncludeContent
-        {
-            get { return includeContent; }
-            set { includeContent = value; }
-        }
-        private string includeContent = "";
+        private string lineText = "";
 
         private int delimiter0 = -1;
         private int delimiter1 = -1;
-
-        /// <summary>
-        /// Flag used by formatting to signal that a line should be added before this one.
-        /// </summary>
-        public bool PrependNewline { get; set; } = false;
     }
 }

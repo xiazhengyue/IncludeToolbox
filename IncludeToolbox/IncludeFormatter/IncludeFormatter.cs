@@ -108,7 +108,7 @@ namespace IncludeToolbox.IncludeFormatter
             return regexes;
         }
 
-        private static void SortIncludes(IncludeLineInfo[] lines, FormatterOptionsPage settings, string documentName, string newLineChars)
+        private static void SortIncludes(ref IncludeLineInfo[] lines, FormatterOptionsPage settings, string documentName)
         {
             FormatterOptionsPage.TypeSorting typeSorting = settings.SortByType;
             bool regexIncludeDelimiter = settings.RegexIncludeDelimiter;
@@ -140,11 +140,12 @@ namespace IncludeToolbox.IncludeFormatter
                 .OrderBy(x => x.Key);
 
             // Optional newlines between regex match groups
+            var groupStarts = new HashSet<IncludeLineInfo>();
             if (blankAfterRegexGroupMatch && precedenceRegexes.Length > 0 && includeLines.Count() > 1)
             {
                 // Set flag to prepend a newline to each group's first include
                 foreach (var grouping in includeGroups)
-                    grouping.First().PrependNewline = true;
+                    groupStarts.Add(grouping.First());
             }
 
             // Flatten the groups
@@ -157,25 +158,34 @@ namespace IncludeToolbox.IncludeFormatter
                 sortedIncludes = sortedIncludes.OrderBy(x => x.LineType == IncludeLineInfo.Type.Quotes ? 0 : 1);
 
             // Finally, update the actual lines
+            List<IncludeLineInfo> extendedLineList = new List<IncludeLineInfo>(lines.Length);
             {
                 var sortedIncludesArray = sortedIncludes.ToArray();
                 int sortedIndex = 0;
                 for (int i = 0; i < lines.Length; ++i)
                 {
-                    if (lines[i].LineType != IncludeLineInfo.Type.NoInclude)
+                    if (lines[i].ContainsInclude)
                     {
-                        lines[i] = sortedIncludesArray[sortedIndex++];
+                        var includeLine = sortedIncludesArray[sortedIndex++];
 
                         // Handle prepending a newline if requested, as long as:
                         // - It's not the first line, and
                         // - We'll remove empty lines or the previous line isn't already a NoInclude
-                        if (lines[i].PrependNewline && i > 0 && (removeEmptyLines || lines[i - 1].LineType != IncludeLineInfo.Type.NoInclude))
+                        if (groupStarts.Contains(includeLine) && i > 0 && (removeEmptyLines || !extendedLineList[i - 1].ContainsInclude))
                         {
-                            lines[i].RawLine = String.Format("{0}{1}", newLineChars, lines[i].RawLine);
+                            extendedLineList.Add(new IncludeLineInfo());
                         }
+
+                        lines[i] = includeLine;
                     }
+
+                    extendedLineList.Add(lines[i]);
                 }
             }
+
+            // Only overwrite original array if we've added lines.
+            if(lines.Length != extendedLineList.Count)
+                lines = extendedLineList.ToArray();
         }
 
 
@@ -208,12 +218,8 @@ namespace IncludeToolbox.IncludeFormatter
             FormatDelimiters(lines, settings.DelimiterFormatting);
             FormatSlashes(lines, settings.SlashFormatting);
 
-            // Apply changes so far.
-            foreach (var line in lines)
-                line.UpdateRawLineWithIncludeContentChanges();
-
             // Sorting. Ignores non-include lines.
-            SortIncludes(lines, settings, documentName, newLineChars);
+            SortIncludes(ref lines, settings, documentName);
 
             // Combine again.
             return string.Join(newLineChars, lines.Select(x => x.RawLine));
