@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 
-namespace IncludeToolbox
+namespace IncludeToolbox.IncludeToolbox
 {
     /// <summary>
     /// A simple DGML graph file writer.

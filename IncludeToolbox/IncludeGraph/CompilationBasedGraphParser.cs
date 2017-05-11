@@ -97,19 +97,15 @@ namespace IncludeToolbox.IncludeGraph
             }
             catch(Exception e)
             {
-                Reset();
+                ResetPendingCompilationInfo();
                 Output.Instance.ErrorMsg("Compilation of file '{0}' with /showIncludes failed: {1}.", document.FullName, e);
                 return false;
-            }
-            finally
-            {
-                dte.Events.BuildEvents.OnBuildProjConfigDone -= OnBuildConfigFinished;
             }
 
             return true;
         }
 
-        private static void Reset()
+        private static void ResetPendingCompilationInfo()
         {
             string reasonForFailure;
             VSUtils.VCUtils.SetCompilerSetting_ShowIncludes(documentBeingCompiled.ProjectItem?.ContainingProject, showIncludeSettingBefore ?? false, out reasonForFailure);
@@ -138,8 +134,7 @@ namespace IncludeToolbox.IncludeGraph
                 includeDirectories.Insert(0, PathUtil.Normalize(documentBeingCompiled.Path) + Path.DirectorySeparatorChar);
 
                 const string includeNoteString = "Note: including file: ";
-                int numIncludes = 0;
-                string[] outputLines = outputText.Split('\n');
+                string[] outputLines = System.Text.RegularExpressions.Regex.Split(outputText, "\r\n|\r|\n"); // yes there are actually \r\n in there in some VS versions.
                 foreach (string line in outputLines)
                 {
                     int startIndex = line.IndexOf(includeNoteString);
@@ -173,7 +168,7 @@ namespace IncludeToolbox.IncludeGraph
             }
             finally
             {
-                Reset();
+                ResetPendingCompilationInfo();
             }
 
             onCompleted(graphBeingExtended, true);

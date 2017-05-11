@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IncludeToolbox;
 using System.IO;
+using IncludeToolbox.IncludeToolbox;
 
 namespace Tests
 {
@@ -9,7 +10,7 @@ namespace Tests
     public class DGML
     {
         [TestMethod]
-        public void DgmlTest()
+        public void WriteGraph()
         {
             string filenameTestOutput = "testdata/test.dgml";
             string filenameComparision= "testdata/expected.dgml";
