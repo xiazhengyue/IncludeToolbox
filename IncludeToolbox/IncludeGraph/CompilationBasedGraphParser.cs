@@ -119,11 +119,16 @@ namespace IncludeToolbox.IncludeGraph
 
         private static void OnBuildConfigFinished(string project, string projectConfig, string platform, string solutionConfig, bool success)
         {
+            // Parsing maybe successful for an unsuccessful build!
+            bool successfulParsing = true;
             try
             {
                 string outputText = VSUtils.GetOutputText();
                 if (string.IsNullOrEmpty(outputText))
+                {
+                    successfulParsing = false;
                     return;
+                }
 
                 // What we're building right now is a tree.
                 // However, combined with the existing data it might be a wide graph.
@@ -163,15 +168,14 @@ namespace IncludeToolbox.IncludeGraph
             catch(Exception e)
             {
                 Output.Instance.ErrorMsg("Failed to parse output from /showInclude compilation of file '{0}': {1}", documentBeingCompiled.FullName, e);
-                onCompleted(graphBeingExtended, false);
+                successfulParsing = false;
                 return;
             }
             finally
             {
+                onCompleted(graphBeingExtended, successfulParsing);
                 ResetPendingCompilationInfo();
             }
-
-            onCompleted(graphBeingExtended, true);
         }
     }
 }
