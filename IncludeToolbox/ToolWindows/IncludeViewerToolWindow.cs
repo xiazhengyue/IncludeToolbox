@@ -9,7 +9,7 @@ using System.Linq;
 using IncludeToolbox;
 using Microsoft.VisualStudio.VCProjectEngine;
 
-namespace IncludeViewer
+namespace IncludeToolbox.ToolWindows
 {
     /// <summary>
     /// This class implements the tool window exposed by this package and hosts a user control.

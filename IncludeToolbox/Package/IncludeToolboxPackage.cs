@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using IncludeViewer;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -16,7 +15,7 @@ namespace IncludeToolbox
     [ProvideOptionPage(typeof(IncludeWhatYouUseOptionsPage), Options.Constants.Category, IncludeWhatYouUseOptionsPage.SubCategory, 1000, 1002, true)]
     [ProvideOptionPage(typeof(TryAndErrorRemovalOptionsPage), Options.Constants.Category, TryAndErrorRemovalOptionsPage.SubCategory, 1000, 1003, true)]
 
-    [ProvideToolWindow(typeof(IncludeViewerToolWindow))]
+    [ProvideToolWindow(typeof(ToolWindows.IncludeViewerToolWindow))]
     [Guid(IncludeToolboxPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [InstalledProductRegistration("#110", "#112", "0.2", IconResourceID = 400)]

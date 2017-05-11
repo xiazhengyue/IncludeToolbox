@@ -57,11 +57,12 @@ namespace IncludeToolbox.IncludeGraph
             */
         }
 
-        public struct GraphItem
+        public class GraphItem
         {
             public GraphItem(string absoluteFilename)
             {
                 AbsoluteFilename = absoluteFilename;
+                FormattedName = absoluteFilename;
                 Includes = new List<Include>();
             }
 
@@ -73,6 +74,11 @@ namespace IncludeToolbox.IncludeGraph
             /// This is also used as key in the graph item dictionary.
             /// </remarks>
             public string AbsoluteFilename { get; private set; }
+
+            /// <summary>
+            /// A formatted name that can be set from the outside. Is by default the same as AbsoluteFilename.
+            /// </summary>
+            public string FormattedName { get; set; }
 
             /// <summary>
             /// List of all includes of this file.
@@ -107,6 +113,8 @@ namespace IncludeToolbox.IncludeGraph
         }
 
 
+        public IReadOnlyCollection<GraphItem> GraphItems => graphItems.Values;
+
         /// <summary>
         /// Map of all files that the graph reaches.
         /// Use CreateOrAddItem to populate it.
@@ -135,7 +143,5 @@ namespace IncludeToolbox.IncludeGraph
                 return outItem;
             }
         }
-
-        public int NumGraphItems { get { return graphItems.Count; } }
     }
 }

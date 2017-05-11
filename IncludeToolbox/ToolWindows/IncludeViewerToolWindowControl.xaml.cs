@@ -1,40 +1,28 @@
-﻿//------------------------------------------------------------------------------
-// <copyright file="IncludeViewerToolWindowControl.xaml.cs" company="Company">
-//     Copyright (c) Company.  All rights reserved.
-// </copyright>
-//------------------------------------------------------------------------------
-
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Windows.Media;
-using EnvDTE;
-using IncludeToolbox;
-using IncludeToolbox.IncludeFormatter;
-using IncludeToolbox.IncludeGraph;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.VCProjectEngine;
+using System.ComponentModel;
+using System.Windows.Controls;
+using System.Windows;
+using IncludeToolbox.IncludeToolbox;
+using System.IO;
+using Graph = IncludeToolbox.IncludeGraph.IncludeGraph;
+using GraphItem = IncludeToolbox.IncludeGraph.IncludeGraph.GraphItem;
+using IncludeToolbox.IncludeGraph;
+using Formatter = IncludeToolbox.IncludeFormatter.IncludeFormatter;
 
-namespace IncludeViewer
+namespace IncludeToolbox.ToolWindows
 {
-    using IncludeToolbox.IncludeToolbox;
-    using System;
-    using System.Diagnostics.CodeAnalysis;
-    using System.IO;
-    using System.Windows;
-    using System.Windows.Controls;
-
     /// <summary>
     /// Interaction logic for IncludeViewerToolWindowControl.
     /// </summary>
     public partial class IncludeViewerToolWindowControl : UserControl
     {
         private EnvDTE.Document currentDocument = null;
-        private bool showIncludeSettingBefore = false;
+        private Graph graph = null;
 
-        private IncludeGraph graph = null;
+        public IncludeTreeViewItem IncludeTreeModel { get; private set; } = new IncludeTreeViewItem(null);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IncludeViewerToolWindowControl"/> class.
@@ -42,6 +30,7 @@ namespace IncludeViewer
         public IncludeViewerToolWindowControl()
         {
             this.InitializeComponent();
+            this.DataContext = this;
         }
 
         private static Brush GetSolidBrush(ThemeResourceKey themeResourceKey)
@@ -50,58 +39,35 @@ namespace IncludeViewer
             return new SolidColorBrush(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
         }
 
-        private void PopulateTreeWidgetRecursive(ItemCollection target, IEnumerable<IncludeGraph.Include> includes, IEnumerable<string> includeDirectories)
-        {
-            foreach (var elem in includes)
-            {
-                string fullIncludePath = elem.IncludedFile.AbsoluteFilename;
-                string includeName = IncludeFormatter.FormatPath(fullIncludePath, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories) ?? fullIncludePath;
-
-                var newItem = new TreeViewItem()
-                {
-                    Header = includeName,
-                    ToolTip = fullIncludePath,
-                    // Todo: Styling should be part of XAML, but there were some exceptions I don't understand yet
-                    Foreground = GetSolidBrush(EnvironmentColors.ToolWindowTextBrushKey),
-                    // Todo: Unselected looks weird.
-                };
-
-                target.Add(newItem);
-                
-                if (elem.IncludedFile.Includes != null)
-                    PopulateTreeWidgetRecursive(newItem.Items, elem.IncludedFile.Includes, includeDirectories);
-            }
-        }
-
         private void Click_Refresh(object sender, RoutedEventArgs e)
         {
             var dte = VSUtils.GetDTE();
             currentDocument = dte?.ActiveDocument;
 
-            var newGraph = new IncludeGraph();
+            var newGraph = new Graph();
             if (newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, OnNewTreeComputed))
             {
                 FileNameLabel.Content = currentDocument.Name;
                 ProgressBar.Visibility = Visibility.Visible;
                 NumIncludes.Content = "";
-                IncludeTree.Items.Clear();
+                IncludeTreeModel.Reset(null);
                 RefreshButton.IsEnabled = false;
             }
         }
 
-        private void PopulateDGMLGraph(DGMLGraph graph, IncludeGraph.GraphItem item, IEnumerable<string> includeDirectories)
+        private void PopulateDGMLGraph(DGMLGraph graph, GraphItem item)
         {
             // TODO: Port to IncludeGraph
 
             string fullIncludePath = item.AbsoluteFilename;
-            string includeName = IncludeFormatter.FormatPath(fullIncludePath, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories) ?? fullIncludePath;
+            string includeName = item.FormattedName;
 
             graph.Nodes.Add(new DGMLGraph.Node { Id = fullIncludePath, Label = includeName });
             
             foreach (var link in item.Includes)
             {
                 graph.Links.Add(new DGMLGraph.Link { Source = fullIncludePath, Target = link.IncludedFile.AbsoluteFilename });
-                PopulateDGMLGraph(graph, link.IncludedFile, includeDirectories);
+                PopulateDGMLGraph(graph, link.IncludedFile);
             }
         }
 
@@ -125,13 +91,12 @@ namespace IncludeViewer
             if (!result ?? false)
                 return;
 
-            var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
             DGMLGraph dgmlGraph = new DGMLGraph();
-            PopulateDGMLGraph(dgmlGraph, graph.CreateOrGetItem(currentDocument.FullName), includeDirectories);
+            PopulateDGMLGraph(dgmlGraph, graph.CreateOrGetItem(currentDocument.FullName));
             dgmlGraph.Serialize(dlg.FileName);
         }
 
-        private void OnNewTreeComputed(IncludeGraph graph, bool success)
+        private void OnNewTreeComputed(Graph graph, bool success)
         {
             ProgressBar.Visibility = Visibility.Hidden;
             RefreshButton.IsEnabled = true;
@@ -140,12 +105,15 @@ namespace IncludeViewer
             {
                 this.graph = graph;
                 FileNameLabel.Content = currentDocument.Name;
-                NumIncludes.Content = (graph.NumGraphItems - 1).ToString(); // The document is itself part of the graph.
+                NumIncludes.Content = (graph.GraphItems.Count - 1).ToString(); // The document is itself part of the graph.
                 ButtonSaveGraph.IsEnabled = true;
 
                 var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
                 includeDirectories.Insert(0, PathUtil.Normalize(currentDocument.Path) + Path.DirectorySeparatorChar);
-                PopulateTreeWidgetRecursive(IncludeTree.Items, graph.CreateOrGetItem(currentDocument.FullName).Includes, includeDirectories);
+
+                foreach(var item in graph.GraphItems)
+                    item.FormattedName = Formatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
+                IncludeTreeModel.Reset(graph.CreateOrGetItem(currentDocument.FullName));
             }
             else
             {

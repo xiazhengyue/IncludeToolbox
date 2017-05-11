@@ -3,11 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:IncludeViewer"
+             xmlns:local="clr-namespace:IncludeToolbox.ToolWindows"
              xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
-             x:Class="IncludeViewer.IncludeViewerToolWindowControl"
-             mc:Ignorable="d"
-             x:Name="MyToolWindow">
+             x:Class="IncludeToolbox.ToolWindows.IncludeViewerToolWindowControl"
+             mc:Ignorable="d">
     <UserControl.Resources>
         <!-- Use VS styles http://stackoverflow.com/questions/18913208/colors-in-visual-studio-extension -->
         <ResourceDictionary>
@@ -19,9 +18,9 @@
                 <Setter Property="Background" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
             </Style>
-            <!-- <Style TargetType="TreeViewItem">
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.DropDownPopupBackgroundEndColorKey }}"/>
-            </Style> -->
+            <Style TargetType="TreeViewItem">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowTextBrushKey }}"/>
+            </Style>
             <Style TargetType="ListBox">
                 <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.DropDownPopupBackgroundEndColorKey }}"/>
                 <Setter Property="Background" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
@@ -43,7 +42,13 @@
         <Button x:Name="RefreshButton" Content="Refresh" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Height="29" Click="Click_Refresh"/>
         <Label x:Name="FileNameLabel" Content="&lt;File&gt;" FontWeight="Bold" FontSize="16" FontFamily="Consolas" Margin="80,0,0,0"/>
         <Label x:Name="IncludeTreeLabel" Content="Includes:" VerticalAlignment="Top" Height="25" Grid.Row="1" FontWeight="Bold"/>
-        <TreeView x:Name="IncludeTree" Grid.Row="2"/>
+        <TreeView Grid.Row="2" ItemsSource="{Binding IncludeTreeModel.Children}">
+            <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
+                    <TreeViewItem Header="{Binding Name}" ToolTip="{Binding ToolTip}"/>
+                </HierarchicalDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
         <ProgressBar x:Name="ProgressBar" Height="25" VerticalAlignment="Center" Width="130" Grid.Row="2" IsIndeterminate="True" Visibility="Hidden"/>
         <Grid Grid.Row="3">
             <Grid.RowDefinitions>
