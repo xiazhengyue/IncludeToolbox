@@ -16,7 +16,7 @@ namespace IncludeToolbox.IncludeGraph
         // There can always be only one compilation operation and it takes a while.
         // This makes the whole mechanism effectively a singletonish thing.
         private static bool CompilationOngoing { get { return documentBeingCompiled != null; } }
-        private static bool? showIncludeSettingBefore = false;
+        private static bool showIncludeSettingBefore = false;
         private static OnCompleteCallback onCompleted;
         private static Document documentBeingCompiled;
         private static IncludeGraph graphBeingExtended;
@@ -108,7 +108,7 @@ namespace IncludeToolbox.IncludeGraph
         private static void ResetPendingCompilationInfo()
         {
             string reasonForFailure;
-            VSUtils.VCUtils.SetCompilerSetting_ShowIncludes(documentBeingCompiled.ProjectItem?.ContainingProject, showIncludeSettingBefore ?? false, out reasonForFailure);
+            VSUtils.VCUtils.SetCompilerSetting_ShowIncludes(documentBeingCompiled.ProjectItem?.ContainingProject, showIncludeSettingBefore, out reasonForFailure);
 
             onCompleted = null;
             documentBeingCompiled = null;
@@ -119,6 +119,10 @@ namespace IncludeToolbox.IncludeGraph
 
         private static void OnBuildConfigFinished(string project, string projectConfig, string platform, string solutionConfig, bool success)
         {
+            // Sometimes we get this message several times.
+            if (!CompilationOngoing)
+                return;
+
             // Parsing maybe successful for an unsuccessful build!
             bool successfulParsing = true;
             try
@@ -173,8 +177,14 @@ namespace IncludeToolbox.IncludeGraph
             }
             finally
             {
-                onCompleted(graphBeingExtended, successfulParsing);
-                ResetPendingCompilationInfo();
+                try
+                {
+                    onCompleted(graphBeingExtended, successfulParsing);
+                }
+                finally
+                {
+                    ResetPendingCompilationInfo();
+                }
             }
         }
     }
