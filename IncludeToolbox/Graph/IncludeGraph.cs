@@ -1,12 +1,7 @@
 ﻿using Microsoft.VisualStudio.PlatformUI;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace IncludeToolbox.IncludeGraph
+namespace IncludeToolbox.Graph
 {
     /// <summary>
     /// Graph of files including files.

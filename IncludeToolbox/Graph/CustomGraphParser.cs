@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IncludeToolbox.IncludeGraph
+namespace IncludeToolbox.Graph
 {
     public static class CustomGraphParser
     {

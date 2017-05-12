@@ -1,15 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Windows.Media;
+﻿using System.Windows.Media;
 using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
-using System.ComponentModel;
 using System.Windows.Controls;
 using System.Windows;
-using IncludeToolbox.IncludeToolbox;
 using System.IO;
-using Graph = IncludeToolbox.IncludeGraph.IncludeGraph;
-using GraphItem = IncludeToolbox.IncludeGraph.IncludeGraph.GraphItem;
-using IncludeToolbox.IncludeGraph;
+using IncludeToolbox.Graph;
 using Formatter = IncludeToolbox.IncludeFormatter.IncludeFormatter;
 
 namespace IncludeToolbox.ToolWindows
@@ -20,7 +15,7 @@ namespace IncludeToolbox.ToolWindows
     public partial class IncludeViewerToolWindowControl : UserControl
     {
         private EnvDTE.Document currentDocument = null;
-        private Graph graph = null;
+        private IncludeGraph graph = null;
 
         public IncludeTreeViewItem IncludeTreeModel { get; private set; } = new IncludeTreeViewItem(null);
 
@@ -44,7 +39,7 @@ namespace IncludeToolbox.ToolWindows
             var dte = VSUtils.GetDTE();
             currentDocument = dte?.ActiveDocument;
 
-            var newGraph = new Graph();
+            var newGraph = new IncludeGraph();
             if (newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, OnNewTreeComputed))
             {
                 FileNameLabel.Content = currentDocument.Name;
@@ -55,7 +50,7 @@ namespace IncludeToolbox.ToolWindows
             }
         }
 
-        private void PopulateDGMLGraph(DGMLGraph graph, GraphItem item)
+        private void PopulateDGMLGraph(DGMLGraph graph, IncludeGraph.GraphItem item)
         {
             // TODO: Port to IncludeGraph
 
@@ -91,12 +86,12 @@ namespace IncludeToolbox.ToolWindows
             if (!result ?? false)
                 return;
 
-            DGMLGraph dgmlGraph = new DGMLGraph();
+            Graph.DGMLGraph dgmlGraph = new DGMLGraph();
             PopulateDGMLGraph(dgmlGraph, graph.CreateOrGetItem(currentDocument.FullName));
             dgmlGraph.Serialize(dlg.FileName);
         }
 
-        private void OnNewTreeComputed(Graph graph, bool success)
+        private void OnNewTreeComputed(IncludeGraph graph, bool success)
         {
             ProgressBar.Visibility = Visibility.Hidden;
             RefreshButton.IsEnabled = true;

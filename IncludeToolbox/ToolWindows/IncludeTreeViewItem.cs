@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using IncludeGraphItem = IncludeToolbox.IncludeGraph.IncludeGraph.GraphItem;
-using IncludeGraphInclude = IncludeToolbox.IncludeGraph.IncludeGraph.Include;
 
 namespace IncludeToolbox.ToolWindows
 {
@@ -23,14 +21,14 @@ namespace IncludeToolbox.ToolWindows
             }
         }
         private List<IncludeTreeViewItem> cachedItems;
-        private IncludeGraphItem item;
+        private Graph.IncludeGraph.GraphItem item;
 
-        public IncludeTreeViewItem(IncludeGraphItem graphItem)
+        public IncludeTreeViewItem(Graph.IncludeGraph.GraphItem graphItem)
         {
             Reset(graphItem);
         }
 
-        public void Reset(IncludeGraphItem graphItem)
+        public void Reset(Graph.IncludeGraph.GraphItem graphItem)
         {
             item = graphItem;
             cachedItems = null;
@@ -48,7 +46,7 @@ namespace IncludeToolbox.ToolWindows
 
             if (item?.Includes != null)
             {
-                foreach (IncludeGraphInclude include in item?.Includes)
+                foreach (Graph.IncludeGraph.Include include in item?.Includes)
                 {
                     cachedItems.Add(new IncludeTreeViewItem(include.IncludedFile));
                 }

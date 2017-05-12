@@ -66,10 +66,10 @@
     <Compile Include="Commands\CommandSetGuids.cs" />
     <Compile Include="Commands\IncludeViewerToolWindowCommand.cs" />
     <Compile Include="Commands\IncludeWhatYouUse.cs" />
-    <Compile Include="IncludeGraph\CustomGraphParser.cs" />
-    <Compile Include="IncludeGraph\DGMLGraph.cs" />
-    <Compile Include="IncludeGraph\CompilationBasedGraphParser.cs" />
-    <Compile Include="IncludeGraph\IncludeGraph.cs" />
+    <Compile Include="Graph\CustomGraphParser.cs" />
+    <Compile Include="Graph\DGMLGraph.cs" />
+    <Compile Include="Graph\CompilationBasedGraphParser.cs" />
+    <Compile Include="Graph\IncludeGraph.cs" />
     <Compile Include="IncludeWhatYouUse\IWYU.cs" />
     <Compile Include="IncludeWhatYouUse\IWYUDownload.cs" />
     <Compile Include="Options\IncludeWhatYouUseOptionsPage.cs">

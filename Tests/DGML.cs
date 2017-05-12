@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IncludeToolbox;
 using System.IO;
-using IncludeToolbox.IncludeToolbox;
+using IncludeToolbox.Graph;
 
 namespace Tests
 {
