@@ -168,7 +168,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                         if (applyFormatting)
                         {
                             var includeDirectories = VSUtils.GetProjectIncludeDirectories(fileWindow.Document.ProjectItem?.ContainingProject);
-                            stringToInsert = IncludeFormatter.IncludeFormatter.FormatIncludes(stringToInsert, fileWindow.Document.FullName, includeDirectories, formatSettings);
+                            stringToInsert = Formatter.IncludeFormatter.FormatIncludes(stringToInsert, fileWindow.Document.FullName, includeDirectories, formatSettings);
 
                             // Add a newline if we removed it.
                             if (formatSettings.RemoveEmptyLines)

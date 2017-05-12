@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using IncludeToolbox.IncludeFormatter;
+using IncludeToolbox.Formatter;
 
 namespace Tests
 {

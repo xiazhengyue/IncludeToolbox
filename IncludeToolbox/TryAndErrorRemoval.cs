@@ -74,17 +74,17 @@ namespace IncludeToolbox
 
             // Extract all includes.
             ITextBuffer textBuffer = null;
-            Tuple<int, IncludeFormatter.IncludeLineInfo>[] includeLines;
+            Tuple<int, Formatter.IncludeLineInfo>[] includeLines;
             { 
                 // Parsing.
-                IncludeFormatter.IncludeLineInfo[] documentLines = null;
+                Formatter.IncludeLineInfo[] documentLines = null;
                 try
                 {
                     document.Activate();
                     var documentTextView = VSUtils.GetCurrentTextViewHost();
                     textBuffer = documentTextView.TextView.TextBuffer;
                     string documentText = documentTextView.TextView.TextSnapshot.GetText();
-                    documentLines = IncludeFormatter.IncludeLineInfo.ParseIncludes(documentText, false, true);
+                    documentLines = Formatter.IncludeLineInfo.ParseIncludes(documentText, false, true);
                 }
                 catch (Exception ex)
                 {
@@ -94,8 +94,8 @@ namespace IncludeToolbox
                 }
 
                 // Filter lines for actual includes.
-                var includeLinesEnumberable = documentLines.Select((line, order) => new Tuple<int, IncludeFormatter.IncludeLineInfo>(order, line))
-                                                           .Where(x => x.Item2.LineType != IncludeFormatter.IncludeLineInfo.Type.NoInclude);
+                var includeLinesEnumberable = documentLines.Select((line, order) => new Tuple<int, Formatter.IncludeLineInfo>(order, line))
+                                                           .Where(x => x.Item2.LineType != Formatter.IncludeLineInfo.Type.NoInclude);
                 // Optionally skip top most include.
                 if (settings.IgnoreFirstInclude)
                     includeLinesEnumberable = includeLinesEnumberable.Skip(1);
@@ -129,7 +129,7 @@ namespace IncludeToolbox
                     int currentProgressStep = 0;
 
                     // For ever include line..
-                    foreach (Tuple<int, IncludeFormatter.IncludeLineInfo> line in includeLines)
+                    foreach (Tuple<int, Formatter.IncludeLineInfo> line in includeLines)
                     {
                         // If we are working from top to bottom, the line number may have changed!
                         int currentLine = line.Item1;

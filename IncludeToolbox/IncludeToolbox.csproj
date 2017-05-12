@@ -80,9 +80,9 @@
     <Compile Include="Commands\TryAndErrorRemoval_CodeWindow.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_Project.cs" />
     <Compile Include="Commands\FormatIncludes.cs" />
-    <Compile Include="IncludeFormatter\IncludeFormatter.cs" />
+    <Compile Include="Formatter\IncludeFormatter.cs" />
     <Compile Include="Package\IncludeToolboxPackage.cs" />
-    <Compile Include="IncludeFormatter\IncludeLineInfo.cs" />
+    <Compile Include="Formatter\IncludeLineInfo.cs" />
     <Compile Include="Options\Constants.cs" />
     <Compile Include="Options\TryAndErrorRemovalOptionsPage.cs">
       <SubType>Component</SubType>

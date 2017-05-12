@@ -35,9 +35,9 @@ namespace IncludeToolbox.Commands
             // Check whether any includes are selected.
             var viewHost = VSUtils.GetCurrentTextViewHost();
             var selectionSpan = GetSelectionSpan(viewHost);
-            var lines = IncludeFormatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), true);
+            var lines = Formatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), true);
 
-            menuCommand.Visible = lines.Any(x => x.LineType != IncludeFormatter.IncludeLineInfo.Type.NoInclude);
+            menuCommand.Visible = lines.Any(x => x.LineType != Formatter.IncludeLineInfo.Type.NoInclude);
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace IncludeToolbox.Commands
             var selectionSpan = GetSelectionSpan(viewHost);
 
             // Format
-            string formatedText = IncludeFormatter.IncludeFormatter.FormatIncludes(selectionSpan.GetText(), document.FullName, includeDirectories, settings);
+            string formatedText = Formatter.IncludeFormatter.FormatIncludes(selectionSpan.GetText(), document.FullName, includeDirectories, settings);
 
             // Overwrite.
             using (var edit = viewHost.TextView.TextBuffer.CreateEdit())

@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows;
 using System.IO;
 using IncludeToolbox.Graph;
-using Formatter = IncludeToolbox.IncludeFormatter.IncludeFormatter;
+using IncludeToolbox.Formatter;
 
 namespace IncludeToolbox.ToolWindows
 {
@@ -107,7 +107,7 @@ namespace IncludeToolbox.ToolWindows
                 includeDirectories.Insert(0, PathUtil.Normalize(currentDocument.Path) + Path.DirectorySeparatorChar);
 
                 foreach(var item in graph.GraphItems)
-                    item.FormattedName = Formatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
+                    item.FormattedName = IncludeFormatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
                 IncludeTreeModel.Reset(graph.CreateOrGetItem(currentDocument.FullName));
             }
             else

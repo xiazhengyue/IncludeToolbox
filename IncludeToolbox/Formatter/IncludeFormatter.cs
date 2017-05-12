@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace IncludeToolbox.IncludeFormatter
+namespace IncludeToolbox.Formatter
 {
     public static class IncludeFormatter
     {

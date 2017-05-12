@@ -31,7 +31,7 @@ namespace IncludeToolbox.Graph
             /// <summary>
             /// The original include line in sourceFile.
             /// </summary>
-            IncludeFormatter.IncludeLineInfo IncludeLine;
+            Formatter.IncludeLineInfo IncludeLine;
 
 
             /*

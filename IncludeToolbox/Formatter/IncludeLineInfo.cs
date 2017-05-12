@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace IncludeToolbox.IncludeFormatter
+namespace IncludeToolbox.Formatter
 {
     /// <summary>
     /// A line of text + information about the include directive in this line if any.
