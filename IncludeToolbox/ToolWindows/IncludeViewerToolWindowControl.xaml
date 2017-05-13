@@ -6,7 +6,8 @@
              xmlns:local="clr-namespace:IncludeToolbox.ToolWindows"
              xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
              x:Class="IncludeToolbox.ToolWindows.IncludeViewerToolWindowControl"
-             mc:Ignorable="d">
+             mc:Ignorable="d"
+             DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <UserControl.Resources>
         <!-- Use VS styles http://stackoverflow.com/questions/18913208/colors-in-visual-studio-extension -->
         <ResourceDictionary>
@@ -45,7 +46,7 @@
         <TreeView Grid.Row="2" ItemsSource="{Binding IncludeTreeModel.Children}">
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
-                    <TreeViewItem Header="{Binding Name}" ToolTip="{Binding ToolTip}"/>
+                    <TextBlock Text="{Binding Name}" ToolTip="{Binding ToolTip}"/>
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>

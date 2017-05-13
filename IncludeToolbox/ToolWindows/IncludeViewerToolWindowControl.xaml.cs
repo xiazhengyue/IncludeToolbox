@@ -24,8 +24,7 @@ namespace IncludeToolbox.ToolWindows
         /// </summary>
         public IncludeViewerToolWindowControl()
         {
-            this.InitializeComponent();
-            this.DataContext = this;
+            InitializeComponent();
         }
 
         private static Brush GetSolidBrush(ThemeResourceKey themeResourceKey)
