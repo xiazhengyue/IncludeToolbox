@@ -75,17 +75,16 @@ namespace IncludeToolbox
 
             // Extract all includes.
             ITextBuffer textBuffer = null;
-            Tuple<int, Formatter.IncludeLineInfo>[] includeLines;
+            IEnumerable<Formatter.IncludeLineInfo> includeLines = null;
             { 
                 // Parsing.
-                IEnumerable<Formatter.IncludeLineInfo> documentLines = null;
                 try
                 {
                     document.Activate();
                     var documentTextView = VSUtils.GetCurrentTextViewHost();
                     textBuffer = documentTextView.TextView.TextBuffer;
                     string documentText = documentTextView.TextView.TextSnapshot.GetText();
-                    documentLines = Formatter.IncludeLineInfo.ParseIncludes(documentText, Formatter.ParseOptions.IgnoreIncludesInPreprocessorConditionals);
+                    includeLines = Formatter.IncludeLineInfo.ParseIncludes(documentText, Formatter.ParseOptions.IgnoreIncludesInPreprocessorConditionals | Formatter.ParseOptions.KeepOnlyValidIncludes);
                 }
                 catch (Exception ex)
                 {
@@ -94,20 +93,17 @@ namespace IncludeToolbox
                     return;
                 }
 
-                // Filter lines for actual includes.
-                var includeLinesEnumberable = documentLines.Select((line, order) => new Tuple<int, Formatter.IncludeLineInfo>(order, line))
-                                                           .Where(x => x.Item2.LineType != Formatter.IncludeLineInfo.Type.NoInclude);
                 // Optionally skip top most include.
                 if (settings.IgnoreFirstInclude)
-                    includeLinesEnumberable = includeLinesEnumberable.Skip(1);
+                    includeLines = includeLines.Skip(1);
                 // Apply filter ignore regex.
-                includeLinesEnumberable = includeLinesEnumberable.Where(line => !settings.IgnoreList.Any(regexPattern => 
-                                                          new System.Text.RegularExpressions.Regex(regexPattern).Match(line.Item2.IncludeContent).Success));
+                includeLines = includeLines.Where(line => !settings.IgnoreList.Any(regexPattern => 
+                                                 new System.Text.RegularExpressions.Regex(regexPattern).Match(line.IncludeContent).Success));
                 // Reverse order if necessary.
                 if (settings.RemovalOrder == TryAndErrorRemovalOptionsPage.IncludeRemovalOrder.BottomToTop)
-                    includeLinesEnumberable = includeLinesEnumberable.Reverse();
+                    includeLines = includeLines.Reverse();
 
-                includeLines = includeLinesEnumberable.ToArray();
+                includeLines = includeLines.ToArray();
             }
             int numIncludes = includeLines.Count();
 
@@ -130,16 +126,16 @@ namespace IncludeToolbox
                     int currentProgressStep = 0;
 
                     // For ever include line..
-                    foreach (Tuple<int, Formatter.IncludeLineInfo> line in includeLines)
+                    foreach (Formatter.IncludeLineInfo line in includeLines)
                     {
                         // If we are working from top to bottom, the line number may have changed!
-                        int currentLine = line.Item1;
+                        int currentLine = line.LineNumber;
                         if (settings.RemovalOrder == TryAndErrorRemovalOptionsPage.IncludeRemovalOrder.TopToBottom)
                             currentLine -= numRemovedIncludes;
 
                         // Update progress.
                         string waitMessage = $"Removing #includes from '{document.Name}'";
-                        string progressText = $"Trying to remove '{line.Item2.IncludeContent}' ...";
+                        string progressText = $"Trying to remove '{line.IncludeContent}' ...";
                         progressDialog.UpdateProgress(
                             szUpdatedWaitMessage: waitMessage,
                             szProgressText: progressText,
@@ -204,7 +200,7 @@ namespace IncludeToolbox
                         // Undo removal if compilation failed.
                         if (!noTimeout || !lastBuildSuccessful)
                         {
-                            Output.Instance.WriteLine("Could not remove #include: '{0}'", line.Item2.IncludeContent);
+                            Output.Instance.WriteLine("Could not remove #include: '{0}'", line.IncludeContent);
                             document.Undo();
                             if (!noTimeout)
                             {
@@ -214,7 +210,7 @@ namespace IncludeToolbox
                         }
                         else
                         {
-                            Output.Instance.WriteLine("Successfully removed #include: '{0}'", line.Item2.IncludeContent);
+                            Output.Instance.WriteLine("Successfully removed #include: '{0}'", line.IncludeContent);
                             ++numRemovedIncludes;
                         }
                     }

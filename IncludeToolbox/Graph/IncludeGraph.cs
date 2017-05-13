@@ -13,7 +13,6 @@ namespace IncludeToolbox.Graph
             public Include(GraphItem file)
             {
                 IncludedFile = file;
-                IncludeLineNumber = -1;
                 IncludeLine = null;
             }
 
@@ -23,14 +22,9 @@ namespace IncludeToolbox.Graph
             public GraphItem IncludedFile { get; private set; }
 
             /// <summary>
-            /// Line in sourceFile which includes includeFile.
-            /// May be unknown (-1) depending on the way the graph created.
-            /// </summary>
-            public int IncludeLineNumber;
-
-            /// <summary>
             /// The original include line in sourceFile.
             /// </summary>
+            /// <remarks>Depending on the graph generation algorithm, this may be null.</remarks>
             Formatter.IncludeLineInfo IncludeLine;
         }
 
