@@ -54,8 +54,8 @@ namespace IncludeToolbox.Formatter
 
             foreach (var line in lines)
             {
-                string absoluteIncludeDir = line.TryResolveInclude(includeDirectories);
-                if (!string.IsNullOrEmpty(absoluteIncludeDir))
+                string absoluteIncludeDir = line.TryResolveInclude(includeDirectories, out bool resolvedPath);
+                if (resolvedPath)
                     line.IncludeContent = FormatPath(absoluteIncludeDir, pathformat, includeDirectories) ?? line.IncludeContent;
             }
         }

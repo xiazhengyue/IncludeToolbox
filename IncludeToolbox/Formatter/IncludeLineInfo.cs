@@ -87,8 +87,7 @@ namespace IncludeToolbox.Formatter
                     }
                 }
 
-                Func<int, bool> isCommented = pos => (commentedSectionStart == int.MaxValue && openMultiLineComments > 0) || 
-                                                     (pos > commentedSectionStart && pos < commentedSectionEnd);
+                bool isCommented(int pos) => (commentedSectionStart == int.MaxValue && openMultiLineComments > 0) || (pos > commentedSectionStart && pos < commentedSectionEnd);
 
                 // Check for #if / #ifdefs.
                 if (options.HasFlag(ParseOptions.IgnoreIncludesInPreprocessorConditionals))
@@ -210,10 +209,13 @@ namespace IncludeToolbox.Formatter
         /// </summary>
         /// <param name="includeDirectories">Include directories.</param>
         /// <returns>Empty string if this is not an include, absolute include path if possible or raw include if not.</returns>
-        public string TryResolveInclude(IEnumerable<string> includeDirectories)
+        public string TryResolveInclude(IEnumerable<string> includeDirectories, out bool success)
         {
             if (!ContainsActiveInclude)
+            {
+                success = false;
                 return "";
+            }
 
             string includeContent = IncludeContent;
 
@@ -222,11 +224,13 @@ namespace IncludeToolbox.Formatter
                 string candidate = Path.Combine(dir, includeContent);
                 if (File.Exists(candidate))
                 {
+                    success = true;
                     return Utils.GetExactPathName(candidate);
                 }
             }
 
             Output.Instance.WriteLine("Unable to resolve include: '{0}'", includeContent);
+            success = false;
             return includeContent;
         }
 

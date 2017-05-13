@@ -142,17 +142,23 @@ dfdf // */ #include <there1>";
 
             var parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
 
-            string resolvedPath = parse[0].TryResolveInclude(includeDirs);
+            bool successfullyResolved = false;
+
+            string resolvedPath = parse[0].TryResolveInclude(includeDirs, out successfullyResolved);
             StringAssert.EndsWith(resolvedPath, "testdata\\subdir\\testinclude.h");
+            Assert.AreEqual(true, successfullyResolved);
 
-            resolvedPath = parse[1].TryResolveInclude(includeDirs);
+            resolvedPath = parse[1].TryResolveInclude(includeDirs, out successfullyResolved);
             StringAssert.EndsWith(resolvedPath, "testdata\\testinclude.h");
+            Assert.AreEqual(true, successfullyResolved);
 
-            resolvedPath = parse[2].TryResolveInclude(includeDirs);
+            resolvedPath = parse[2].TryResolveInclude(includeDirs, out successfullyResolved);
             Assert.AreEqual("unresolvable", resolvedPath);
+            Assert.AreEqual(false, successfullyResolved);
 
-            resolvedPath = parse[3].TryResolveInclude(includeDirs);
+            resolvedPath = parse[3].TryResolveInclude(includeDirs, out successfullyResolved);
             Assert.AreEqual("", resolvedPath);
+            Assert.AreEqual(false, successfullyResolved);
         }
 
         [TestMethod]
