@@ -207,7 +207,7 @@ namespace IncludeToolbox.Formatter
         /// <summary>
         /// Tries to resolve the include (if any) using a list of directories.
         /// </summary>
-        /// <param name="includeDirectories">Include directories.</param>
+        /// <param name="includeDirectories">Include directories. Keep in mind that IncludeLineInfo does not know the path of the file this include is from.</param>
         /// <returns>Empty string if this is not an include, absolute include path if possible or raw include if not.</returns>
         public string TryResolveInclude(IEnumerable<string> includeDirectories, out bool success)
         {

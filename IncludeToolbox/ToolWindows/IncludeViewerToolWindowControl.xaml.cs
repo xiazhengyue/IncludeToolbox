@@ -91,7 +91,7 @@ namespace IncludeToolbox.ToolWindows
 
                 foreach(var item in graph.GraphItems)
                     item.FormattedName = IncludeFormatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
-                IncludeTreeModel.Reset(graph.CreateOrGetItem(currentDocument.FullName));
+                IncludeTreeModel.Reset(graph.CreateOrGetItem(currentDocument.FullName, out _));
             }
             else
             {

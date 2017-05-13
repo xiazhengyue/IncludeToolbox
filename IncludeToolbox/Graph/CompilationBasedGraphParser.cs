@@ -135,7 +135,7 @@ namespace IncludeToolbox.Graph
                 // What we're building right now is a tree.
                 // However, combined with the existing data it might be a wide graph.
                 var includeTreeItemStack = new Stack<IncludeGraph.GraphItem>();
-                includeTreeItemStack.Push(graphBeingExtended.CreateOrGetItem(documentBeingCompiled.FullName));
+                includeTreeItemStack.Push(graphBeingExtended.CreateOrGetItem(documentBeingCompiled.FullName, out _));
 
                 var includeDirectories = VSUtils.GetProjectIncludeDirectories(documentBeingCompiled.ProjectItem.ContainingProject);
                 includeDirectories.Insert(0, PathUtil.Normalize(documentBeingCompiled.Path) + Path.DirectorySeparatorChar);
@@ -162,8 +162,8 @@ namespace IncludeToolbox.Graph
                         includeTreeItemStack.Pop();
 
                     string fullIncludePath = line.Substring(includeStartIndex);
-                    IncludeGraph.GraphItem includedItem = graphBeingExtended.CreateOrGetItem(fullIncludePath);
-                    includeTreeItemStack.Peek().Includes.Add(new IncludeGraph.Include(includedItem));
+                    IncludeGraph.GraphItem includedItem = graphBeingExtended.CreateOrGetItem(fullIncludePath, out _);
+                    includeTreeItemStack.Peek().Includes.Add(new IncludeGraph.Include() { IncludedFile = includedItem });
                 }
             }
 

@@ -10,22 +10,17 @@ namespace IncludeToolbox.Graph
     {
         public struct Include
         {
-            public Include(GraphItem file)
-            {
-                IncludedFile = file;
-                IncludeLine = null;
-            }
-
             /// <summary>
             /// Absolute path to the file that includes another file.
             /// </summary>
-            public GraphItem IncludedFile { get; private set; }
+            /// <remarks>May be null, signaling that the include line could not be resolved.</remarks>
+            public GraphItem IncludedFile;
 
             /// <summary>
             /// The original include line in sourceFile.
             /// </summary>
             /// <remarks>Depending on the graph generation algorithm, this may be null.</remarks>
-            Formatter.IncludeLineInfo IncludeLine;
+            public Formatter.IncludeLineInfo IncludeLine;
         }
 
         public class GraphItem
@@ -55,32 +50,6 @@ namespace IncludeToolbox.Graph
             /// List of all includes of this file.
             /// </summary>
             public List<Include> Includes { get; private set; }
-
-
-            // GraphItem is uniquely identified by its filename.
-            /*
-            public static bool operator ==(GraphItem a, GraphItem b)
-            {
-                return a.AbsoluteFilename.Equals(b.AbsoluteFilename);
-            }
-
-            public static bool operator !=(GraphItem a, GraphItem b)
-            {
-                return !(a == b);
-            }
-
-            public override int GetHashCode()
-            {
-                return AbsoluteFilename.GetHashCode();
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (!(obj is GraphItem))
-                    return false;
-                return (GraphItem)obj == this;
-            }
-            */
         }
 
 
@@ -95,35 +64,37 @@ namespace IncludeToolbox.Graph
         /// <summary>
         /// Retrieves item from a given identifying absolute filename.
         /// </summary>
-        /// <param name="absoluteFilename">
-        /// Absolute path to an include. Will be normalized internally.
+        /// <param name="filename">
+        /// Filename of an include, may be relative. Will be normalized internally.
         /// If an absolute filename can't be provided (e.g. due to resolve failure), this can be any kind of unique file identifier.
-        /// Note however, that this is used as unique identifier.
         /// </param>
-        public GraphItem CreateOrGetItem(string absoluteFilename)
+        public GraphItem CreateOrGetItem(string filename, out bool isNew)
         {
-            absoluteFilename = PathUtil.Normalize(absoluteFilename);
+            filename = Utils.GetExactPathName(filename);
+            return CreateOrGetItem_AbsoluteNormalizedPath(filename, out isNew);
+        }
 
+        public GraphItem CreateOrGetItem_AbsoluteNormalizedPath(string normalizedAbsoluteFilename, out bool isNew)
+        {
             GraphItem outItem;
-            if (graphItems.TryGetValue(absoluteFilename, out outItem))
-                return outItem;
-            else
+            isNew = !graphItems.TryGetValue(normalizedAbsoluteFilename, out outItem);
+            if (isNew)
             {
-                outItem = new GraphItem(absoluteFilename);
-                graphItems.Add(absoluteFilename, outItem);
-                return outItem;
+                outItem = new GraphItem(normalizedAbsoluteFilename);
+                graphItems.Add(normalizedAbsoluteFilename, outItem);
             }
+            return outItem;
         }
 
         public DGMLGraph ToDGMLGraph()
         {
             DGMLGraph dgmlGraph = new DGMLGraph();
-            foreach(GraphItem node in graphItems.Values)
+            foreach (GraphItem node in graphItems.Values)
             {
                 dgmlGraph.Nodes.Add(new DGMLGraph.Node { Id = node.AbsoluteFilename, Label = node.FormattedName });
                 foreach (Include include in node.Includes)
                 {
-                    dgmlGraph.Links.Add(new DGMLGraph.Link { Source = node.AbsoluteFilename, Target = include.IncludedFile.AbsoluteFilename });
+                    dgmlGraph.Links.Add(new DGMLGraph.Link { Source = node.AbsoluteFilename, Target = include.IncludedFile?.AbsoluteFilename ?? null });
                 }
             }
 
