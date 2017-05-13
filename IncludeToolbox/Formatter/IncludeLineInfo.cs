@@ -7,6 +7,27 @@ using System.Text.RegularExpressions;
 
 namespace IncludeToolbox.Formatter
 {
+    [Flags]
+    public enum ParseOptions
+    {
+        None = 0,
+
+        /// <summary>
+        /// Whether IncludeLineInfo objects should be created for empty lines.</param>
+        /// </summary>
+        RemoveEmptyLines = 1,
+
+        /// <summary>
+        /// Marks all includes that are within preprocessor conditionals as inactive/non-includes
+        /// </summary>
+        IgnoreIncludesInPreprocessorConditionals = 2,
+
+        /// <summary>
+        /// Keep only lines that contain valid includes.
+        /// </summary>
+        KeepOnlyValidIncludes = 4 | RemoveEmptyLines,
+    }
+
     /// <summary>
     /// A line of text + information about the include directive in this line if any.
     /// Allows for manipulation of the former.
@@ -19,47 +40,46 @@ namespace IncludeToolbox.Formatter
         /// <summary>
         /// Parses a given text into IncludeLineInfo objects.
         /// </summary>
-        /// <param name="text">A piece of code.</param>
-        /// <param name="removeEmptyLines">Whether IncludeLineInfo objects should be created for empty lines.</param>
-        /// <param name="ignoreIncludesInPreprocessorConditionals">If true, ignores all includes that are within preprocessor conditionals.</param>
-        /// <returns>An array of parsed lines.</returns>
-        public static IncludeLineInfo[] ParseIncludes(string text, bool removeEmptyLines, bool ignoreIncludesInPreprocessorConditionals = false)
+        /// <returns>A list of parsed lines.</returns>
+        public static List<IncludeLineInfo> ParseIncludes(string text, ParseOptions options)
         {
-            var lines = Regex.Split(text, "\r\n|\r|\n");
-            if (removeEmptyLines)
-            {
-                lines = lines.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
-            }
-            var outInfo = new IncludeLineInfo[lines.Length];
+            StringReader reader = new StringReader(text);
+
+            var outInfo = new List<IncludeLineInfo>();
 
             // Simplistic parsing.
             int openMultiLineComments = 0;
             int openIfdefs = 0;
-            for (int line = 0; line < lines.Length; ++line)
+            string lineText;
+            while (true)
             {
-                outInfo[line] = new IncludeLineInfo();
-                outInfo[line].lineText = lines[line];
+                lineText = reader.ReadLine();
+                if (lineText == null)
+                    break;
+
+                if (options.HasFlag(ParseOptions.RemoveEmptyLines) && string.IsNullOrWhiteSpace(lineText))
+                    continue;
 
                 int commentedSectionStart = int.MaxValue;
                 int commentedSectionEnd = int.MaxValue;
 
                 // Check for single line comment.
                 {
-                    int singleLineCommentStart = lines[line].IndexOf("//");
+                    int singleLineCommentStart = lineText.IndexOf("//");
                     if (singleLineCommentStart != -1)
                         commentedSectionStart = singleLineCommentStart;
                 }
 
                 // Check for multi line comments.
                 {
-                    int multiLineCommentStart = lines[line].IndexOf("/*");
+                    int multiLineCommentStart = lineText.IndexOf("/*");
                     if (multiLineCommentStart > -1 && multiLineCommentStart < commentedSectionStart)
                     {
                         ++openMultiLineComments;
                         commentedSectionStart = multiLineCommentStart;
                     }
                     
-                    int multiLineCommentEnd = lines[line].IndexOf("*/");
+                    int multiLineCommentEnd = lineText.IndexOf("*/");
                     if (multiLineCommentEnd > -1)
                     {
                         --openMultiLineComments;
@@ -71,45 +91,54 @@ namespace IncludeToolbox.Formatter
                                                      (pos > commentedSectionStart && pos < commentedSectionEnd);
 
                 // Check for #if / #ifdefs.
-                if (ignoreIncludesInPreprocessorConditionals)
+                if (options.HasFlag(ParseOptions.IgnoreIncludesInPreprocessorConditionals))
                 {
-                    int ifdefStart = lines[line].IndexOf("#if");
-                    int ifdefEnd = lines[line].IndexOf("#endif");
+                    // There can be only a single preprocessor directive per line, so no need to parse more than this.
+                    int ifdefStart = lineText.IndexOf("#if");
+                    int ifdefEnd = lineText.IndexOf("#endif");
                     if (ifdefStart > -1 && !isCommented(ifdefStart))
                     {
                         ++openIfdefs;
-                        continue; // There can be only a single preprocessor directive per line.
                     }
                     else if (ifdefEnd > -1 && !isCommented(ifdefEnd))
                     {
                         --openIfdefs;
-                        continue; // There can be only a single preprocessor directive per line.
                     }
                 }
 
-                int includeOccurence = lines[line].IndexOf("#include");
-                if (includeOccurence == -1) // No include found
-                    continue;
-                if (isCommented(includeOccurence)) // Include commented out
-                    continue;
-                if (openIfdefs > 0)  // Inside an #ifdef block.
-                    continue;
+                int includeOccurence = lineText.IndexOf("#include");
 
-                // Parse include content.
-                outInfo[line].delimiter0 = lines[line].IndexOf('\"', includeOccurence + "#include".Length);
-                if (outInfo[line].delimiter0 == -1)
+                // Not a valid include.
+                if (includeOccurence == -1 ||        // Include not found 
+                    isCommented(includeOccurence) || // Include commented out
+                    openIfdefs > 0)                // Inside an #ifdef block
                 {
-                    outInfo[line].delimiter0 = lines[line].IndexOf('<', includeOccurence + "#include".Length);
-                    if (outInfo[line].delimiter0 == -1)
-                        continue;
-                    outInfo[line].delimiter1 = lines[line].IndexOf('>', outInfo[line].delimiter0 + 1);
+                    if (!options.HasFlag(ParseOptions.KeepOnlyValidIncludes))
+                        outInfo.Add(new IncludeLineInfo() { lineText = lineText });
                 }
+                // A valid include
                 else
                 {
-                    outInfo[line].delimiter1 = lines[line].IndexOf('\"', outInfo[line].delimiter0 + 1);
+                    // Parse include delimiters.
+                    int delimiter1 = -1;
+                    int delimiter0 = lineText.IndexOf('\"', includeOccurence + "#include".Length);
+                    if (delimiter0 == -1)
+                    {
+                        delimiter0 = lineText.IndexOf('<', includeOccurence + "#include".Length);
+                        if (delimiter0 != -1)
+                            delimiter1 = lineText.IndexOf('>', delimiter0 + 1);
+                    }
+                    else
+                    {
+                        delimiter1 = lineText.IndexOf('\"', delimiter0 + 1);
+                    }
+
+                    // Might not be valid after all!
+                    if (delimiter0 != -1 && delimiter1 != -1)
+                        outInfo.Add(new IncludeLineInfo() { lineText = lineText, delimiter0 = delimiter0, delimiter1 = delimiter1 });
+                    else if(!options.HasFlag(ParseOptions.KeepOnlyValidIncludes))
+                        outInfo.Add(new IncludeLineInfo() { lineText = lineText });
                 }
-                if (outInfo[line].delimiter1 == -1)
-                    continue;
             }
 
             return outInfo;
@@ -127,7 +156,7 @@ namespace IncludeToolbox.Formatter
         {
             get
             {
-                if (ContainsInclude)
+                if (ContainsActiveInclude)
                 {
                     if (lineText[delimiter0] == '<')
                         return Type.AngleBrackets;
@@ -139,7 +168,13 @@ namespace IncludeToolbox.Formatter
             }
         }
 
-        public bool ContainsInclude
+        /// <summary>
+        /// Whether the line includes an enabled include.
+        /// </summary>
+        /// <remarks>
+        /// A line that contains a valid #include may still be ContainsActiveInclude==false if it is commented or (depending on parsing options) #if(def)'ed out.
+        /// </remarks>
+        public bool ContainsActiveInclude
         {
             get { return delimiter0 != -1; }
         }
@@ -177,7 +212,7 @@ namespace IncludeToolbox.Formatter
         /// <returns>Empty string if this is not an include, absolute include path if possible or raw include if not.</returns>
         public string TryResolveInclude(IEnumerable<string> includeDirectories)
         {
-            if (!ContainsInclude)
+            if (!ContainsActiveInclude)
                 return "";
 
             string includeContent = IncludeContent;
@@ -217,7 +252,7 @@ namespace IncludeToolbox.Formatter
             }
             set
             {
-                if (!ContainsInclude)
+                if (!ContainsActiveInclude)
                     return;
 
                 lineText = lineText.Remove(delimiter0 + 1, delimiter1 - delimiter0 - 1);

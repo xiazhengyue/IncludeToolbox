@@ -60,7 +60,7 @@ namespace IncludeToolbox.Formatter
             }
         }
 
-        private static void FormatDelimiters(IncludeLineInfo[] lines, FormatterOptionsPage.DelimiterMode delimiterMode)
+        private static void FormatDelimiters(IEnumerable<IncludeLineInfo> lines, FormatterOptionsPage.DelimiterMode delimiterMode)
         {
             switch (delimiterMode)
             {
@@ -75,7 +75,7 @@ namespace IncludeToolbox.Formatter
             }
         }
 
-        private static void FormatSlashes(IncludeLineInfo[] lines, FormatterOptionsPage.SlashMode slashMode)
+        private static void FormatSlashes(IEnumerable<IncludeLineInfo> lines, FormatterOptionsPage.SlashMode slashMode)
         {
             switch (slashMode)
             {
@@ -108,7 +108,7 @@ namespace IncludeToolbox.Formatter
             return regexes;
         }
 
-        private static void SortIncludes(ref IncludeLineInfo[] lines, FormatterOptionsPage settings, string documentName)
+        private static void SortIncludes(ref List<IncludeLineInfo> lines, FormatterOptionsPage settings, string documentName)
         {
             FormatterOptionsPage.TypeSorting typeSorting = settings.SortByType;
             bool regexIncludeDelimiter = settings.RegexIncludeDelimiter;
@@ -158,20 +158,20 @@ namespace IncludeToolbox.Formatter
                 sortedIncludes = sortedIncludes.OrderBy(x => x.LineType == IncludeLineInfo.Type.Quotes ? 0 : 1);
 
             // Finally, update the actual lines
-            List<IncludeLineInfo> extendedLineList = new List<IncludeLineInfo>(lines.Length);
+            List<IncludeLineInfo> extendedLineList = new List<IncludeLineInfo>(lines.Count);
             {
                 var sortedIncludesArray = sortedIncludes.ToArray();
                 int sortedIndex = 0;
-                for (int i = 0; i < lines.Length; ++i)
+                for (int i = 0; i < lines.Count; ++i)
                 {
-                    if (lines[i].ContainsInclude)
+                    if (lines[i].ContainsActiveInclude)
                     {
                         var includeLine = sortedIncludesArray[sortedIndex++];
 
                         // Handle prepending a newline if requested, as long as:
                         // - It's not the first line, and
                         // - We'll remove empty lines or the previous line isn't already a NoInclude
-                        if (groupStarts.Contains(includeLine) && i > 0 && (removeEmptyLines || !extendedLineList[i - 1].ContainsInclude))
+                        if (groupStarts.Contains(includeLine) && i > 0 && (removeEmptyLines || !extendedLineList[i - 1].ContainsActiveInclude))
                         {
                             extendedLineList.Add(new IncludeLineInfo());
                         }
@@ -184,8 +184,8 @@ namespace IncludeToolbox.Formatter
             }
 
             // Only overwrite original array if we've added lines.
-            if(lines.Length != extendedLineList.Count)
-                lines = extendedLineList.ToArray();
+            if(lines.Count != extendedLineList.Count)
+                lines = extendedLineList;
         }
 
 
@@ -206,7 +206,7 @@ namespace IncludeToolbox.Formatter
 
             string newLineChars = Utils.GetDominantNewLineSeparator(text);
 
-            var lines = IncludeLineInfo.ParseIncludes(text, settings.RemoveEmptyLines);
+            var lines = IncludeLineInfo.ParseIncludes(text, settings.RemoveEmptyLines ? ParseOptions.RemoveEmptyLines : ParseOptions.None);
 
             // Format.
             IEnumerable<string> formatingDirs = includeDirectories;

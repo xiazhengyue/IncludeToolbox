@@ -69,6 +69,7 @@ namespace IncludeToolbox.ToolWindows
             if (!result ?? false)
                 return;
 
+            // TODO: Progressbar and open prompt.
             DGMLGraph dgmlGraph = graph.ToDGMLGraph();
             dgmlGraph.Serialize(dlg.FileName);
         }

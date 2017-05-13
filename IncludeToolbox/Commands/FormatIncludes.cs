@@ -35,7 +35,7 @@ namespace IncludeToolbox.Commands
             // Check whether any includes are selected.
             var viewHost = VSUtils.GetCurrentTextViewHost();
             var selectionSpan = GetSelectionSpan(viewHost);
-            var lines = Formatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), true);
+            var lines = Formatter.IncludeLineInfo.ParseIncludes(selectionSpan.GetText(), Formatter.ParseOptions.RemoveEmptyLines);
 
             menuCommand.Visible = lines.Any(x => x.LineType != Formatter.IncludeLineInfo.Type.NoInclude);
         }

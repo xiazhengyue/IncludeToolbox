@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using EnvDTE;
 using Microsoft.VisualStudio.Text;
+using System.Collections.Generic;
 
 namespace IncludeToolbox
 {
@@ -77,14 +78,14 @@ namespace IncludeToolbox
             Tuple<int, Formatter.IncludeLineInfo>[] includeLines;
             { 
                 // Parsing.
-                Formatter.IncludeLineInfo[] documentLines = null;
+                IEnumerable<Formatter.IncludeLineInfo> documentLines = null;
                 try
                 {
                     document.Activate();
                     var documentTextView = VSUtils.GetCurrentTextViewHost();
                     textBuffer = documentTextView.TextView.TextBuffer;
                     string documentText = documentTextView.TextView.TextSnapshot.GetText();
-                    documentLines = Formatter.IncludeLineInfo.ParseIncludes(documentText, false, true);
+                    documentLines = Formatter.IncludeLineInfo.ParseIncludes(documentText, Formatter.ParseOptions.IgnoreIncludesInPreprocessorConditionals);
                 }
                 catch (Exception ex)
                 {
