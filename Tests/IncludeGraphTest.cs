@@ -3,7 +3,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IncludeToolbox;
 using System.IO;
 using IncludeToolbox.Graph;
-using System.Collections;
+using IncludeToolbox.Formatter;
+using System.Collections.Generic;
 
 namespace Tests
 {
@@ -88,6 +89,54 @@ namespace Tests
             Assert.AreEqual(1, subdir_inline.Includes.Count);
             Assert.AreEqual(null, subdir_inline.Includes[0].IncludedFile);
             Assert.AreEqual(true, subdir_inline.Includes[0].IncludeLine.ContainsActiveInclude);
+        }
+
+        private DGMLGraph RemoveAbsolutePathsFromDGML(DGMLGraph dgml, IEnumerable<string> includeDirectories)
+        {
+            var dgml2 = new DGMLGraph();
+            foreach (var item in dgml.Nodes)
+            {
+                DGMLGraph.Node newNode = item;
+                newNode.Id = IncludeFormatter.FormatPath(item.Id, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
+                dgml2.Nodes.Add(newNode);
+            }
+            foreach (var link in dgml.Links)
+            {
+                DGMLGraph.Link newLink = link;
+                newLink.Source = IncludeFormatter.FormatPath(newLink.Source, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
+                newLink.Target = IncludeFormatter.FormatPath(newLink.Target, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
+                dgml2.Links.Add(newLink);
+            }
+
+            return dgml2;
+        }
+
+        [TestMethod]
+        public void CustomGraphParseDGML()
+        {
+            string filenameTestOutput = "testdata/output.dgml";
+            string filenameComparision = "testdata/includegraph.dgml";
+
+            IncludeGraph graph = new IncludeGraph();
+            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/source0.cpp"), Enumerable.Empty<string>());
+            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/source1.cpp"), Enumerable.Empty<string>());
+
+            // Formatting...
+            var includeDirectories = new[] { Path.Combine(System.Environment.CurrentDirectory, "testdata") };
+            foreach (var item in graph.GraphItems)
+                item.FormattedName = IncludeFormatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
+
+            // To DGML and save.
+            // Since we don't want to have absolute paths in our compare/output dgml we hack the graph before writing it out.
+            var dgml = RemoveAbsolutePathsFromDGML(graph.ToDGMLGraph(), new[] { System.Environment.CurrentDirectory });
+            dgml.Serialize(filenameTestOutput);
+
+            string expectedFile = File.ReadAllText(filenameComparision);
+            string writtenFile = File.ReadAllText(filenameTestOutput);
+            Assert.AreEqual(expectedFile, writtenFile);
+
+            // For a clean environment!
+            File.Delete(filenameTestOutput);
         }
     }
 }
