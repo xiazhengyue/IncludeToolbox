@@ -4,6 +4,8 @@
     <Node Id="Debug/testdata/source0.cpp" Label="testdata/source0.cpp" />
     <Node Id="Debug/testdata/subdir/testinclude.h" Label="testdata/subdir/testinclude.h" />
     <Node Id="Debug/testdata/subdir/inline.inl" Label="testdata/subdir/inline.inl" />
+    <Node Id="broken!" Label="broken!" />
+    <Node Id="Debug/testdata/subdir/subdir/subsub.h" Label="testdata/subdir/subdir/subsub.h" />
     <Node Id="Debug/testdata/source1.cpp" Label="testdata/source1.cpp" />
     <Node Id="Debug/testdata/testinclude.h" Label="testdata/testinclude.h" />
   </Nodes>
@@ -11,7 +13,8 @@
     <Link Source="Debug/testdata/source0.cpp" Target="Debug/testdata/subdir/testinclude.h" />
     <Link Source="Debug/testdata/source0.cpp" Target="Debug/testdata/subdir/testinclude.h" />
     <Link Source="Debug/testdata/subdir/testinclude.h" Target="Debug/testdata/subdir/inline.inl" />
-    <Link Source="Debug/testdata/subdir/inline.inl" />
+    <Link Source="Debug/testdata/subdir/testinclude.h" Target="Debug/testdata/subdir/subdir/subsub.h" />
+    <Link Source="Debug/testdata/subdir/inline.inl" Target="broken!" />
     <Link Source="Debug/testdata/source1.cpp" Target="Debug/testdata/testinclude.h" />
     <Link Source="Debug/testdata/testinclude.h" Target="Debug/testdata/subdir/testinclude.h" />
   </Links>

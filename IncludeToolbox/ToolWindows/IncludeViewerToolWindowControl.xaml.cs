@@ -53,11 +53,12 @@ namespace IncludeToolbox.ToolWindows
             else
             {
                 TreeComputeStarted();
+                var settings = (ViewerOptionsPage)IncludeToolboxPackage.Instance.GetDialogPage(typeof(ViewerOptionsPage));
                 var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
                 System.Threading.Tasks.Task.Run(
                     () =>
                     {
-                        newGraph.AddIncludesRecursively_ManualParsing(currentDocument.FullName, includeDirectories);
+                        newGraph.AddIncludesRecursively_ManualParsing(currentDocument.FullName, includeDirectories, settings.NoParsePaths);
                     }).ContinueWith(
                     (x) =>
                     {

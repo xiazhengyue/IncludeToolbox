@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace IncludeToolbox.Graph
 {
@@ -24,26 +25,26 @@ namespace IncludeToolbox.Graph
         /// Unlike in other places in the code, we always try to resolve first with the local path. So you should *not* to include it here yourself.
         /// This is necessary since the local path changes during the recursion.
         /// </param>
-        public static void AddIncludesRecursively_ManualParsing(this IncludeGraph graph, string filename, string fileContent, IEnumerable<string> includeDirectories)
+        public static void AddIncludesRecursively_ManualParsing(this IncludeGraph graph, string filename, string fileContent, IEnumerable<string> includeDirectories, IEnumerable<string> nonParseDirectories)
         {
             var graphItem = graph.CreateOrGetItem(filename, out bool isNewGraphItem);
             if (!isNewGraphItem)
                 return;
 
-            ParseIncludesRecursively(graph, graphItem, fileContent, includeDirectories);
+            ParseIncludesRecursively(graph, graphItem, fileContent, includeDirectories, nonParseDirectories);
         }
 
         /// <see cref="AddIncludesRecursively_ManualParsing(IncludeGraph, string, string, IEnumerable{string})"/>
-        public static void AddIncludesRecursively_ManualParsing(this IncludeGraph graph, string filename, IEnumerable<string> includeDirectories)
+        public static void AddIncludesRecursively_ManualParsing(this IncludeGraph graph, string filename, IEnumerable<string> includeDirectories, IEnumerable<string> nonParseDirectories)
         {
             var graphItem = graph.CreateOrGetItem(filename, out bool isNewGraphItem);
             if (!isNewGraphItem)
                 return;
 
-            ParseIncludesRecursively(graph, graphItem, File.ReadAllText(filename), includeDirectories);
+            ParseIncludesRecursively(graph, graphItem, File.ReadAllText(filename), includeDirectories, nonParseDirectories);
         }
 
-        private static void ParseIncludesRecursively(IncludeGraph graph, IncludeGraph.GraphItem parentItem, string fileContent, IEnumerable<string> includeDirectories)
+        private static void ParseIncludesRecursively(IncludeGraph graph, IncludeGraph.GraphItem parentItem, string fileContent, IEnumerable<string> includeDirectories, IEnumerable<string> nonParseDirectories)
         {
             string currentDirectory = Path.GetDirectoryName(parentItem.AbsoluteFilename);
             var includeDirectoriesPlusLocal = includeDirectories.Prepend(currentDirectory);
@@ -51,32 +52,26 @@ namespace IncludeToolbox.Graph
             var includes = Formatter.IncludeLineInfo.ParseIncludes(fileContent, Formatter.ParseOptions.KeepOnlyValidIncludes);
             foreach (var includeLine in includes)
             {
-                IncludeGraph.GraphItem includedFile = null;
-
                 // Try to resolve the include (may fail)
                 string resolvedInclude = includeLine.TryResolveInclude(includeDirectoriesPlusLocal, out bool successfullyResolved);
-                if (successfullyResolved)
-                {
-                    // We have definitely a item to link now...
-                    includedFile = graph.CreateOrGetItem_AbsoluteNormalizedPath(resolvedInclude, out bool isNewGraphItem);
+                // Create a link to the file in any case now even if resolving was unsuccessful.
+                var includedFile = graph.CreateOrGetItem_AbsoluteNormalizedPath(resolvedInclude, out bool isNewGraphItem);
 
-                    // ... but if it's old we don't want to parse it again.
-                    if (isNewGraphItem)
+                if (successfullyResolved && isNewGraphItem && !nonParseDirectories.Any(x => resolvedInclude.StartsWith(x)))
+                {
+                    bool successReadingFile = true;
+                    try
                     {
-                        bool successReadingFile = true;
-                        try
-                        {
-                            fileContent = File.ReadAllText(resolvedInclude);
-                        }
-                        catch
-                        {
-                            successReadingFile = false;
-                            Output.Instance.WriteLine("Unable to read included file: '{0}'", resolvedInclude);
-                        }
-                        if(successReadingFile)
-                        {
-                            ParseIncludesRecursively(graph, includedFile, fileContent, includeDirectories);
-                        }
+                        fileContent = File.ReadAllText(resolvedInclude);
+                    }
+                    catch
+                    {
+                        successReadingFile = false;
+                        Output.Instance.WriteLine("Unable to read included file: '{0}'", resolvedInclude);
+                    }
+                    if (successReadingFile)
+                    {
+                        ParseIncludesRecursively(graph, includedFile, fileContent, includeDirectories, nonParseDirectories);
                     }
                 }
 

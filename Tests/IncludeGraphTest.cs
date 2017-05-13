@@ -47,13 +47,15 @@ namespace Tests
         [TestMethod]
         public void CustomGraphParse()
         {
+            string[] noParseDirectories = new[] { Utils.GetExactPathName("testdata/subdir/subdir") };
+
             IncludeGraph graph = new IncludeGraph();
-            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/source0.cpp"), Enumerable.Empty<string>());
-            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/source1.cpp"), Enumerable.Empty<string>());
-            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/testinclude.h"), Enumerable.Empty<string>()); // Redundancy shouldn't matter.
+            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/source0.cpp"), Enumerable.Empty<string>(), noParseDirectories);
+            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/source1.cpp"), Enumerable.Empty<string>(), noParseDirectories);
+            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/testinclude.h"), Enumerable.Empty<string>(), noParseDirectories); // Redundancy shouldn't matter.
 
             // Check items.
-            Assert.AreEqual(5, graph.GraphItems.Count);
+            Assert.AreEqual(7, graph.GraphItems.Count);
             bool newItem = false;
             var source0 = graph.CreateOrGetItem("testdata/source0.cpp", out newItem);
             Assert.AreEqual(false, newItem);
@@ -64,6 +66,10 @@ namespace Tests
             var subdir_testinclude = graph.CreateOrGetItem("testdata/subdir/teStinclude.h", out newItem);
             Assert.AreEqual(false, newItem);
             var subdir_inline = graph.CreateOrGetItem("testdata/subdir/inline.inl", out newItem);
+            Assert.AreEqual(false, newItem);
+            var subdirsubdir_subsub = graph.CreateOrGetItem("testdata/subdir/subdir/subsub.h", out newItem);
+            Assert.AreEqual(false, newItem);
+            var broken = graph.CreateOrGetItem("broken!", out newItem);
             Assert.AreEqual(false, newItem);
 
             // Check includes in source0.
@@ -82,13 +88,20 @@ namespace Tests
             Assert.AreEqual(subdir_testinclude, testinclude.Includes[0].IncludedFile);
 
             // Check includes in subdir_testinclude.
-            Assert.AreEqual(1, subdir_testinclude.Includes.Count);
+            Assert.AreEqual(2, subdir_testinclude.Includes.Count);
             Assert.AreEqual(subdir_inline, subdir_testinclude.Includes[0].IncludedFile);
+            Assert.AreEqual(subdirsubdir_subsub, subdir_testinclude.Includes[1].IncludedFile);
 
             // Check includes in subdir_inline.
             Assert.AreEqual(1, subdir_inline.Includes.Count);
-            Assert.AreEqual(null, subdir_inline.Includes[0].IncludedFile);
+            Assert.AreEqual(broken, subdir_inline.Includes[0].IncludedFile);
             Assert.AreEqual(true, subdir_inline.Includes[0].IncludeLine.ContainsActiveInclude);
+
+            // Check includes in subdirsubdir_subsub - should be empty since we have this dir on the ignore list.
+            Assert.AreEqual(0, subdirsubdir_subsub.Includes.Count);
+
+            // Check item representing a unresolved include.
+            Assert.AreEqual(0, broken.Includes.Count);
         }
 
         private DGMLGraph RemoveAbsolutePathsFromDGML(DGMLGraph dgml, IEnumerable<string> includeDirectories)
@@ -117,9 +130,11 @@ namespace Tests
             string filenameTestOutput = "testdata/output.dgml";
             string filenameComparision = "testdata/includegraph.dgml";
 
+            string[] noParseDirectories = new[] { Utils.GetExactPathName("testdata/subdir/subdir") };
+
             IncludeGraph graph = new IncludeGraph();
-            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/source0.cpp"), Enumerable.Empty<string>());
-            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/source1.cpp"), Enumerable.Empty<string>());
+            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/source0.cpp"), Enumerable.Empty<string>(), noParseDirectories);
+            graph.AddIncludesRecursively_ManualParsing(Utils.GetExactPathName("testdata/source1.cpp"), Enumerable.Empty<string>(), noParseDirectories);
 
             // Formatting...
             var includeDirectories = new[] { Path.Combine(System.Environment.CurrentDirectory, "testdata") };

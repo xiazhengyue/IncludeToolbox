@@ -75,6 +75,9 @@
     <Compile Include="Options\IncludeWhatYouUseOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Options\ViewerOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ToolWindows\IncludeTreeViewItem.cs" />
     <Compile Include="TryAndErrorRemoval.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_CodeWindow.cs" />

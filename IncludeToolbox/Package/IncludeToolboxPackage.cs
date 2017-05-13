@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace IncludeToolbox
 {
-    [ProvideBindingPath(SubPath="")]   // Necessary to find packaged assemblies.
+    [ProvideBindingPath(SubPath = "")]   // Necessary to find packaged assemblies.
 
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
@@ -14,6 +14,7 @@ namespace IncludeToolbox
     [ProvideOptionPage(typeof(FormatterOptionsPage), Options.Constants.Category, FormatterOptionsPage.SubCategory, 1000, 1001, true)]
     [ProvideOptionPage(typeof(IncludeWhatYouUseOptionsPage), Options.Constants.Category, IncludeWhatYouUseOptionsPage.SubCategory, 1000, 1002, true)]
     [ProvideOptionPage(typeof(TryAndErrorRemovalOptionsPage), Options.Constants.Category, TryAndErrorRemovalOptionsPage.SubCategory, 1000, 1003, true)]
+    [ProvideOptionPage(typeof(ViewerOptionsPage), Options.Constants.Category, ViewerOptionsPage.SubCategory, 1000, 1004, true)]
 
     [ProvideToolWindow(typeof(ToolWindows.IncludeViewerToolWindow))]
     [Guid(IncludeToolboxPackage.PackageGuidString)]
@@ -26,12 +27,15 @@ namespace IncludeToolbox
         /// </summary>
         public const string PackageGuidString = "5c2743c4-1b3f-4edd-b6a0-4379f867d47f";
 
+        static public Package Instance { get; private set; }
+
         public IncludeToolboxPackage()
         {
             // Inside this method you can place any initialization code that does not require
             // any Visual Studio service because at this point the package object is created but
             // not sited yet inside Visual Studio environment. The place to do all the other
             // initialization is the Initialize method.
+            Instance = this;
         }
 
         #region Package Members
