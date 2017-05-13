@@ -142,5 +142,16 @@ dfdf // */ #include <there1>";
             resolvedPath = parse[3].TryResolveInclude(includeDirs);
             Assert.AreEqual("", resolvedPath);
         }
+
+        [TestMethod]
+        public void MixedLineEndings()
+        {
+            // The end of this string is tricky as it adds a 3 newlines: \r\n (win), \n (unix), \r (mac old)
+            string sourceCode = "#include <a>\n#include <b>\r\n#include <c>\r#include <d>\r\n\n\r";
+            var parseWithoutEmpty = IncludeLineInfo.ParseIncludes(sourceCode, true);
+            Assert.AreEqual(4, parseWithoutEmpty.Length);
+            var parseWithEmpty = IncludeLineInfo.ParseIncludes(sourceCode, false);
+            Assert.AreEqual(7, parseWithEmpty.Length);
+        }
     }
 }
