@@ -6,6 +6,7 @@ using System.Windows;
 using System.IO;
 using IncludeToolbox.Graph;
 using IncludeToolbox.Formatter;
+using System;
 
 namespace IncludeToolbox.ToolWindows
 {
@@ -18,6 +19,8 @@ namespace IncludeToolbox.ToolWindows
         private IncludeGraph graph = null;
 
         public IncludeTreeViewItem IncludeTreeModel { get; private set; } = new IncludeTreeViewItem(null);
+
+        public bool UseShowIncludeCompilation { get; set; } = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IncludeViewerToolWindowControl"/> class.
@@ -39,13 +42,27 @@ namespace IncludeToolbox.ToolWindows
             currentDocument = dte?.ActiveDocument;
 
             var newGraph = new IncludeGraph();
-            if (newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, OnNewTreeComputed))
+
+            if (UseShowIncludeCompilation)
             {
-                FileNameLabel.Content = currentDocument.Name;
-                ProgressBar.Visibility = Visibility.Visible;
-                NumIncludes.Content = "";
-                IncludeTreeModel.Reset(null);
-                RefreshButton.IsEnabled = false;
+                if (newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, OnNewTreeComputed))
+                {
+                    TreeComputeStarted();
+                }
+            }
+            else
+            {
+                TreeComputeStarted();
+                var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
+                System.Threading.Tasks.Task.Run(
+                    () =>
+                    {
+                        newGraph.AddIncludesRecursively_ManualParsing(currentDocument.FullName, includeDirectories);
+                    }).ContinueWith(
+                    (x) =>
+                    {
+                        Dispatcher.BeginInvoke((Action)(() => OnNewTreeComputed(newGraph, true)));
+                    });
             }
         }
 
@@ -72,6 +89,15 @@ namespace IncludeToolbox.ToolWindows
             // TODO: Progressbar and open prompt.
             DGMLGraph dgmlGraph = graph.ToDGMLGraph();
             dgmlGraph.Serialize(dlg.FileName);
+        }
+
+        private void TreeComputeStarted()
+        {
+            FileNameLabel.Content = currentDocument.Name;
+            ProgressBar.Visibility = Visibility.Visible;
+            NumIncludes.Content = "";
+            IncludeTreeModel.Reset(null);
+            RefreshButton.IsEnabled = false;
         }
 
         private void OnNewTreeComputed(IncludeGraph graph, bool success)
