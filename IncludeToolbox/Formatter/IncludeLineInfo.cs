@@ -51,7 +51,7 @@ namespace IncludeToolbox.Formatter
             int openMultiLineComments = 0;
             int openIfdefs = 0;
             string lineText;
-            while (true)
+            for (int lineNumber = 0; true; ++lineNumber)
             {
                 lineText = reader.ReadLine();
                 if (lineText == null)
@@ -114,7 +114,7 @@ namespace IncludeToolbox.Formatter
                     openIfdefs > 0)                // Inside an #ifdef block
                 {
                     if (!options.HasFlag(ParseOptions.KeepOnlyValidIncludes))
-                        outInfo.Add(new IncludeLineInfo() { lineText = lineText });
+                        outInfo.Add(new IncludeLineInfo() { lineText = lineText, LineNumber = lineNumber });
                 }
                 // A valid include
                 else
@@ -135,9 +135,9 @@ namespace IncludeToolbox.Formatter
 
                     // Might not be valid after all!
                     if (delimiter0 != -1 && delimiter1 != -1)
-                        outInfo.Add(new IncludeLineInfo() { lineText = lineText, delimiter0 = delimiter0, delimiter1 = delimiter1 });
-                    else if(!options.HasFlag(ParseOptions.KeepOnlyValidIncludes))
-                        outInfo.Add(new IncludeLineInfo() { lineText = lineText });
+                        outInfo.Add(new IncludeLineInfo() { lineText = lineText, LineNumber = lineNumber, delimiter0 = delimiter0, delimiter1 = delimiter1 });
+                    else if (!options.HasFlag(ParseOptions.KeepOnlyValidIncludes))
+                        outInfo.Add(new IncludeLineInfo() { lineText = lineText, LineNumber = lineNumber });
                 }
             }
 
@@ -269,6 +269,14 @@ namespace IncludeToolbox.Formatter
             get { return lineText; }
         }
         private string lineText = "";
+
+        /// <summary>
+        /// Line number in which this include line occurred within its original file.
+        /// </summary>
+        /// <remarks>
+        /// Starts of course with 0 unlike displayed line numbers.
+        /// </remarks>
+        public int LineNumber { get; private set; } = -1;
 
         private int delimiter0 = -1;
         private int delimiter1 = -1;

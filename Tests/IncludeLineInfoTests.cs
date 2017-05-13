@@ -37,6 +37,9 @@ int main () {}";
 
             parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
             Assert.AreEqual(parse.Count, 3);
+            Assert.AreEqual(0, parse[0].LineNumber);
+            Assert.AreEqual(1, parse[1].LineNumber);
+            Assert.AreEqual(3, parse[2].LineNumber);
         }
 
         [TestMethod]
@@ -105,11 +108,15 @@ dfdf // */ #include <there1>";
             Assert.AreEqual(2, parse.Count(x => x.LineType != IncludeLineInfo.Type.NoInclude));
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[parse.Count - 1].LineType);
+            Assert.AreEqual(0, parse[0].LineNumber);
+            Assert.AreEqual(1, parse[1].LineNumber);
 
             parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.KeepOnlyValidIncludes | ParseOptions.IgnoreIncludesInPreprocessorConditionals);
             Assert.AreEqual(2, parse.Count);
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[parse.Count - 1].LineType);
+            Assert.AreEqual(0, parse[0].LineNumber);
+            Assert.AreEqual(12, parse[1].LineNumber);
 
             parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
             Assert.AreEqual(5, parse.Count(x => x.LineType != IncludeLineInfo.Type.NoInclude));
