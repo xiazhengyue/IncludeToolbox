@@ -106,6 +106,11 @@ dfdf // */ #include <there1>";
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[parse.Count - 1].LineType);
 
+            parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.KeepOnlyValidIncludes | ParseOptions.IgnoreIncludesInPreprocessorConditionals);
+            Assert.AreEqual(2, parse.Count);
+            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
+            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[parse.Count - 1].LineType);
+
             parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
             Assert.AreEqual(5, parse.Count(x => x.LineType != IncludeLineInfo.Type.NoInclude));
         }
