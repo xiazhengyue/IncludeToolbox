@@ -8,6 +8,7 @@
              x:Class="IncludeToolbox.ToolWindows.IncludeViewerToolWindowControl"
              mc:Ignorable="d"
              DataContext="{Binding RelativeSource={RelativeSource Self}}">
+    <!-- We're binding to the code behind. Not a purist MVVM pattern but good enough for this simple UI -->
     <UserControl.Resources>
         <!-- Use VS styles http://stackoverflow.com/questions/18913208/colors-in-visual-studio-extension -->
         <ResourceDictionary>
@@ -59,7 +60,7 @@
                 <ColumnDefinition Width="140"/>
                 <ColumnDefinition Width="50*"/>
             </Grid.ColumnDefinitions>
-            <Label x:Name="statLabel0" Content="Num Includes"  Grid.Row="0" Grid.Column="0"/>
+            <Label Content="Num Includes"  Grid.Row="0" Grid.Column="0"/>
             <Label x:Name="NumIncludes" Content="-" Grid.Row="0" Grid.Column="1"/>
         </Grid>
         <Button x:Name="ButtonSaveGraph" Content="Save Graph..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto" Height="29" Click="Click_SaveGraph" Grid.Row="4" IsEnabled="False"/>

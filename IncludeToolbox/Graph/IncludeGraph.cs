@@ -32,24 +32,6 @@ namespace IncludeToolbox.Graph
             /// The original include line in sourceFile.
             /// </summary>
             Formatter.IncludeLineInfo IncludeLine;
-
-
-            /*
-            // Two includes are treated as the same if they include the same file
-            // See GraphItem.Includes for more remarks on this.
-
-            public override int GetHashCode()
-            {
-                return IncludedFile.GetHashCode();
-            }
-            public override bool Equals(object obj)
-            {
-                if (!(obj is Include))
-                    return false;
-                return ((Include)obj).IncludedFile == IncludedFile;
-            }
-
-            */
         }
 
         public class GraphItem
@@ -137,6 +119,21 @@ namespace IncludeToolbox.Graph
                 graphItems.Add(absoluteFilename, outItem);
                 return outItem;
             }
+        }
+
+        public DGMLGraph ToDGMLGraph()
+        {
+            DGMLGraph dgmlGraph = new DGMLGraph();
+            foreach(GraphItem node in graphItems.Values)
+            {
+                dgmlGraph.Nodes.Add(new DGMLGraph.Node { Id = node.AbsoluteFilename, Label = node.FormattedName });
+                foreach (Include include in node.Includes)
+                {
+                    dgmlGraph.Links.Add(new DGMLGraph.Link { Source = node.AbsoluteFilename, Target = include.IncludedFile.AbsoluteFilename });
+                }
+            }
+
+            return dgmlGraph;
         }
     }
 }

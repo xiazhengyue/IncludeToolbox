@@ -49,22 +49,6 @@ namespace IncludeToolbox.ToolWindows
             }
         }
 
-        private void PopulateDGMLGraph(DGMLGraph graph, IncludeGraph.GraphItem item)
-        {
-            // TODO: Port to IncludeGraph
-
-            string fullIncludePath = item.AbsoluteFilename;
-            string includeName = item.FormattedName;
-
-            graph.Nodes.Add(new DGMLGraph.Node { Id = fullIncludePath, Label = includeName });
-            
-            foreach (var link in item.Includes)
-            {
-                graph.Links.Add(new DGMLGraph.Link { Source = fullIncludePath, Target = link.IncludedFile.AbsoluteFilename });
-                PopulateDGMLGraph(graph, link.IncludedFile);
-            }
-        }
-
         private void Click_SaveGraph(object sender, RoutedEventArgs e)
         {
             if (graph == null)
@@ -85,8 +69,7 @@ namespace IncludeToolbox.ToolWindows
             if (!result ?? false)
                 return;
 
-            Graph.DGMLGraph dgmlGraph = new DGMLGraph();
-            PopulateDGMLGraph(dgmlGraph, graph.CreateOrGetItem(currentDocument.FullName));
+            DGMLGraph dgmlGraph = graph.ToDGMLGraph();
             dgmlGraph.Serialize(dlg.FileName);
         }
 
