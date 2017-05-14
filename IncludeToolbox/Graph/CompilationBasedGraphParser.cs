@@ -35,17 +35,12 @@ namespace IncludeToolbox.Graph
                 return false;
             }
 
-            CompilationBasedGraphParser.onCompleted = onCompleted;
-            CompilationBasedGraphParser.documentBeingCompiled = document;
-            CompilationBasedGraphParser.graphBeingExtended = graph;
-
             var dte = VSUtils.GetDTE();
             if (dte == null)
             {
                 Output.Instance.ErrorMsg("Failed to acquire dte object.");
                 return false;
             }
-            dte.Events.BuildEvents.OnBuildProjConfigDone += OnBuildConfigFinished;
 
             try
             {
@@ -73,6 +68,12 @@ namespace IncludeToolbox.Graph
                         return false;
                     }
                 }
+
+                // Only after we're through all early out error cases, set static compilation infos.
+                dte.Events.BuildEvents.OnBuildProjConfigDone += OnBuildConfigFinished;
+                CompilationBasedGraphParser.onCompleted = onCompleted;
+                CompilationBasedGraphParser.documentBeingCompiled = document;
+                CompilationBasedGraphParser.graphBeingExtended = graph;
 
                 // Even with having the config changed and having compile force==true, we still need to make a dummy change in order to enforce recompilation of this file.
                 {
