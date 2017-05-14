@@ -3,10 +3,8 @@ using System.ComponentModel;
 
 namespace IncludeToolbox.GraphWindow
 {
-    public class IncludeTreeViewItem : INotifyPropertyChanged
+    public class IncludeTreeViewItem : PropertyChangedBase
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
         public string Name { get; private set; }
 
         public string ToolTip { get; private set; }
@@ -35,9 +33,9 @@ namespace IncludeToolbox.GraphWindow
             Name = graphItem?.FormattedName ?? "";
             ToolTip = graphItem?.AbsoluteFilename ?? "";
 
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Children)));
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ToolTip)));
+            OnNotifyPropertyChanged(nameof(Name));
+            OnNotifyPropertyChanged(nameof(Children));
+            OnNotifyPropertyChanged(nameof(ToolTip));
         }
 
         private void GenerateChildItems()

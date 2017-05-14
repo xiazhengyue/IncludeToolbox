@@ -1,23 +1,21 @@
-﻿using System.Windows.Media;
-using Microsoft.VisualStudio.PlatformUI;
-using Microsoft.VisualStudio.Shell;
-using System.Windows.Controls;
-using System.Windows;
-using System.IO;
+﻿using IncludeToolbox.Formatter;
 using IncludeToolbox.Graph;
-using IncludeToolbox.Formatter;
+using Microsoft.VisualStudio.PlatformUI;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO;
 using System.Linq;
 
 namespace IncludeToolbox.GraphWindow
 {
-    public partial class IncludeGraphControl : UserControl
+    public class IncludeGraphViewModel : PropertyChangedBase
     {
-        private EnvDTE.Document currentDocument = null;
-        private IncludeGraph graph = null;
-
         public IncludeTreeViewItem IncludeTreeModel { get; private set; } = new IncludeTreeViewItem(null);
+
+        private IncludeGraph graph = null;
+        private EnvDTE.Document currentDocument = null;
+
 
         public enum RefreshMode
         {
@@ -33,46 +31,55 @@ namespace IncludeToolbox.GraphWindow
                 if (activeRefreshMode != value)
                 {
                     activeRefreshMode = value;
-                    UpdateRefreshButton();
+                    OnNotifyPropertyChanged();
+                    UpdateRefreshability();
                 }
-                //OnPropertyChanged(nameof(ActiveRefreshMode));
             }
         }
         RefreshMode activeRefreshMode;
 
         public IEnumerable<RefreshMode> PossibleRefreshModes => Enum.GetValues(typeof(RefreshMode)).Cast<RefreshMode>();
-           
+
+        public bool CanRefresh
+        {
+            get => canRefresh;
+            private set
+            {
+                canRefresh = value;
+                OnNotifyPropertyChanged();
+            }
+        }
+        bool canRefresh;
+
+        public string RefreshTooltip
+        {
+            get => refreshTooltip;
+            set
+            {
+                refreshTooltip = value;
+                OnNotifyPropertyChanged();
+            }
+        }
+        string refreshTooltip;
+
 
         // Need to keep these guys alive.
         private EnvDTE.WindowEvents windowEvents;
-        //private EnvDTE.BuildEvents buildEvents;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="IncludeGraphControl"/> class.
-        /// </summary>
-        public IncludeGraphControl()
+        public IncludeGraphViewModel()
         {
-            InitializeComponent();
-
             // UI update on dte events.
             var dte = VSUtils.GetDTE();
             if (dte != null)
             {
                 windowEvents = dte.Events.WindowEvents;
-                windowEvents.WindowActivated += (x,y) => UpdateRefreshButton();
-                //buildEvents = dte.Events.BuildEvents;
-                //buildEvents.OnBuildBegin += (x, y) => UpdateRefreshButton();
-                //buildEvents.OnBuildDone += (x, y) => UpdateRefreshButton();
+                windowEvents.WindowActivated += (x, y) => UpdateRefreshability();
             }
+
+            UpdateRefreshability();
         }
 
-        private static Brush GetSolidBrush(ThemeResourceKey themeResourceKey)
-        {
-            var color = VSColorTheme.GetThemedColor(themeResourceKey);
-            return new SolidColorBrush(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
-        }
-
-        private void UpdateRefreshButton()
+        private void UpdateRefreshability()
         {
             var dte = VSUtils.GetDTE();
             currentDocument = dte?.ActiveDocument;
@@ -82,35 +89,40 @@ namespace IncludeToolbox.GraphWindow
             // This is why we just check for "having a document" here for now.
             if (currentDocument == null)
             {
-                RefreshButton.IsEnabled = false;
-                RefreshButton.ToolTip = "No open document";
+                CanRefresh = false;
+                RefreshTooltip = "No open document";
             }
             else
             {
                 if (activeRefreshMode == RefreshMode.ShowIncludes)
                 {
-                    RefreshButton.IsEnabled = CompilationBasedGraphParser.CanPerformShowIncludeCompilation(currentDocument, out string reasonForFailure);
-                    RefreshButton.ToolTip = reasonForFailure;
+                    CanRefresh = CompilationBasedGraphParser.CanPerformShowIncludeCompilation(currentDocument, out string reasonForFailure);
+                    RefreshTooltip = reasonForFailure;
                 }
                 else
                 {
-                    RefreshButton.IsEnabled = true;
-                    RefreshButton.ToolTip = null;
+                    CanRefresh = true;
+                    RefreshTooltip = null;
                 }
             }
         }
 
-        private void Click_Refresh(object sender, RoutedEventArgs e)
+        public delegate void GraphCreationFinished(bool success, int numIncludes, string filename);
+
+        public void RefreshIncludeGraph(System.Windows.Threading.Dispatcher dispatcher, GraphCreationFinished finishedCallback)
         {
             var dte = VSUtils.GetDTE();
             currentDocument = dte?.ActiveDocument;
 
             var newGraph = new IncludeGraph();
 
+            CanRefresh = false;
+            RefreshTooltip = "Update in Progress";
+
             switch (activeRefreshMode)
             {
                 case RefreshMode.ShowIncludes:
-                    if (newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, OnNewTreeComputed))
+                    if (newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, (x,y) => OnNewTreeComputed(x,y, finishedCallback)))
                     {
                         TreeComputeStarted();
                     }
@@ -127,7 +139,7 @@ namespace IncludeToolbox.GraphWindow
                         }).ContinueWith(
                         (x) =>
                         {
-                            Dispatcher.BeginInvoke((Action)(() => OnNewTreeComputed(newGraph, true)));
+                            dispatcher.BeginInvoke((Action)(() => OnNewTreeComputed(newGraph, true, finishedCallback)));
                         });
                     break;
 
@@ -136,7 +148,7 @@ namespace IncludeToolbox.GraphWindow
             }
         }
 
-        private void Click_SaveGraph(object sender, RoutedEventArgs e)
+        public void SaveGraph()
         {
             if (graph == null)
             {
@@ -156,44 +168,35 @@ namespace IncludeToolbox.GraphWindow
             if (!result ?? false)
                 return;
 
-            // TODO: Progressbar and open prompt.
             DGMLGraph dgmlGraph = graph.ToDGMLGraph();
             dgmlGraph.Serialize(dlg.FileName);
         }
 
         private void TreeComputeStarted()
         {
-            FileNameLabel.Content = currentDocument.Name;
-            ProgressBar.Visibility = Visibility.Visible;
-            NumIncludes.Content = "";
             IncludeTreeModel.Reset(null);
-            RefreshButton.IsEnabled = false;
         }
 
-        private void OnNewTreeComputed(IncludeGraph graph, bool success)
+        private void OnNewTreeComputed(IncludeGraph graph, bool success, GraphCreationFinished finishedCallback)
         {
-            ProgressBar.Visibility = Visibility.Hidden;
-            UpdateRefreshButton();
+            UpdateRefreshability();
 
             if (success)
             {
                 this.graph = graph;
-                FileNameLabel.Content = currentDocument.Name;
-                NumIncludes.Content = (graph.GraphItems.Count - 1).ToString(); // The document is itself part of the graph.
-                ButtonSaveGraph.IsEnabled = true;
+
+                finishedCallback(true, graph.GraphItems.Count - 1, currentDocument.Name);
 
                 var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
                 includeDirectories.Insert(0, PathUtil.Normalize(currentDocument.Path) + Path.DirectorySeparatorChar);
 
-                foreach(var item in graph.GraphItems)
+                foreach (var item in graph.GraphItems)
                     item.FormattedName = IncludeFormatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
                 IncludeTreeModel.Reset(graph.CreateOrGetItem(currentDocument.FullName, out _));
             }
             else
             {
-                FileNameLabel.Content = "";
-                NumIncludes.Content = "";
-                ButtonSaveGraph.IsEnabled = false;
+                finishedCallback(false, 0, "");
             }
         }
     }

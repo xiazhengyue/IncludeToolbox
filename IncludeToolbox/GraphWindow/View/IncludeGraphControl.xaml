@@ -5,10 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:IncludeToolbox.GraphWindow"
              x:Class="IncludeToolbox.GraphWindow.IncludeGraphControl"
-             mc:Ignorable="d"
-             DataContext="{Binding RelativeSource={RelativeSource Self}}">
+             mc:Ignorable="d">
     <!-- We're binding to the code behind. Not a purist MVVM pattern but good enough for this simple UI -->
 
+    <UserControl.DataContext>
+        <local:IncludeGraphViewModel/>
+    </UserControl.DataContext>
+    
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -30,7 +33,8 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <Button x:Name="RefreshButton" Content="Refresh" HorizontalAlignment="Left" VerticalAlignment="Center" Width="60" Height="Auto" Click="Click_Refresh"/>
+            <Button Content="Refresh" HorizontalAlignment="Left" VerticalAlignment="Center" Width="60" Height="Auto"
+                    Click="Click_Refresh" IsEnabled="{Binding CanRefresh}" ToolTip="{Binding RefreshTooltip}"/>
             <ComboBox Width="140" Height="Auto"  Margin="5 0 0 0" SelectedItem="{Binding ActiveRefreshMode}" ItemsSource="{Binding PossibleRefreshModes}"/>
         </StackPanel>
 

@@ -66,6 +66,8 @@
     <Compile Include="Commands\CommandSetGuids.cs" />
     <Compile Include="Commands\IncludeViewerToolWindowCommand.cs" />
     <Compile Include="Commands\IncludeWhatYouUse.cs" />
+    <Compile Include="GraphWindow\PropertyChangedBase.cs" />
+    <Compile Include="GraphWindow\ViewModel\IncludeGraphViewModel.cs" />
     <Compile Include="Graph\CustomGraphParser.cs" />
     <Compile Include="Graph\DGMLGraph.cs" />
     <Compile Include="Graph\CompilationBasedGraphParser.cs" />
@@ -78,7 +80,7 @@
     <Compile Include="Options\ViewerOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GraphWindow\IncludeTreeViewItem.cs" />
+    <Compile Include="GraphWindow\ViewModel\IncludeTreeViewItem.cs" />
     <Compile Include="TryAndErrorRemoval.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_CodeWindow.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_Project.cs" />
@@ -90,8 +92,8 @@
     <Compile Include="Options\TryAndErrorRemovalOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GraphWindow\IncludeGraphToolWindow.cs" />
-    <Compile Include="GraphWindow\IncludeGraphControl.xaml.cs">
+    <Compile Include="GraphWindow\View\IncludeGraphToolWindow.cs" />
+    <Compile Include="GraphWindow\View\IncludeGraphControl.xaml.cs">
       <DependentUpon>IncludeGraphControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Options\FormatterOptionsPage.cs">
@@ -300,11 +302,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="GraphWindow\IncludeGraphControl.xaml">
+    <Page Include="GraphWindow\View\IncludeGraphControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="GraphWindow\ToolWindowStyle.xaml">
+    <Page Include="GraphWindow\View\ToolWindowStyle.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
