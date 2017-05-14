@@ -26,6 +26,11 @@ namespace IncludeToolbox.Commands
         protected virtual void SetupMenuCommand()
         {
             OleMenuCommandService commandService = ServiceProvider.GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            if(commandService == null)
+            {
+                Output.Instance.WriteLine("Failed to retrieve MenuCommandService. No commands could be registered!");
+                return;
+            }
 
             EventHandler callback = (sender, e) =>
             {

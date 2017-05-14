@@ -8,7 +8,7 @@ namespace IncludeToolbox.Commands
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class IncludeViewerToolWindowCommand : CommandBase<IncludeViewerToolWindowCommand>
+    internal sealed class IncludeGraphToolWindow : CommandBase<IncludeGraphToolWindow>
     {
         public override CommandID CommandID => new CommandID(CommandSetGuids.ToolGroup, 0x0102);
 
@@ -25,11 +25,14 @@ namespace IncludeToolbox.Commands
             ToolWindowPane window = Package.FindToolWindow(typeof(GraphWindow.IncludeGraphToolWindow), 0, true);
             if (window?.Frame == null)
             {
-                throw new NotSupportedException("Cannot create tool window");
+                Output.Instance.ErrorMsg("Failed to open Include Graph window!");
             }
-
-            IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
-            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(windowFrame.Show());
+            else
+            {
+                IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
+                windowFrame.SetProperty((int)__VSFPROPID.VSFPROPID_CmdUIGuid, GraphWindow.IncludeGraphToolWindow.GUIDString);
+                Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(windowFrame.Show());
+            }
         }
     }
 }

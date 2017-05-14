@@ -64,8 +64,11 @@
   <ItemGroup>
     <Compile Include="Commands\CommandBase.cs" />
     <Compile Include="Commands\CommandSetGuids.cs" />
-    <Compile Include="Commands\IncludeViewerToolWindowCommand.cs" />
+    <Compile Include="Commands\IncludeGraphToolWindow.cs" />
     <Compile Include="Commands\IncludeWhatYouUse.cs" />
+    <Compile Include="GraphWindow\Commands\RefreshModeComboBoxOptions.cs" />
+    <Compile Include="GraphWindow\Commands\RefreshModeComboBox.cs" />
+    <Compile Include="GraphWindow\Commands\RefreshIncludeGraph.cs" />
     <Compile Include="GraphWindow\PropertyChangedBase.cs" />
     <Compile Include="GraphWindow\ViewModel\IncludeGraphViewModel.cs" />
     <Compile Include="Graph\CustomGraphParser.cs" />
@@ -279,7 +282,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <VSCTCompile Include="Package\IncludeToolboxPackage.vsct">
+    <VSCTCompile Include="Package\CommandDefinitions.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
@@ -300,6 +303,7 @@
     <Content Include="Resources\IncludeFormatterPackage.png">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="Resources\IncludeGraphToolbarIcons.png" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="GraphWindow\View\IncludeGraphControl.xaml">

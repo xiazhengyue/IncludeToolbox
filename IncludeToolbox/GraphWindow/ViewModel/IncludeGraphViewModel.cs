@@ -11,17 +11,18 @@ namespace IncludeToolbox.GraphWindow
 {
     public class IncludeGraphViewModel : PropertyChangedBase
     {
-        public IncludeTreeViewItem IncludeTreeModel { get; private set; } = new IncludeTreeViewItem(null);
-
+        public IncludeTreeViewItem IncludeTreeModel { get; set; } = new IncludeTreeViewItem(null);
         private IncludeGraph graph = null;
         private EnvDTE.Document currentDocument = null;
 
 
         public enum RefreshMode
         {
-            ShowIncludes,
             DirectParsing,
+            ShowIncludes,
         }
+
+        public static readonly string[] RefreshModeNames = new string[] { "Direct Parsing", "Compile /showIncludes" };
 
         public RefreshMode ActiveRefreshMode
         {
@@ -32,36 +33,57 @@ namespace IncludeToolbox.GraphWindow
                 {
                     activeRefreshMode = value;
                     OnNotifyPropertyChanged();
-                    UpdateRefreshability();
+                    UpdateCanRefresh();
                 }
             }
         }
-        RefreshMode activeRefreshMode;
+        RefreshMode activeRefreshMode = RefreshMode.DirectParsing;
 
         public IEnumerable<RefreshMode> PossibleRefreshModes => Enum.GetValues(typeof(RefreshMode)).Cast<RefreshMode>();
 
         public bool CanRefresh
         {
             get => canRefresh;
-            private set
-            {
-                canRefresh = value;
-                OnNotifyPropertyChanged();
-            }
+            private set { canRefresh = value; OnNotifyPropertyChanged(); }
         }
-        bool canRefresh;
+        private bool canRefresh = false;
 
         public string RefreshTooltip
         {
             get => refreshTooltip;
-            set
+            set { refreshTooltip = value; OnNotifyPropertyChanged(); }
+        }
+        private string refreshTooltip = "";
+
+        public bool RefreshInProgress
+        {
+            get => refreshInProgress;
+            private set
             {
-                refreshTooltip = value;
+                refreshInProgress = value;
+                UpdateCanRefresh();
                 OnNotifyPropertyChanged();
+                OnNotifyPropertyChanged(nameof(CanSave));
             }
         }
-        string refreshTooltip;
+        private bool refreshInProgress = false;
 
+        public string GraphRootFilename
+        {
+            get => graphRootFilename;
+            private set { graphRootFilename = value; OnNotifyPropertyChanged(); }
+        }
+        private string graphRootFilename = "<No File>";
+
+        public int NumIncludes
+        {
+            get => (graph?.GraphItems.Count ?? 1) - 1;
+        }
+
+        public bool CanSave
+        {
+            get => !refreshInProgress && graph != null && graph.GraphItems.Count > 0;
+        }
 
         // Need to keep these guys alive.
         private EnvDTE.WindowEvents windowEvents;
@@ -73,21 +95,29 @@ namespace IncludeToolbox.GraphWindow
             if (dte != null)
             {
                 windowEvents = dte.Events.WindowEvents;
-                windowEvents.WindowActivated += (x, y) => UpdateRefreshability();
+                windowEvents.WindowActivated += (x, y) => UpdateActiveDoc();
             }
 
-            UpdateRefreshability();
+            UpdateActiveDoc();
         }
 
-        private void UpdateRefreshability()
+        private void UpdateActiveDoc()
         {
             var dte = VSUtils.GetDTE();
-            currentDocument = dte?.ActiveDocument;
+            var newDoc = dte?.ActiveDocument;
+            if (newDoc != currentDocument)
+            {
+                currentDocument = newDoc;
+                UpdateCanRefresh();
+            }
+        }
 
+        private void UpdateCanRefresh()
+        {
             // In any case we need a it to be a document.
             // Limiting to C++ document is a bit harsh though for the general case as we might not have this information depending on the project type.
             // This is why we just check for "having a document" here for now.
-            if (currentDocument == null)
+            if (currentDocument == null || RefreshInProgress)
             {
                 CanRefresh = false;
                 RefreshTooltip = "No open document";
@@ -107,44 +137,51 @@ namespace IncludeToolbox.GraphWindow
             }
         }
 
-        public delegate void GraphCreationFinished(bool success, int numIncludes, string filename);
-
-        public void RefreshIncludeGraph(System.Windows.Threading.Dispatcher dispatcher, GraphCreationFinished finishedCallback)
+        public void RefreshIncludeGraph()
         {
-            var dte = VSUtils.GetDTE();
-            currentDocument = dte?.ActiveDocument;
+            UpdateActiveDoc();
 
             var newGraph = new IncludeGraph();
 
-            CanRefresh = false;
             RefreshTooltip = "Update in Progress";
+            GraphRootFilename = currentDocument?.Name ?? "<No File>";
+            RefreshInProgress = true;
 
-            switch (activeRefreshMode)
+            try
             {
-                case RefreshMode.ShowIncludes:
-                    if (newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, (x,y) => OnNewTreeComputed(x,y, finishedCallback)))
-                    {
-                        TreeComputeStarted();
-                    }
-                    break;
-
-                case RefreshMode.DirectParsing:
-                    TreeComputeStarted();
-                    var settings = (ViewerOptionsPage)IncludeToolboxPackage.Instance.GetDialogPage(typeof(ViewerOptionsPage));
-                    var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
-                    System.Threading.Tasks.Task.Run(
-                        () =>
+                switch (activeRefreshMode)
+                {
+                    case RefreshMode.ShowIncludes:
+                        if (newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, OnNewTreeComputed))
                         {
-                            newGraph.AddIncludesRecursively_ManualParsing(currentDocument.FullName, includeDirectories, settings.NoParsePaths);
-                        }).ContinueWith(
-                        (x) =>
-                        {
-                            dispatcher.BeginInvoke((Action)(() => OnNewTreeComputed(newGraph, true, finishedCallback)));
-                        });
-                    break;
+                            ResetIncludeTreeModel(null);
+                        }
+                        break;
 
-                default:
-                    throw new NotImplementedException();
+                    case RefreshMode.DirectParsing:
+                        ResetIncludeTreeModel(null);
+                        var settings = (ViewerOptionsPage)IncludeToolboxPackage.Instance.GetDialogPage(typeof(ViewerOptionsPage));
+                        var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
+                        var uiThreadDispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
+                        System.Threading.Tasks.Task.Run(
+                            () =>
+                            {
+                                newGraph.AddIncludesRecursively_ManualParsing(currentDocument.FullName, includeDirectories, settings.NoParsePaths);
+                            }).ContinueWith(
+                            (x) =>
+                            {
+                                uiThreadDispatcher.BeginInvoke((Action)(() => OnNewTreeComputed(newGraph, true)));
+                            });
+                        break;
+
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+            catch(Exception e)
+            {
+                Output.Instance.WriteLine("Unexpected error when refreshing Include Graph: {0}", e);
+                OnNewTreeComputed(newGraph, false);
             }
         }
 
@@ -156,6 +193,7 @@ namespace IncludeToolbox.GraphWindow
                 return;
             }
 
+            // Todo: This is UI and does not really belong here.
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
             dlg.FileName = ".dgml";
             dlg.DefaultExt = ".dgml";
@@ -172,32 +210,33 @@ namespace IncludeToolbox.GraphWindow
             dgmlGraph.Serialize(dlg.FileName);
         }
 
-        private void TreeComputeStarted()
+        private void ResetIncludeTreeModel(IncludeGraph.GraphItem root)
         {
-            IncludeTreeModel.Reset(null);
+            IncludeTreeModel.Reset(root);
+            OnNotifyPropertyChanged(nameof(IncludeTreeModel));
+            OnNotifyPropertyChanged(nameof(CanSave));
         }
 
-        private void OnNewTreeComputed(IncludeGraph graph, bool success, GraphCreationFinished finishedCallback)
+        private void OnNewTreeComputed(IncludeGraph graph, bool success)
         {
-            UpdateRefreshability();
+            RefreshInProgress = false;
 
             if (success)
             {
                 this.graph = graph;
-
-                finishedCallback(true, graph.GraphItems.Count - 1, currentDocument.Name);
 
                 var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
                 includeDirectories.Insert(0, PathUtil.Normalize(currentDocument.Path) + Path.DirectorySeparatorChar);
 
                 foreach (var item in graph.GraphItems)
                     item.FormattedName = IncludeFormatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
-                IncludeTreeModel.Reset(graph.CreateOrGetItem(currentDocument.FullName, out _));
+                ResetIncludeTreeModel(graph.CreateOrGetItem(currentDocument.FullName, out _));
+
+                OnNotifyPropertyChanged(nameof(IncludeTreeModel));
+                OnNotifyPropertyChanged(nameof(CanSave));
             }
-            else
-            {
-                finishedCallback(false, 0, "");
-            }
+
+            OnNotifyPropertyChanged(nameof(NumIncludes));
         }
     }
 }

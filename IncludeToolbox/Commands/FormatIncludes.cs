@@ -29,7 +29,7 @@ namespace IncludeToolbox.Commands
             base.SetupMenuCommand();
             menuCommand.BeforeQueryStatus += UpdateVisibility;
         }
-
+        
         private void UpdateVisibility(object sender, EventArgs e)
         {
             // Check whether any includes are selected.

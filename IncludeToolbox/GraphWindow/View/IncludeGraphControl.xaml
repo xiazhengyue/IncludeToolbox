@@ -17,12 +17,12 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="ToolWindowStyle.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
         </ResourceDictionary>
     </UserControl.Resources>
     
     <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*" MinHeight="80"/>
             <RowDefinition Height="Auto"/>
@@ -32,27 +32,21 @@
             <ColumnDefinition MinWidth="150" />
         </Grid.ColumnDefinitions>
 
-        <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <Button Content="Refresh" HorizontalAlignment="Left" VerticalAlignment="Center" Width="60" Height="Auto"
-                    Click="Click_Refresh" IsEnabled="{Binding CanRefresh}" ToolTip="{Binding RefreshTooltip}"/>
-            <ComboBox Width="140" Height="Auto"  Margin="5 0 0 0" SelectedItem="{Binding ActiveRefreshMode}" ItemsSource="{Binding PossibleRefreshModes}"/>
-        </StackPanel>
+        <Label Content="{Binding GraphRootFilename}" FontWeight="Bold" FontFamily="Consolas" Grid.Row="0"/>
 
-        <Label x:Name="FileNameLabel" Content="&lt;File&gt;" FontWeight="Bold" FontSize="16" FontFamily="Consolas" Grid.Row="1"/>
-
-        <TreeView Grid.Row="2" ItemsSource="{Binding IncludeTreeModel.Children}">
+        <TreeView Grid.Row="1" ItemsSource="{Binding IncludeTreeModel.Children}">
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
                     <TextBlock Text="{Binding Name}" ToolTip="{Binding ToolTip}"/>
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
-        <ProgressBar x:Name="ProgressBar" Height="25" VerticalAlignment="Center" Width="130" Grid.Row="2" IsIndeterminate="True" Visibility="Hidden"/>
+        <ProgressBar Height="25" VerticalAlignment="Center" Width="130" Grid.Row="1" IsIndeterminate="True" Visibility="{Binding Path=RefreshInProgress, Converter={StaticResource BoolToVis}}"/>
         
-        <StackPanel Grid.Row="3" Orientation="Horizontal">
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
             <Label Content="Unique File Count:"/>
-            <Label x:Name="NumIncludes" Content="-"/>
+            <Label Content="{Binding Path=NumIncludes}"/>
         </StackPanel>
-        <Button x:Name="ButtonSaveGraph" Content="Save Graph..." Width="75" Height="29" HorizontalAlignment="Left" VerticalAlignment="Top" Click="Click_SaveGraph" Grid.Row="4" IsEnabled="False"/>
+        <Button Content="Save Graph..." Width="75" Height="29" HorizontalAlignment="Left" VerticalAlignment="Top" Click="Click_SaveGraph" Grid.Row="3"/>
     </Grid>
 </UserControl>

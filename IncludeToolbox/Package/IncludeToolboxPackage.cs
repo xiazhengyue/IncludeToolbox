@@ -46,7 +46,7 @@ namespace IncludeToolbox
         /// </summary>
         protected override void Initialize()
         {
-            Commands.IncludeViewerToolWindowCommand.Initialize(this);
+            Commands.IncludeGraphToolWindow.Initialize(this);
             Commands.FormatIncludes.Initialize(this);
             Commands.IncludeWhatYouUse.Initialize(this);
             Commands.TryAndErrorRemoval_CodeWindow.Initialize(this);
