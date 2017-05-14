@@ -12,10 +12,6 @@ namespace IncludeToolbox.Commands
     {
         public override CommandID CommandID => new CommandID(CommandSetGuids.ToolGroup, 0x0102);
 
-        public IncludeViewerToolWindowCommand()
-        {
-        }
-
         /// <summary>
         /// Shows the tool window when the menu item is clicked.
         /// </summary>
