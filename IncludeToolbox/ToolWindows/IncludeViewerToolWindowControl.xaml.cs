@@ -7,6 +7,8 @@ using System.IO;
 using IncludeToolbox.Graph;
 using IncludeToolbox.Formatter;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace IncludeToolbox.ToolWindows
 {
@@ -20,19 +22,29 @@ namespace IncludeToolbox.ToolWindows
 
         public IncludeTreeViewItem IncludeTreeModel { get; private set; } = new IncludeTreeViewItem(null);
 
-        public bool UseShowIncludeCompilation
+        public enum RefreshMode
         {
-            get => useShowIncludeCompilation;
+            ShowIncludes,
+            DirectParsing,
+        }
+
+        public RefreshMode ActiveRefreshMode
+        {
+            get => activeRefreshMode;
             set
             {
-                if (useShowIncludeCompilation != value)
+                if (activeRefreshMode != value)
                 {
-                    useShowIncludeCompilation = value;
+                    activeRefreshMode = value;
                     UpdateRefreshButton();
                 }
+                //OnPropertyChanged(nameof(ActiveRefreshMode));
             }
         }
-        private bool useShowIncludeCompilation = false;
+        RefreshMode activeRefreshMode;
+
+        public IEnumerable<RefreshMode> PossibleRefreshModes => Enum.GetValues(typeof(RefreshMode)).Cast<RefreshMode>();
+           
 
         // Need to keep these guys alive.
         private EnvDTE.WindowEvents windowEvents;
@@ -78,7 +90,7 @@ namespace IncludeToolbox.ToolWindows
             }
             else
             {
-                if (UseShowIncludeCompilation)
+                if (activeRefreshMode == RefreshMode.ShowIncludes)
                 {
                     RefreshButton.IsEnabled = CompilationBasedGraphParser.CanPerformShowIncludeCompilation(currentDocument, out string reasonForFailure);
                     RefreshButton.ToolTip = reasonForFailure;
@@ -98,27 +110,32 @@ namespace IncludeToolbox.ToolWindows
 
             var newGraph = new IncludeGraph();
 
-            if (UseShowIncludeCompilation)
+            switch (activeRefreshMode)
             {
-                if (newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, OnNewTreeComputed))
-                {
+                case RefreshMode.ShowIncludes:
+                    if (newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, OnNewTreeComputed))
+                    {
+                        TreeComputeStarted();
+                    }
+                    break;
+
+                case RefreshMode.DirectParsing:
                     TreeComputeStarted();
-                }
-            }
-            else
-            {
-                TreeComputeStarted();
-                var settings = (ViewerOptionsPage)IncludeToolboxPackage.Instance.GetDialogPage(typeof(ViewerOptionsPage));
-                var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
-                System.Threading.Tasks.Task.Run(
-                    () =>
-                    {
-                        newGraph.AddIncludesRecursively_ManualParsing(currentDocument.FullName, includeDirectories, settings.NoParsePaths);
-                    }).ContinueWith(
-                    (x) =>
-                    {
-                        Dispatcher.BeginInvoke((Action)(() => OnNewTreeComputed(newGraph, true)));
-                    });
+                    var settings = (ViewerOptionsPage)IncludeToolboxPackage.Instance.GetDialogPage(typeof(ViewerOptionsPage));
+                    var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
+                    System.Threading.Tasks.Task.Run(
+                        () =>
+                        {
+                            newGraph.AddIncludesRecursively_ManualParsing(currentDocument.FullName, includeDirectories, settings.NoParsePaths);
+                        }).ContinueWith(
+                        (x) =>
+                        {
+                            Dispatcher.BeginInvoke((Action)(() => OnNewTreeComputed(newGraph, true)));
+                        });
+                    break;
+
+                default:
+                    throw new NotImplementedException();
             }
         }
 

@@ -4,38 +4,21 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:IncludeToolbox.ToolWindows"
-             xmlns:platformUi="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.14.0"
              x:Class="IncludeToolbox.ToolWindows.IncludeViewerToolWindowControl"
              mc:Ignorable="d"
              DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <!-- We're binding to the code behind. Not a purist MVVM pattern but good enough for this simple UI -->
+
     <UserControl.Resources>
-        <!-- Use VS styles http://stackoverflow.com/questions/18913208/colors-in-visual-studio-extension -->
         <ResourceDictionary>
-            <Style TargetType="Label">
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowTextBrushKey}}"/>
-            </Style>
-            <Style TargetType="RadioButton">
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowTextBrushKey}}"/>
-            </Style>
-            <Style TargetType="TreeView">
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.DropDownPopupBackgroundEndColorKey}}"/>
-                <Setter Property="Background" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
-            </Style>
-            <Style TargetType="TreeViewItem">
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowTextBrushKey}}"/>
-            </Style>
-            <Style TargetType="ListBox">
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.DropDownPopupBackgroundEndColorKey}}"/>
-                <Setter Property="Background" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static platformUi:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
-            </Style>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ToolWindowStyle.xaml" />
+            </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
+    
     <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*" MinHeight="80"/>
@@ -45,30 +28,27 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="150" />
         </Grid.ColumnDefinitions>
-        <Label x:Name="FileNameLabel" Content="&lt;File&gt;" FontWeight="Bold" FontSize="16" FontFamily="Consolas" Grid.Row="1"/>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <Button x:Name="RefreshButton" Content="Refresh" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Height="29" Click="Click_Refresh"/>
-            <StackPanel Margin="5 0 0 0">
-                <RadioButton Content="Parse Directly" GroupName="RefreshMode" IsChecked="True"/>
-                <RadioButton Content="Compile with /showIncludes" GroupName="RefreshMode" IsChecked="{Binding UseShowIncludeCompilation}"/>
-            </StackPanel>
+            <Button x:Name="RefreshButton" Content="Refresh" HorizontalAlignment="Left" VerticalAlignment="Center" Width="60" Height="Auto" Click="Click_Refresh"/>
+            <ComboBox Width="140" Height="Auto"  Margin="5 0 0 0" SelectedItem="{Binding ActiveRefreshMode}" ItemsSource="{Binding PossibleRefreshModes}"/>
         </StackPanel>
-        <Label x:Name="IncludeTreeLabel" Content="Includes:" VerticalAlignment="Top" Height="25" Grid.Row="2" FontWeight="Bold"/>
-        
-        <TreeView Grid.Row="3" ItemsSource="{Binding IncludeTreeModel.Children}">
+
+        <Label x:Name="FileNameLabel" Content="&lt;File&gt;" FontWeight="Bold" FontSize="16" FontFamily="Consolas" Grid.Row="1"/>
+
+        <TreeView Grid.Row="2" ItemsSource="{Binding IncludeTreeModel.Children}">
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
                     <TextBlock Text="{Binding Name}" ToolTip="{Binding ToolTip}"/>
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
-        <ProgressBar x:Name="ProgressBar" Height="25" VerticalAlignment="Center" Width="130" Grid.Row="3" IsIndeterminate="True" Visibility="Hidden"/>
+        <ProgressBar x:Name="ProgressBar" Height="25" VerticalAlignment="Center" Width="130" Grid.Row="2" IsIndeterminate="True" Visibility="Hidden"/>
         
-        <StackPanel Grid.Row="4" Orientation="Horizontal">
+        <StackPanel Grid.Row="3" Orientation="Horizontal">
             <Label Content="Unique File Count:"/>
             <Label x:Name="NumIncludes" Content="-"/>
         </StackPanel>
-        <Button x:Name="ButtonSaveGraph" Content="Save Graph..." HorizontalAlignment="Left" VerticalAlignment="Top" Width="Auto" Height="29" Click="Click_SaveGraph" Grid.Row="5" IsEnabled="False"/>
+        <Button x:Name="ButtonSaveGraph" Content="Save Graph..." Width="75" Height="29" HorizontalAlignment="Left" VerticalAlignment="Top" Click="Click_SaveGraph" Grid.Row="4" IsEnabled="False"/>
     </Grid>
 </UserControl>
