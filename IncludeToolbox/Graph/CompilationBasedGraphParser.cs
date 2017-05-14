@@ -20,6 +20,30 @@ namespace IncludeToolbox.Graph
         private static IncludeGraph graphBeingExtended;
 
 
+        public static bool CanPerformShowIncludeCompilation(Document document, out string reasonForFailure)
+        {
+            if (CompilationOngoing)
+            {
+                reasonForFailure = "Can't compile while another file is being compiled.";
+                return false;
+            }
+
+            var dte = VSUtils.GetDTE();
+            if (dte == null)
+            {
+                reasonForFailure = "Failed to acquire dte object.";
+                return false;
+            }
+
+            if (VSUtils.VCUtils.IsCompilableFile(document, out reasonForFailure) == false)
+            {
+                reasonForFailure = string.Format("Can't extract include graph since current file '{0}' can't be compiled: {1}.", document?.FullName ?? "<no file>", reasonForFailure);
+                return false;
+            }
+
+            return true;
+         }
+
         /// <summary>
         /// Parses a given source file using cl.exe with the /showIncludes option and adds the output to the original graph.
         /// </summary>
@@ -29,25 +53,18 @@ namespace IncludeToolbox.Graph
         /// <returns>true if successful, false otherwise.</returns>
         public static bool AddIncludesRecursively_ShowIncludesCompilation(this IncludeGraph graph, Document document, OnCompleteCallback onCompleted)
         {
-            if (CompilationOngoing)
+            if (!CanPerformShowIncludeCompilation(document, out string reasonForFailure))
             {
-                Output.Instance.ErrorMsg("Can't compile while another file is being compiled.");
-                return false;
-            }
-
-            var dte = VSUtils.GetDTE();
-            if (dte == null)
-            {
-                Output.Instance.ErrorMsg("Failed to acquire dte object.");
+                Output.Instance.ErrorMsg(reasonForFailure);
                 return false;
             }
 
             try
             {
-                string reasonForFailure;
-                if (VSUtils.VCUtils.IsCompilableFile(document, out reasonForFailure) == false)
+                var dte = VSUtils.GetDTE();
+                if (dte == null)
                 {
-                    Output.Instance.ErrorMsg("Can't extract include graph since current file '{0}' can't be compiled: {1}.", document?.FullName ?? "<no file>", reasonForFailure);
+                    Output.Instance.ErrorMsg("Failed to acquire dte object.");
                     return false;
                 }
 
@@ -70,7 +87,7 @@ namespace IncludeToolbox.Graph
                 }
 
                 // Only after we're through all early out error cases, set static compilation infos.
-                dte.Events.BuildEvents.OnBuildProjConfigDone += OnBuildConfigFinished;
+                dte.Events.BuildEvents.OnBuildDone += OnBuildConfigFinished;
                 CompilationBasedGraphParser.onCompleted = onCompleted;
                 CompilationBasedGraphParser.documentBeingCompiled = document;
                 CompilationBasedGraphParser.graphBeingExtended = graph;
@@ -113,10 +130,10 @@ namespace IncludeToolbox.Graph
             documentBeingCompiled = null;
             graphBeingExtended = null;
 
-            VSUtils.GetDTE().Events.BuildEvents.OnBuildProjConfigDone -= OnBuildConfigFinished;
+            VSUtils.GetDTE().Events.BuildEvents.OnBuildDone -= OnBuildConfigFinished;
         }
 
-        private static void OnBuildConfigFinished(string project, string projectConfig, string platform, string solutionConfig, bool success)
+        private static void OnBuildConfigFinished(vsBuildScope Scope, vsBuildAction Action)
         {
             // Sometimes we get this message several times.
             if (!CompilationOngoing)

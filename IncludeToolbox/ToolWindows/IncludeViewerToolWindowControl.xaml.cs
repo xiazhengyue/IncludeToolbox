@@ -20,7 +20,23 @@ namespace IncludeToolbox.ToolWindows
 
         public IncludeTreeViewItem IncludeTreeModel { get; private set; } = new IncludeTreeViewItem(null);
 
-        public bool UseShowIncludeCompilation { get; set; } = false;
+        public bool UseShowIncludeCompilation
+        {
+            get => useShowIncludeCompilation;
+            set
+            {
+                if (useShowIncludeCompilation != value)
+                {
+                    useShowIncludeCompilation = value;
+                    UpdateRefreshButton();
+                }
+            }
+        }
+        private bool useShowIncludeCompilation = false;
+
+        // Need to keep these guys alive.
+        private EnvDTE.WindowEvents windowEvents;
+        //private EnvDTE.BuildEvents buildEvents;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IncludeViewerToolWindowControl"/> class.
@@ -28,12 +44,51 @@ namespace IncludeToolbox.ToolWindows
         public IncludeViewerToolWindowControl()
         {
             InitializeComponent();
+
+            // UI update on dte events.
+            var dte = VSUtils.GetDTE();
+            if (dte != null)
+            {
+                windowEvents = dte.Events.WindowEvents;
+                windowEvents.WindowActivated += (x,y) => UpdateRefreshButton();
+                //buildEvents = dte.Events.BuildEvents;
+                //buildEvents.OnBuildBegin += (x, y) => UpdateRefreshButton();
+                //buildEvents.OnBuildDone += (x, y) => UpdateRefreshButton();
+            }
         }
 
         private static Brush GetSolidBrush(ThemeResourceKey themeResourceKey)
         {
             var color = VSColorTheme.GetThemedColor(themeResourceKey);
             return new SolidColorBrush(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
+        }
+
+        private void UpdateRefreshButton()
+        {
+            var dte = VSUtils.GetDTE();
+            currentDocument = dte?.ActiveDocument;
+
+            // In any case we need a it to be a document.
+            // Limiting to C++ document is a bit harsh though for the general case as we might not have this information depending on the project type.
+            // This is why we just check for "having a document" here for now.
+            if (currentDocument == null)
+            {
+                RefreshButton.IsEnabled = false;
+                RefreshButton.ToolTip = "No open document";
+            }
+            else
+            {
+                if (UseShowIncludeCompilation)
+                {
+                    RefreshButton.IsEnabled = CompilationBasedGraphParser.CanPerformShowIncludeCompilation(currentDocument, out string reasonForFailure);
+                    RefreshButton.ToolTip = reasonForFailure;
+                }
+                else
+                {
+                    RefreshButton.IsEnabled = true;
+                    RefreshButton.ToolTip = null;
+                }
+            }
         }
 
         private void Click_Refresh(object sender, RoutedEventArgs e)
@@ -104,7 +159,7 @@ namespace IncludeToolbox.ToolWindows
         private void OnNewTreeComputed(IncludeGraph graph, bool success)
         {
             ProgressBar.Visibility = Visibility.Hidden;
-            RefreshButton.IsEnabled = true;
+            UpdateRefreshButton();
 
             if (success)
             {
