@@ -10,12 +10,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace IncludeToolbox.ToolWindows
+namespace IncludeToolbox.GraphWindow
 {
-    /// <summary>
-    /// Interaction logic for IncludeViewerToolWindowControl.
-    /// </summary>
-    public partial class IncludeViewerToolWindowControl : UserControl
+    public partial class IncludeGraphControl : UserControl
     {
         private EnvDTE.Document currentDocument = null;
         private IncludeGraph graph = null;
@@ -51,9 +48,9 @@ namespace IncludeToolbox.ToolWindows
         //private EnvDTE.BuildEvents buildEvents;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="IncludeViewerToolWindowControl"/> class.
+        /// Initializes a new instance of the <see cref="IncludeGraphControl"/> class.
         /// </summary>
-        public IncludeViewerToolWindowControl()
+        public IncludeGraphControl()
         {
             InitializeComponent();
 

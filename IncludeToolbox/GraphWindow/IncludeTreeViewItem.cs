@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace IncludeToolbox.ToolWindows
+namespace IncludeToolbox.GraphWindow
 {
     public class IncludeTreeViewItem : INotifyPropertyChanged
     {

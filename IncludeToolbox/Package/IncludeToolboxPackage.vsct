@@ -39,7 +39,7 @@
       <Group guid="guidCodeMenuCmdSet" id="EditMenuGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN" />
       </Group>
-      <Group guid="guidIncludeViewerToolWindowCmdSet" id="IncludeViewerToolWindowGroup" priority="0x8000"/>
+      <Group guid="guidIncludeGraphWindowCmdSet" id="IncludeGraphToolWindowGroup" priority="0x8000"/>
       <Group guid="guidProjectMenuCmdSet" id="ProjectMenuGroup" priority="0x8000"/>
     </Groups>
 
@@ -90,11 +90,11 @@
         </Strings>
       </Button>
 
-      <Button guid="guidIncludeViewerToolWindowCmdSet" id="IncludeViewerToolWindowCommandId" priority="0x2000" type="Button">
+      <Button guid="guidIncludeGraphWindowCmdSet" id="IncludeGraphToolWindowCommandId" priority="0x2000" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
         <Icon guid="guidImages" id="iconExplorer" />
         <Strings>
-          <ButtonText>IncludeViewerToolWindow</ButtonText>
+          <ButtonText>Include Graph</ButtonText>
         </Strings>
       </Button>
       
@@ -123,9 +123,9 @@
       <IDSymbol name="TryAndErrorRemovalId" value="0x0104" />
     </GuidSymbol>
 
-    <GuidSymbol name="guidIncludeViewerToolWindowCmdSet" value="{032eb795-1f1c-440d-af98-43cdc1de7a8b}">
-      <IDSymbol name="IncludeViewerToolWindowGroup" value="0x1000" />
-      <IDSymbol name="IncludeViewerToolWindowCommandId" value="0x0102" />
+    <GuidSymbol name="guidIncludeGraphWindowCmdSet" value="{032eb795-1f1c-440d-af98-43cdc1de7a8b}">
+      <IDSymbol name="IncludeGraphToolWindowGroup" value="0x1000" />
+      <IDSymbol name="IncludeGraphToolWindowCommandId" value="0x0102" />
     </GuidSymbol>
 
     <GuidSymbol name="guidProjectMenuCmdSet" value="{1970ECF3-6C03-4CCF-B422-8DD07F774ED8}">

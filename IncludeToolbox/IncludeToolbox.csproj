@@ -78,7 +78,7 @@
     <Compile Include="Options\ViewerOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ToolWindows\IncludeTreeViewItem.cs" />
+    <Compile Include="GraphWindow\IncludeTreeViewItem.cs" />
     <Compile Include="TryAndErrorRemoval.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_CodeWindow.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_Project.cs" />
@@ -90,9 +90,9 @@
     <Compile Include="Options\TryAndErrorRemovalOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ToolWindows\IncludeViewerToolWindow.cs" />
-    <Compile Include="ToolWindows\IncludeViewerToolWindowControl.xaml.cs">
-      <DependentUpon>IncludeViewerToolWindowControl.xaml</DependentUpon>
+    <Compile Include="GraphWindow\IncludeGraphToolWindow.cs" />
+    <Compile Include="GraphWindow\IncludeGraphControl.xaml.cs">
+      <DependentUpon>IncludeGraphControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Options\FormatterOptionsPage.cs">
       <SubType>Component</SubType>
@@ -300,11 +300,11 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="ToolWindows\IncludeViewerToolWindowControl.xaml">
+    <Page Include="GraphWindow\IncludeGraphControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="ToolWindows\ToolWindowStyle.xaml">
+    <Page Include="GraphWindow\ToolWindowStyle.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

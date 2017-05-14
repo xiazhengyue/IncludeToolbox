@@ -16,7 +16,7 @@ namespace IncludeToolbox
     [ProvideOptionPage(typeof(TryAndErrorRemovalOptionsPage), Options.Constants.Category, TryAndErrorRemovalOptionsPage.SubCategory, 1000, 1003, true)]
     [ProvideOptionPage(typeof(ViewerOptionsPage), Options.Constants.Category, ViewerOptionsPage.SubCategory, 1000, 1004, true)]
 
-    [ProvideToolWindow(typeof(ToolWindows.IncludeViewerToolWindow))]
+    [ProvideToolWindow(typeof(GraphWindow.IncludeGraphToolWindow))]
     [Guid(IncludeToolboxPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [InstalledProductRegistration("#110", "#112", "0.2", IconResourceID = 400)]

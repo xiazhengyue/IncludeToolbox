@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:local="clr-namespace:IncludeToolbox.ToolWindows"
-             x:Class="IncludeToolbox.ToolWindows.IncludeViewerToolWindowControl"
+             xmlns:local="clr-namespace:IncludeToolbox.GraphWindow"
+             x:Class="IncludeToolbox.GraphWindow.IncludeGraphControl"
              mc:Ignorable="d"
              DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <!-- We're binding to the code behind. Not a purist MVVM pattern but good enough for this simple UI -->
