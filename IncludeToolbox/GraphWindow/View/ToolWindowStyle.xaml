@@ -7,12 +7,8 @@
     VS styles are NOT automatically applied, we have to do a lot of work for that. 
     http://stackoverflow.com/questions/18913208/colors-in-visual-studio-extension
     -->
-    
+
     <Style TargetType="Label">
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static vs:EnvironmentColors.ToolWindowTextBrushKey}}"/>
-    </Style>
-    
-    <Style TargetType="RadioButton">
         <Setter Property="Foreground" Value="{DynamicResource {x:Static vs:EnvironmentColors.ToolWindowTextBrushKey}}"/>
     </Style>
 
@@ -20,18 +16,6 @@
         <Setter Property="Foreground" Value="{DynamicResource {x:Static vs:EnvironmentColors.ToolWindowTextBrushKey}}"/>
         <Setter Property="Background" Value="{DynamicResource {x:Static vs:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vs:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
-    </Style>
-
-    <Style TargetType="ComboBox">
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static vs:EnvironmentColors.ToolWindowTextBrushKey}}"/>
-        <Setter Property="Background" Value="{DynamicResource {x:Static vs:EnvironmentColors.ComboBoxBackgroundBrushKey}}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vs:EnvironmentColors.ComboBoxBorderBrushKey}}"/>
-    </Style>
-
-    <Style TargetType="ComboBoxItem">
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static vs:EnvironmentColors.ToolWindowTextBrushKey}}"/>
-        <Setter Property="Background" Value="{DynamicResource {x:Static vs:EnvironmentColors.ComboBoxBackgroundBrushKey}}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vs:EnvironmentColors.ComboBoxBorderBrushKey}}"/>
     </Style>
 
     <Style TargetType="TreeView">
@@ -64,9 +48,4 @@
         </Style.Triggers>
     </Style>
 
-    <Style TargetType="ListBox">
-        <Setter Property="Foreground" Value="{DynamicResource {x:Static vs:EnvironmentColors.DropDownPopupBackgroundEndColorKey}}"/>
-        <Setter Property="Background" Value="{DynamicResource {x:Static vs:EnvironmentColors.ToolWindowBackgroundBrushKey}}"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource {x:Static vs:EnvironmentColors.ToolWindowBorderBrushKey}}"/>
-    </Style>
 </ResourceDictionary>
