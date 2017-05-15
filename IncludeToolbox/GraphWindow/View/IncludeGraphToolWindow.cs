@@ -57,9 +57,13 @@ namespace IncludeToolbox.GraphWindow
                 commandsInitialized = true;
                 Commands.RefreshIncludeGraph.Initialize(IncludeToolboxPackage.Instance);
                 Commands.RefreshIncludeGraph.Instance.SetViewModel(graphToolWindowControl.ViewModel);
+
                 Commands.RefreshModeComboBox.Initialize(IncludeToolboxPackage.Instance);
                 Commands.RefreshModeComboBox.Instance.SetViewModel(graphToolWindowControl.ViewModel);
                 Commands.RefreshModeComboBoxOptions.Initialize(IncludeToolboxPackage.Instance);
+
+                Commands.SaveDGML.Initialize(IncludeToolboxPackage.Instance);
+                Commands.SaveDGML.Instance.SetViewModel(graphToolWindowControl.ViewModel);
             }
 
             ToolBar = new CommandID(IncludeToolbox.Commands.CommandSetGuids.GraphWindowToolbarCmdSet, ToolbarID);

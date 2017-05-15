@@ -66,6 +66,7 @@
     <Compile Include="Commands\CommandSetGuids.cs" />
     <Compile Include="Commands\IncludeGraphToolWindow.cs" />
     <Compile Include="Commands\IncludeWhatYouUse.cs" />
+    <Compile Include="GraphWindow\Commands\SaveDGML.cs" />
     <Compile Include="GraphWindow\Commands\RefreshModeComboBoxOptions.cs" />
     <Compile Include="GraphWindow\Commands\RefreshModeComboBox.cs" />
     <Compile Include="GraphWindow\Commands\RefreshIncludeGraph.cs" />

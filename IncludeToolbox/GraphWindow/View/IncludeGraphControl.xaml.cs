@@ -12,11 +12,5 @@ namespace IncludeToolbox.GraphWindow
             InitializeComponent();
             ViewModel = (IncludeGraphViewModel)DataContext;
         }
-
-        private void Click_SaveGraph(object sender, RoutedEventArgs e)
-        {
-            // TODO: Progressbar and open prompt.
-            ViewModel.SaveGraph();
-        }
     }
 }

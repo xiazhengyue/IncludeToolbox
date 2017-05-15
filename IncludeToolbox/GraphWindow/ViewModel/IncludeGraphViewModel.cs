@@ -185,29 +185,10 @@ namespace IncludeToolbox.GraphWindow
             }
         }
 
-        public void SaveGraph()
+        public void SaveGraph(string filename)
         {
-            if (graph == null)
-            {
-                Output.Instance.ErrorMsg("There is no include tree to save!");
-                return;
-            }
-
-            // Todo: This is UI and does not really belong here.
-            Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-            dlg.FileName = ".dgml";
-            dlg.DefaultExt = ".dgml";
-            dlg.Filter = "Text documents (.dgml)|*.dgml";
-
-            // Show save file dialog box
-            bool? result = dlg.ShowDialog();
-
-            // Process save file dialog box results
-            if (!result ?? false)
-                return;
-
             DGMLGraph dgmlGraph = graph.ToDGMLGraph();
-            dgmlGraph.Serialize(dlg.FileName);
+            dgmlGraph.Serialize(filename);
         }
 
         private void ResetIncludeTreeModel(IncludeGraph.GraphItem root)
