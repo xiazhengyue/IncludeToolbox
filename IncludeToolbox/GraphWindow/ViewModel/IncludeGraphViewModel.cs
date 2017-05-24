@@ -11,7 +11,9 @@ namespace IncludeToolbox.GraphWindow
 {
     public class IncludeGraphViewModel : PropertyChangedBase
     {
-        public IncludeTreeViewItem IncludeTreeModel { get; set; } = new IncludeTreeViewItem(null);
+        public HierarchyIncludeTreeViewItem HierarchyIncludeTreeModel { get; set; } = new HierarchyIncludeTreeViewItem(null);
+        public FolderIncludeTreeViewItem_Root FolderGroupedIncludeTreeModel { get; set; } = new FolderIncludeTreeViewItem_Root(null, null);
+
         private IncludeGraph graph = null;
         private EnvDTE.Document currentDocument = null;
 
@@ -193,8 +195,12 @@ namespace IncludeToolbox.GraphWindow
 
         private void ResetIncludeTreeModel(IncludeGraph.GraphItem root)
         {
-            IncludeTreeModel.Reset(root);
-            OnNotifyPropertyChanged(nameof(IncludeTreeModel));
+            HierarchyIncludeTreeModel.Reset(root);
+            OnNotifyPropertyChanged(nameof(HierarchyIncludeTreeModel));
+
+            FolderGroupedIncludeTreeModel.Reset(graph?.GraphItems, root);
+            OnNotifyPropertyChanged(nameof(FolderGroupedIncludeTreeModel));
+
             OnNotifyPropertyChanged(nameof(CanSave));
         }
 
@@ -211,10 +217,8 @@ namespace IncludeToolbox.GraphWindow
 
                 foreach (var item in graph.GraphItems)
                     item.FormattedName = IncludeFormatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
-                ResetIncludeTreeModel(graph.CreateOrGetItem(currentDocument.FullName, out _));
 
-                OnNotifyPropertyChanged(nameof(IncludeTreeModel));
-                OnNotifyPropertyChanged(nameof(CanSave));
+                ResetIncludeTreeModel(graph.CreateOrGetItem(currentDocument.FullName, out _));
             }
 
             OnNotifyPropertyChanged(nameof(NumIncludes));

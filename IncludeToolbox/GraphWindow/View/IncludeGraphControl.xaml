@@ -6,8 +6,7 @@
              xmlns:local="clr-namespace:IncludeToolbox.GraphWindow"
              x:Class="IncludeToolbox.GraphWindow.IncludeGraphControl"
              mc:Ignorable="d">
-    <!-- We're binding to the code behind. Not a purist MVVM pattern but good enough for this simple UI -->
-
+    
     <UserControl.DataContext>
         <local:IncludeGraphViewModel/>
     </UserControl.DataContext>
@@ -21,7 +20,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
     
-    <Grid Margin="5">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*" MinHeight="80"/>
@@ -31,15 +30,29 @@
             <ColumnDefinition MinWidth="150" />
         </Grid.ColumnDefinitions>
 
-        <Label Content="{Binding GraphRootFilename}" FontWeight="Bold" FontFamily="Consolas" Grid.Row="0"/>
+        <Label Content="{Binding GraphRootFilename}" FontWeight="Bold" FontFamily="Consolas" Grid.Row="0" />
+        <TabControl Grid.Row="1">
+            <TabItem Header="Include Hierarchy">
+                <TreeView Grid.Row="1" ItemsSource="{Binding HierarchyIncludeTreeModel.Children}">
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
+                            <TextBlock Text="{Binding Name}" ToolTip="{Binding AbsoluteFilename}"/>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </TabItem>
+            <TabItem Header="Grouped by Folder">
+                <TreeView Grid.Row="1" ItemsSource="{Binding FolderGroupedIncludeTreeModel.Children}">
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
+                            <TextBlock Text="{Binding Name}" ToolTip="{Binding AbsoluteFilename}"/>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </TabItem>
+        </TabControl>
 
-        <TreeView Grid.Row="1" ItemsSource="{Binding IncludeTreeModel.Children}">
-            <TreeView.ItemTemplate>
-                <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
-                    <TextBlock Text="{Binding Name}" ToolTip="{Binding ToolTip}"/>
-                </HierarchicalDataTemplate>
-            </TreeView.ItemTemplate>
-        </TreeView>
+
         <ProgressBar Height="25" VerticalAlignment="Center" Width="130" Grid.Row="1" IsIndeterminate="True" Visibility="{Binding Path=RefreshInProgress, Converter={StaticResource BoolToVis}}"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal">

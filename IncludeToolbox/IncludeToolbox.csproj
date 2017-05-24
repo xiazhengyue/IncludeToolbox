@@ -71,6 +71,8 @@
     <Compile Include="GraphWindow\Commands\RefreshModeComboBox.cs" />
     <Compile Include="GraphWindow\Commands\RefreshIncludeGraph.cs" />
     <Compile Include="GraphWindow\PropertyChangedBase.cs" />
+    <Compile Include="GraphWindow\ViewModel\FolderIncludeTreeItem.cs" />
+    <Compile Include="GraphWindow\ViewModel\HierarchyIncludeTreeViewItem.cs" />
     <Compile Include="GraphWindow\ViewModel\IncludeGraphViewModel.cs" />
     <Compile Include="Graph\CustomGraphParser.cs" />
     <Compile Include="Graph\DGMLGraph.cs" />
