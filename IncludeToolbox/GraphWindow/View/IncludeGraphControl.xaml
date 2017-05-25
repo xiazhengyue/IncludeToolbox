@@ -24,13 +24,18 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*" MinHeight="80"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="150" />
         </Grid.ColumnDefinitions>
 
-        <Label Content="{Binding GraphRootFilename}" FontWeight="Bold" FontFamily="Consolas" Grid.Row="0" />
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Label Content="{Binding GraphRootFilename}" FontFamily="Consolas" VerticalAlignment="Center"/>
+            <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="5 5 5 5"/>
+            <Label Content="Include Count:"/>
+            <Label Content="{Binding Path=NumIncludes}"/>
+        </StackPanel>
+
         <TabControl Grid.Row="1">
             <TabItem Header="Include Hierarchy">
                 <TreeView Grid.Row="1" ItemsSource="{Binding HierarchyIncludeTreeModel.Children}">
@@ -52,12 +57,7 @@
             </TabItem>
         </TabControl>
 
-
         <ProgressBar Height="25" VerticalAlignment="Center" Width="130" Grid.Row="1" IsIndeterminate="True" Visibility="{Binding Path=RefreshInProgress, Converter={StaticResource BoolToVis}}"/>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal">
-            <Label Content="Unique File Count:"/>
-            <Label Content="{Binding Path=NumIncludes}"/>
-        </StackPanel>
     </Grid>
 </UserControl>
