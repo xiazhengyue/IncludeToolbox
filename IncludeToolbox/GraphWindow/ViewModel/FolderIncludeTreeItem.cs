@@ -52,66 +52,98 @@ namespace IncludeToolbox.GraphWindow
             var rootChildren = new List<IncludeTreeViewItem>();
             cachedItems = rootChildren;
 
-            // Build entire tree bottom up. Can't build as lazy as we do with the HierarchyIncludeTreeViewItem.
-
-            // Create all leaf items first.
-            var itemsToGroup = new List<IncludeTreeViewItem>();
+            // Create first layer of folder and leaf items
+            var leafItems = new List<FolderIncludeTreeViewItem_Leaf>();
             foreach (IncludeGraph.GraphItem item in graphItems)
             {
                 if (item == includingFile)
                     continue;
 
-                var leaf = new FolderIncludeTreeViewItem_Leaf(item);
-
-                if (string.IsNullOrWhiteSpace(item.AbsoluteFilename) || !Path.IsPathRooted(item.AbsoluteFilename))
-                {
-                    if (rootChildren.Count == 0)
-                        rootChildren.Add(new FolderIncludeTreeViewItem_Folder("<unresolved>"));
-                    ((FolderIncludeTreeViewItem_Folder)rootChildren[0]).ChildrenList.Add(leaf);
-                }
-                else
-                    itemsToGroup.Add(leaf);
+                leafItems.Add(new FolderIncludeTreeViewItem_Leaf(item));
             }
 
-            // Group leaf items as long as we can
-            var groups = new Dictionary<string, FolderIncludeTreeViewItem_Folder>();
-            var addedGroups = new List<IncludeTreeViewItem>();
-            while (itemsToGroup.Count > 1)
+            // Group by folder.
+            if (leafItems.Count > 0)
             {
-                addedGroups.Clear();
+                leafItems.Sort((x, y) => x.ParentFolder.CompareTo(y.ParentFolder));
 
-                foreach (var item in itemsToGroup)
+                var root = new FolderIncludeTreeViewItem_Folder("");
+                GroupIncludeRecursively(root, leafItems, 0, leafItems.Count, 0);
+                rootChildren.AddRange(root.ChildrenList);
+            }
+        }
+
+        private string GetNextPathPrefix(string path, int begin)
+        {
+            int nextSlash = begin;
+            while (path.Length > nextSlash && path[nextSlash] != Path.DirectorySeparatorChar)
+                ++nextSlash;
+            return path.Substring(0, nextSlash);
+        }
+
+        private string LargestCommonFolderPrefixInRange(List<FolderIncludeTreeViewItem_Leaf> allLeafItems, int begin, int end, string commonPrefix)
+        {
+            string folderBegin = allLeafItems[begin].ParentFolder;
+            string folderEnd = allLeafItems[end-1].ParentFolder;
+
+            string prefixCandidate = commonPrefix;
+            string previousPrefix = null;
+            do
+            {
+                if (folderBegin.Length == prefixCandidate.Length)
+                    return prefixCandidate;
+
+                previousPrefix = prefixCandidate;
+                prefixCandidate = GetNextPathPrefix(folderBegin, previousPrefix.Length + 1);
+
+            } while (folderEnd.StartsWith(prefixCandidate));
+
+            return previousPrefix;
+        }
+
+        private void GroupIncludeRecursively(FolderIncludeTreeViewItem_Folder parentFolder, List<FolderIncludeTreeViewItem_Leaf> allLeafItems, int begin, int end, int commonPrefixLength)
+        {
+            System.Diagnostics.Debug.Assert(begin < end);
+            System.Diagnostics.Debug.Assert(allLeafItems.Count >= end);
+
+            // Look through the sorted subsection of folders and find ranges where the prefix changes.
+            while(begin < end)
+            {
+                // New subgroup to look at!
+                string currentPrefix = GetNextPathPrefix(allLeafItems[begin].ParentFolder, commonPrefixLength + 1);
+
+                // Find end of the rest of the group and expand recurively.
+                for (int i = begin; i <= end; ++i)
                 {
-                    FolderIncludeTreeViewItem_Folder group = null;
-                    string pathUp = Path.GetDirectoryName(item.AbsoluteFilename);
-                    if (!string.IsNullOrWhiteSpace(pathUp))
+                    if (i == end || !allLeafItems[i].ParentFolder.StartsWith(currentPrefix))
                     {
-                        pathUp = pathUp.TrimEnd(Path.DirectorySeparatorChar);
-                        if (!groups.TryGetValue(pathUp, out group))
+                        // Find maximal prefix of this group.
+                        string largestPrefix = LargestCommonFolderPrefixInRange(allLeafItems, begin, i, currentPrefix);
+                        var newGroup = new FolderIncludeTreeViewItem_Folder(largestPrefix);
+                        parentFolder.ChildrenList.Add(newGroup);
+
+                        // If there are any direct children, they will be first due to sorting. Add them to the new group and ignore this part of the range.
+                        while (allLeafItems[begin].ParentFolder.Length == largestPrefix.Length)
                         {
-                            group = new FolderIncludeTreeViewItem_Folder(pathUp);
-                            groups.Add(pathUp, group);
-                            addedGroups.Add(group);
+                            newGroup.ChildrenList.Add(allLeafItems[begin]);
+                            ++begin;
+                            if (begin == i)
+                                break;
                         }
-                        group.ChildrenList.Add(item);
-                    }
-                    else
-                    {
-                        rootChildren.Add(item);
+
+                        // What's left is non-direct children (== folders!) that we need to handle recursively.
+                        int numFoldersInGroup = i - begin;
+                        if (numFoldersInGroup > 0)
+                        {
+                            GroupIncludeRecursively(newGroup, allLeafItems, begin, i, largestPrefix.Length);
+                        }
+
+                        // Next group starts at this element.
+                        begin = i;
+                        break;
                     }
                 }
-
-                itemsToGroup.Clear();
-                itemsToGroup.AddRange(addedGroups);
             }
-
-            // Remove unnecessary groups.
-            // todo
-
-            if (itemsToGroup.Count == 1)
-                rootChildren.AddRange(itemsToGroup[0].Children);
-            else
-                rootChildren.AddRange(itemsToGroup);
         }
     }
 
@@ -131,10 +163,20 @@ namespace IncludeToolbox.GraphWindow
     {
         public override IReadOnlyList<IncludeTreeViewItem> Children => emptyList;
 
+        /// <summary>
+        /// Parent folder of this leaf. Needed during build-up.
+        /// </summary>
+        public string ParentFolder { get; private set; }
+
         public FolderIncludeTreeViewItem_Leaf(IncludeGraph.GraphItem item)
         {
             Name = item?.FormattedName ?? "";
             AbsoluteFilename = item?.AbsoluteFilename;
+
+            if (string.IsNullOrWhiteSpace(AbsoluteFilename) || !Path.IsPathRooted(AbsoluteFilename))
+                ParentFolder = "<unresolved>";
+            else
+                ParentFolder = Path.GetDirectoryName(AbsoluteFilename);
         }
     }
 }

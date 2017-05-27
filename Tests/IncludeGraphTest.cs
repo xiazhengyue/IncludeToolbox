@@ -153,5 +153,55 @@ namespace Tests
             // For a clean environment!
             File.Delete(filenameTestOutput);
         }
+
+        [TestMethod]
+        public void IncludeFolderGrouping()
+        {
+            IncludeGraph graph = new IncludeGraph();
+            string sourceFile = Utils.GetExactPathName("testdata/source0.cpp");
+            graph.AddIncludesRecursively_ManualParsing(sourceFile, Enumerable.Empty<string>(), new string[] { });
+
+            var root = new IncludeToolbox.GraphWindow.FolderIncludeTreeViewItem_Root(graph.GraphItems, graph.CreateOrGetItem(sourceFile, out bool isNew));
+            var children = root.Children;
+
+            // Check if tree is as expected.
+            {
+                Assert.AreEqual(2, children.Count);
+
+                var unresolvedFolder = children.First(x => x.Name == "<unresolved>");
+                Assert.IsNotNull(unresolvedFolder);
+                Assert.IsInstanceOfType(unresolvedFolder, typeof(IncludeToolbox.GraphWindow.FolderIncludeTreeViewItem_Folder));
+
+                var subdirFolder = children.First(x => x.Name.EndsWith("testdata\\subdir"));
+                Assert.IsNotNull(unresolvedFolder);
+                Assert.IsInstanceOfType(unresolvedFolder, typeof(IncludeToolbox.GraphWindow.FolderIncludeTreeViewItem_Folder));
+
+                // subdir folder
+                {
+                    Assert.AreEqual(3, subdirFolder.Children.Count);
+
+                    var testinclude = subdirFolder.Children.First(x => x.Name.EndsWith("testinclude.h"));
+                    Assert.IsNotNull(testinclude);
+                    Assert.IsInstanceOfType(testinclude, typeof(IncludeToolbox.GraphWindow.FolderIncludeTreeViewItem_Leaf));
+
+                    var inline = subdirFolder.Children.First(x => x.Name.EndsWith("inline.inl"));
+                    Assert.IsNotNull(inline);
+                    Assert.IsInstanceOfType(inline, typeof(IncludeToolbox.GraphWindow.FolderIncludeTreeViewItem_Leaf));
+
+                    var subdirsubdirFolder = subdirFolder.Children.First(x => x.Name.EndsWith("testdata\\subdir\\subdir"));
+                    Assert.IsNotNull(subdirsubdirFolder);
+                    Assert.IsInstanceOfType(subdirsubdirFolder, typeof(IncludeToolbox.GraphWindow.FolderIncludeTreeViewItem_Folder));
+
+                    // subdir\subdir folder
+                    {
+                        Assert.AreEqual(1, subdirsubdirFolder.Children.Count);
+
+                        var subsubh = subdirsubdirFolder.Children.First(x => x.Name.EndsWith("subsub.h"));
+                        Assert.IsNotNull(subsubh);
+                        Assert.IsInstanceOfType(subsubh, typeof(IncludeToolbox.GraphWindow.FolderIncludeTreeViewItem_Leaf));
+                    }
+                }
+            }
+        }
     }
 }
