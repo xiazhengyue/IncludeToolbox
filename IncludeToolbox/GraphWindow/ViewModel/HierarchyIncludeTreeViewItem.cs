@@ -1,11 +1,18 @@
 ﻿using IncludeToolbox.Graph;
+using Microsoft.VisualStudio.Text;
 using System.Collections.Generic;
+using System.IO;
 
 namespace IncludeToolbox.GraphWindow
 {
     public class HierarchyIncludeTreeViewItem : IncludeTreeViewItem
     {
-        private Graph.IncludeGraph.GraphItem item;
+        private IncludeGraph.Include include;
+
+        /// <summary>
+        /// File that caused this inlude - the parent!
+        /// </summary>
+        private string includingFileAbsoluteFilename = null;
 
         public override IReadOnlyList<IncludeTreeViewItem> Children
         {
@@ -18,19 +25,19 @@ namespace IncludeToolbox.GraphWindow
         }
         protected IReadOnlyList<IncludeTreeViewItem> cachedItems;
 
-        public HierarchyIncludeTreeViewItem(IncludeGraph.GraphItem graphItem)
+        public HierarchyIncludeTreeViewItem(IncludeGraph.Include include, string includingFileAbsoluteFilename)
         {
-            Reset(graphItem);
+            Reset(include, includingFileAbsoluteFilename);
         }
 
         private void GenerateChildItems()
         {
-            if (item?.Includes != null)
+            if (include.IncludedFile?.Includes != null)
             {
                 var cachedItemsList = new List<IncludeTreeViewItem>();
-                foreach (Graph.IncludeGraph.Include include in item?.Includes)
+                foreach (Graph.IncludeGraph.Include include in include.IncludedFile?.Includes)
                 {
-                    cachedItemsList.Add(new HierarchyIncludeTreeViewItem(include.IncludedFile));
+                    cachedItemsList.Add(new HierarchyIncludeTreeViewItem(include, this.AbsoluteFilename));
                 }
                 cachedItems = cachedItemsList;
             }
@@ -40,14 +47,47 @@ namespace IncludeToolbox.GraphWindow
             }
         }
 
-        public void Reset(Graph.IncludeGraph.GraphItem graphItem)
+        public void Reset(IncludeGraph.Include include, string includingFileAbsoluteFilename)
         {
-            item = graphItem;
+            this.include = include;
             cachedItems = null;
-            Name = graphItem?.FormattedName ?? "";
-            AbsoluteFilename = graphItem?.AbsoluteFilename;
+            Name = include.IncludedFile?.FormattedName ?? "";
+            AbsoluteFilename = include.IncludedFile?.AbsoluteFilename;
+            this.includingFileAbsoluteFilename = includingFileAbsoluteFilename;
 
             NotifyAllPropertiesChanged();
+        }
+
+        public override void NavigateToInclude()
+        {
+            // Want to navigate to origin of this include, not target if possible
+            if (includingFileAbsoluteFilename != null && Path.IsPathRooted(includingFileAbsoluteFilename))
+            {
+                var dte = VSUtils.GetDTE();
+                EnvDTE.Window fileWindow = dte.ItemOperations.OpenFile(includingFileAbsoluteFilename);
+                if (fileWindow == null)
+                {
+                    Output.Instance.WriteLine("Failed to open File {0}", includingFileAbsoluteFilename);
+                    return;
+                }
+                fileWindow.Activate();
+                fileWindow.Visible = true;
+
+                // Try to move to carret if possible.
+                if (include.IncludeLine != null)
+                {
+                    var textDocument = fileWindow.Document.Object() as EnvDTE.TextDocument;
+
+                    if (textDocument != null)
+                    {
+                        var includeLinePoint = textDocument.StartPoint.CreateEditPoint();
+                        includeLinePoint.MoveToLineAndOffset(include.IncludeLine.LineNumber+1, 1);
+                        includeLinePoint.TryToShow();
+
+                        textDocument.Selection.MoveToPoint(includeLinePoint);
+                    }
+                }
+            }
         }
     }
 }

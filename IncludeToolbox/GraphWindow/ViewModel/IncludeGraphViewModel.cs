@@ -11,7 +11,7 @@ namespace IncludeToolbox.GraphWindow
 {
     public class IncludeGraphViewModel : PropertyChangedBase
     {
-        public HierarchyIncludeTreeViewItem HierarchyIncludeTreeModel { get; set; } = new HierarchyIncludeTreeViewItem(null);
+        public HierarchyIncludeTreeViewItem HierarchyIncludeTreeModel { get; set; } = new HierarchyIncludeTreeViewItem(new IncludeGraph.Include(), "");
         public FolderIncludeTreeViewItem_Root FolderGroupedIncludeTreeModel { get; set; } = new FolderIncludeTreeViewItem_Root(null, null);
 
         private IncludeGraph graph = null;
@@ -195,7 +195,7 @@ namespace IncludeToolbox.GraphWindow
 
         private void ResetIncludeTreeModel(IncludeGraph.GraphItem root)
         {
-            HierarchyIncludeTreeModel.Reset(root);
+            HierarchyIncludeTreeModel.Reset(new IncludeGraph.Include() { IncludedFile = root }, "<root>");
             OnNotifyPropertyChanged(nameof(HierarchyIncludeTreeModel));
 
             FolderGroupedIncludeTreeModel.Reset(graph?.GraphItems, root);

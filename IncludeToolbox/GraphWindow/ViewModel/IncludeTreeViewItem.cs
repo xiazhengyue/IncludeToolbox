@@ -25,5 +25,10 @@ namespace IncludeToolbox.GraphWindow
             OnNotifyPropertyChanged(nameof(Children));
             OnNotifyPropertyChanged(nameof(AbsoluteFilename));
         }
+
+        /// <summary>
+        /// Navigates to to the file/include in the IDE.
+        /// </summary>
+        abstract public void NavigateToInclude();
     }
 }

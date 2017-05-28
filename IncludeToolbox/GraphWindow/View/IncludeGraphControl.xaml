@@ -41,7 +41,7 @@
                 <TreeView Grid.Row="1" ItemsSource="{Binding HierarchyIncludeTreeModel.Children}">
                     <TreeView.ItemTemplate>
                         <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
-                            <TextBlock Text="{Binding Name}" ToolTip="{Binding AbsoluteFilename}"/>
+                            <TextBlock Text="{Binding Name}" ToolTip="{Binding AbsoluteFilename}" MouseDown="OnIncludeTreeItemMouseDown"/>
                         </HierarchicalDataTemplate>
                     </TreeView.ItemTemplate>
                 </TreeView>
@@ -50,7 +50,7 @@
                 <TreeView Grid.Row="1" ItemsSource="{Binding FolderGroupedIncludeTreeModel.Children}">
                     <TreeView.ItemTemplate>
                         <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
-                            <TextBlock Text="{Binding Name}" ToolTip="{Binding AbsoluteFilename}"/>
+                            <TextBlock Text="{Binding Name}" ToolTip="{Binding AbsoluteFilename}" MouseDown="OnIncludeTreeItemMouseDown"/>
                         </HierarchicalDataTemplate>
                     </TreeView.ItemTemplate>
                 </TreeView>

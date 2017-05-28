@@ -145,6 +145,10 @@ namespace IncludeToolbox.GraphWindow
                 }
             }
         }
+
+        public override void NavigateToInclude()
+        {
+        }
     }
 
     public class FolderIncludeTreeViewItem_Folder : IncludeTreeViewItem
@@ -156,6 +160,11 @@ namespace IncludeToolbox.GraphWindow
         {
             Name = folderPart;
             AbsoluteFilename = absoluteFolderName;
+        }
+
+        public override void NavigateToInclude()
+        {
+            // todo?
         }
     }
 
@@ -184,6 +193,11 @@ namespace IncludeToolbox.GraphWindow
                 ParentFolder = "<unresolved>";
             else
                 ParentFolder = Path.GetDirectoryName(AbsoluteFilename);
+        }
+
+        public override void NavigateToInclude()
+        {
+            // todo
         }
     }
 }
