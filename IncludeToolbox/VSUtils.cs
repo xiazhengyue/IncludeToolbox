@@ -133,6 +133,24 @@ namespace IncludeToolbox
             }
         }
 
+        public static EnvDTE.Window OpenFileAndShowDocument(string filePath)
+        {
+            if (filePath == null)
+                return null;
+
+            var dte = VSUtils.GetDTE();
+            EnvDTE.Window fileWindow = dte.ItemOperations.OpenFile(filePath);
+            if (fileWindow == null)
+            {
+                Output.Instance.WriteLine("Failed to open File {0}", filePath);
+                return null;
+            }
+            fileWindow.Activate();
+            fileWindow.Visible = true;
+
+            return fileWindow;
+        }
+
         public static string GetOutputText()
         {
             var dte = GetDTE();

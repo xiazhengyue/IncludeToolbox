@@ -63,15 +63,7 @@ namespace IncludeToolbox.GraphWindow
             // Want to navigate to origin of this include, not target if possible
             if (includingFileAbsoluteFilename != null && Path.IsPathRooted(includingFileAbsoluteFilename))
             {
-                var dte = VSUtils.GetDTE();
-                EnvDTE.Window fileWindow = dte.ItemOperations.OpenFile(includingFileAbsoluteFilename);
-                if (fileWindow == null)
-                {
-                    Output.Instance.WriteLine("Failed to open File {0}", includingFileAbsoluteFilename);
-                    return;
-                }
-                fileWindow.Activate();
-                fileWindow.Visible = true;
+                var fileWindow = VSUtils.OpenFileAndShowDocument(includingFileAbsoluteFilename);
 
                 // Try to move to carret if possible.
                 if (include.IncludeLine != null)

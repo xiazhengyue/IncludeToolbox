@@ -197,7 +197,10 @@ namespace IncludeToolbox.GraphWindow
 
         public override void NavigateToInclude()
         {
-            // todo
+            if (AbsoluteFilename != null && Path.IsPathRooted(AbsoluteFilename))
+            {
+                var fileWindow = VSUtils.OpenFileAndShowDocument(AbsoluteFilename);
+            }
         }
     }
 }
