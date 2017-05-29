@@ -87,6 +87,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="GraphWindow\ViewModel\IncludeTreeViewItem.cs" />
+    <Compile Include="RegexUtils.cs" />
     <Compile Include="TryAndErrorRemoval.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_CodeWindow.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_Project.cs" />

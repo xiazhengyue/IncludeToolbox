@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using EnvDTE;
 using Microsoft.VisualStudio.Text;
 using System.Collections.Generic;
+using System.IO;
 
 namespace IncludeToolbox
 {
@@ -97,8 +98,12 @@ namespace IncludeToolbox
                 if (settings.IgnoreFirstInclude)
                     includeLines = includeLines.Skip(1);
                 // Apply filter ignore regex.
-                includeLines = includeLines.Where(line => !settings.IgnoreList.Any(regexPattern => 
-                                                 new System.Text.RegularExpressions.Regex(regexPattern).Match(line.IncludeContent).Success));
+                {
+                    string documentName = Path.GetFileNameWithoutExtension(document.FullName);
+                    string[] ignoreRegexList = RegexUtils.FixupRegexes(settings.IgnoreList, documentName);
+                    includeLines = includeLines.Where(line => !ignoreRegexList.Any(regexPattern =>
+                                                     new System.Text.RegularExpressions.Regex(regexPattern).Match(line.IncludeContent).Success));
+                }
                 // Reverse order if necessary.
                 if (settings.RemovalOrder == TryAndErrorRemovalOptionsPage.IncludeRemovalOrder.BottomToTop)
                     includeLines = includeLines.Reverse();

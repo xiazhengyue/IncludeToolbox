@@ -31,8 +31,9 @@ namespace IncludeToolbox
 
         [Category("Try And Error Include Removal")]
         [DisplayName("Ignore List")]
-        [Description("List of regexes. If the content of a #include directive match with any of these, it will be ignored.")]
-        public string[] IgnoreList { get; set; } = new string[] { ".inl", "_inl.h" };
+        [Description("List of regexes. If the content of a #include directive match with any of these, it will be ignored." +
+                       "\n\"" + RegexUtils.CurrentFileNameKey + "\" will be replaced with the current file name without extension.")]
+        public string[] IgnoreList { get; set; } = new string[] { $"(\\/|\\\\|^){RegexUtils.CurrentFileNameKey}\\.(h|hpp|hxx|inl|c|cpp|cxx)$", ".inl", "_inl.h" };
 
         [Category("Try And Error Include Removal")]
         [DisplayName("Keep Line Breaks")]

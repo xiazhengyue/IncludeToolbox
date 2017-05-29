@@ -90,24 +90,6 @@ namespace IncludeToolbox.Formatter
             }
         }
 
-        public const string CurrentFileNameKey = "$(currentFilename)";
-
-        /// <summary>
-        /// Replaces special macros in a precedence regex list.
-        /// </summary>
-        /// <param name="precedenceRegexes"></param>
-        /// <param name="documentName">Name of the current document without extension.</param>
-        /// <returns></returns>
-        private static string[] FixupRegexes(string[] precedenceRegexes, string documentName)
-        {
-            string[] regexes = new string[precedenceRegexes.Length];
-            for (int i = 0; i < precedenceRegexes.Length; ++i)
-            {
-                regexes[i] = precedenceRegexes[i].Replace(CurrentFileNameKey, documentName);
-            }
-            return regexes;
-        }
-
         private static void SortIncludes(ref List<IncludeLineInfo> lines, FormatterOptionsPage settings, string documentName)
         {
             FormatterOptionsPage.TypeSorting typeSorting = settings.SortByType;
@@ -115,7 +97,7 @@ namespace IncludeToolbox.Formatter
             bool blankAfterRegexGroupMatch = settings.BlankAfterRegexGroupMatch;
             bool removeEmptyLines = settings.RemoveEmptyLines;
 
-            string[] precedenceRegexes = FixupRegexes(settings.PrecedenceRegexes, documentName);
+            string[] precedenceRegexes = RegexUtils.FixupRegexes(settings.PrecedenceRegexes, documentName);
 
             // Select only valid include lines and sort them. They'll stay in this relative sorted
             // order when rearranged by regex precedence groups.
