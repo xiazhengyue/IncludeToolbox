@@ -33,7 +33,7 @@ namespace Tests
             settings.SortByType = IncludeToolbox.FormatterOptionsPage.TypeSorting.None;
             settings.PrecedenceRegexes = new string[]
                 {
-                    IncludeFormatter.CurrentFileNameKey,
+                    IncludeToolbox.RegexUtils.CurrentFileNameKey,
                     ".+_.+"
                 };
             settings.BlankAfterRegexGroupMatch = true;

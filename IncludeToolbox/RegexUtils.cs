@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace IncludeToolbox
 {
-    static class RegexUtils
+    public static class RegexUtils
     {
         public const string CurrentFileNameKey = "$(currentFilename)";
 
