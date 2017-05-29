@@ -1,0 +1,63 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:IncludeToolbox.GraphWindow"
+             x:Class="IncludeToolbox.GraphWindow.IncludeGraphControl"
+             mc:Ignorable="d">
+    
+    <UserControl.DataContext>
+        <local:IncludeGraphViewModel/>
+    </UserControl.DataContext>
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ToolWindowStyle.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" MinHeight="80"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition MinWidth="150" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Label Content="{Binding GraphRootFilename}" FontFamily="Consolas" VerticalAlignment="Center"/>
+            <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="5 5 5 5"/>
+            <Label Content="Include Count:"/>
+            <Label Content="{Binding Path=NumIncludes}"/>
+        </StackPanel>
+
+        <TabControl Grid.Row="1">
+            <TabItem Header="Include Hierarchy">
+                <TreeView Grid.Row="1" ItemsSource="{Binding HierarchyIncludeTreeModel.Children}">
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
+                            <TextBlock Text="{Binding Name}" ToolTip="{Binding AbsoluteFilename}" MouseDown="OnIncludeTreeItemMouseDown"/>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </TabItem>
+            <TabItem Header="Grouped by Folder">
+                <TreeView Grid.Row="1" ItemsSource="{Binding FolderGroupedIncludeTreeModel.Children}">
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
+                            <TextBlock Text="{Binding Name}" ToolTip="{Binding AbsoluteFilename}" MouseDown="OnIncludeTreeItemMouseDown"/>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </TabItem>
+        </TabControl>
+
+        <ProgressBar Height="25" VerticalAlignment="Center" Width="130" Grid.Row="1" IsIndeterminate="True" Visibility="{Binding Path=RefreshInProgress, Converter={StaticResource BoolToVis}}"/>
+
+    </Grid>
+</UserControl>

@@ -35,12 +35,31 @@
          other menus or buttons (commands); from a visual point of view you can see the
          group as the part of a menu contained between two lines. The parent of a group
          must be a menu. -->
+    
+    <Menus>
+      <Menu guid="guidGraphWindowToolbarCmdSet" id="idGraphWindowToolbar" type="ToolWindowToolbar">
+        <CommandFlag>DefaultDocked</CommandFlag>
+        <Strings>
+          <ButtonText>Include Graph Toolbar</ButtonText>
+          <CommandName>Include Graph Toolbar</CommandName>
+        </Strings>
+      </Menu>
+    </Menus>
+
     <Groups>
       <Group guid="guidCodeMenuCmdSet" id="EditMenuGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN" />
       </Group>
-      <Group guid="guidIncludeViewerToolWindowCmdSet" id="IncludeViewerToolWindowGroup" priority="0x8000"/>
+      <Group guid="guidIncludeGraphWindowCmdSet" id="IncludeGraphToolWindowGroup" priority="0x8000"/>
       <Group guid="guidProjectMenuCmdSet" id="ProjectMenuGroup" priority="0x8000"/>
+    
+      <!-- Groups for include graph window toolbar -->
+      <Group guid="guidGraphWindowToolbarCmdSet" id="idGraphWindowToolbarGroupRefresh" priority="0x0000">
+        <Parent guid="guidGraphWindowToolbarCmdSet" id="idGraphWindowToolbar" />
+      </Group>
+      <Group guid="guidGraphWindowToolbarCmdSet" id="idGraphWindowToolbarGroupSaveGraph" priority="0x0001">
+        <Parent guid="guidGraphWindowToolbarCmdSet" id="idGraphWindowToolbar" />
+      </Group>
     </Groups>
 
     <!--Buttons section. -->
@@ -57,7 +76,7 @@
 
       <Button guid="guidCodeMenuCmdSet" id="FormatIncludesId" priority="0x0100" type="Button">
         <Parent guid="guidCodeMenuCmdSet" id="EditMenuGroup" />
-        <Icon guid="guidImages" id="iconFormatter" />
+        <Icon guid="guidIconsCommon" id="iconFormatter" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Format Selected Includes</ButtonText>
@@ -65,16 +84,15 @@
       </Button>
       <Button guid="guidCodeMenuCmdSet" id="IncludeWhatYouUseId" priority="0x0101" type="Button">
         <Parent guid="guidCodeMenuCmdSet" id="EditMenuGroup" />
-        <Icon guid="guidImages" id="iconIWYU" />
+        <Icon guid="guidIconsCommon" id="iconIWYU" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Run Include-What-You-Use</ButtonText>
         </Strings>
-        
       </Button>
       <Button guid="guidCodeMenuCmdSet" id="TryAndErrorRemovalId" priority="0x0102" type="Button">
         <Parent guid="guidCodeMenuCmdSet" id="EditMenuGroup" />
-        <Icon guid="guidImages" id="iconTryAndError" />
+        <Icon guid="guidIconsCommon" id="iconTryAndError" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Try and Error Include Removal</ButtonText>
@@ -83,24 +101,53 @@
 
       <Button guid="guidProjectMenuCmdSet" id="ProjectWideTryAndErrorRemovalId" priority="0x2000" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD" />
-        <Icon guid="guidImages" id="iconTryAndError" />
+        <Icon guid="guidIconsCommon" id="iconTryAndError" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>Try and Error Include Removal</ButtonText>
         </Strings>
       </Button>
 
-      <Button guid="guidIncludeViewerToolWindowCmdSet" id="IncludeViewerToolWindowCommandId" priority="0x2000" type="Button">
+      <Button guid="guidIncludeGraphWindowCmdSet" id="IncludeGraphToolWindowCommandId" priority="0x2000" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
-        <Icon guid="guidImages" id="iconExplorer" />
+        <Icon guid="guidIconsCommon" id="iconExplorer" />
         <Strings>
-          <ButtonText>IncludeViewerToolWindow</ButtonText>
+          <ButtonText>Include Graph</ButtonText>
         </Strings>
       </Button>
-      
+
+
+      <!-- Buttons for include graph window toolbar -->
+      <Button guid="guidGraphWindowToolbarCmdSet" id="idGraphWindowRefresh" priority="0x00" type="Button">
+        <Parent guid="guidGraphWindowToolbarCmdSet" id="idGraphWindowToolbarGroupRefresh" />
+        <Icon guid="guidIconsGraphWindowToolbar" id="iconRefresh" />
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <ButtonText>Refresh Graph</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidGraphWindowToolbarCmdSet" id="idGraphWindowSaveGraph" priority="0x00" type="Button">
+        <Parent guid="guidGraphWindowToolbarCmdSet" id="idGraphWindowToolbarGroupSaveGraph" />
+        <Icon guid="guidIconsGraphWindowToolbar" id="iconSaveGraph" />
+        <Strings>
+          <ButtonText>Save Graph as DGML</ButtonText>
+        </Strings>
+      </Button>
 
     </Buttons>
 
+    <Combos>
+      <!-- Excellent sample on ComoboBoxes https://github.com/Microsoft/VSSDK-Extensibility-Samples/blob/master/Combo_Box/C%23/PkgCmd.vsct -->
+      <Combo guid="guidGraphWindowToolbarCmdSet" id="idGraphWindowRefreshMode" priority="0x01" type="IndexCombo" defaultWidth="145" idCommandList="idGraphWindowRefreshModeOptions">
+        <Parent guid="guidGraphWindowToolbarCmdSet" id="idGraphWindowToolbarGroupRefresh"/>
+        <Strings>
+          <MenuText>DropDown Combo: </MenuText>
+          <ButtonText>Graph Retrieval Method</ButtonText>
+        </Strings>
+      </Combo>
+    </Combos>
+    
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
       <!--  The bitmap id is defined in a way that is a little bit different from the others:
@@ -108,7 +155,8 @@
             bitmap strip containing the bitmaps and then there are the numeric ids of the elements used
             inside a button definition. An important aspect of this declaration is that the element id
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <Bitmap guid="guidImages" href="..\Resources\IncludeFormatterIcons.png" usedList="iconFormatter, iconIWYU, iconTryAndError, iconExplorer"/>
+      <Bitmap guid="guidIconsCommon" href="..\Resources\IncludeFormatterIcons.png" usedList="iconFormatter, iconIWYU, iconTryAndError, iconExplorer"/>
+      <Bitmap guid="guidIconsGraphWindowToolbar" href="..\Resources\IncludeGraphToolbarIcons.png" usedList="iconRefresh, iconSaveGraph"/>
     </Bitmaps>
   </Commands>
 
@@ -123,17 +171,35 @@
       <IDSymbol name="TryAndErrorRemovalId" value="0x0104" />
     </GuidSymbol>
 
-    <GuidSymbol name="guidIncludeViewerToolWindowCmdSet" value="{032eb795-1f1c-440d-af98-43cdc1de7a8b}">
-      <IDSymbol name="IncludeViewerToolWindowGroup" value="0x1000" />
-      <IDSymbol name="IncludeViewerToolWindowCommandId" value="0x0102" />
+    <GuidSymbol name="guidIncludeGraphWindowCmdSet" value="{032eb795-1f1c-440d-af98-43cdc1de7a8b}">
+      <IDSymbol name="IncludeGraphToolWindowGroup" value="0x1000" />
+      <IDSymbol name="IncludeGraphToolWindowCommandId" value="0x0102" />
     </GuidSymbol>
 
     <GuidSymbol name="guidProjectMenuCmdSet" value="{1970ECF3-6C03-4CCF-B422-8DD07F774ED8}">
       <IDSymbol name="ProjectMenuGroup" value="0x1000" />
       <IDSymbol name="ProjectWideTryAndErrorRemovalId" value="0x0100" />
     </GuidSymbol>
+
+    <GuidSymbol name="guidGraphWindowToolbarCmdSet" value="{0B242452-870A-489B-8336-88FD01AEF0C1}">
+      <!-- Toolbar and groups -->
+      <IDSymbol name="idGraphWindowToolbar" value="0x1000" />
+      <IDSymbol name="idGraphWindowToolbarGroupRefresh" value="0x1001" />
+      <IDSymbol name="idGraphWindowToolbarGroupSaveGraph" value="0x1002" />
+      
+      <!-- Buttons -->
+      <IDSymbol name="idGraphWindowRefresh" value="0x101" />
+      <IDSymbol name="idGraphWindowRefreshMode" value="0x102" />
+      <IDSymbol name="idGraphWindowRefreshModeOptions" value="0x103" />
+      <IDSymbol name="idGraphWindowSaveGraph" value="0x104" />
+    </GuidSymbol>
     
-    <GuidSymbol name="guidImages" value="{dd14909e-b406-4cfa-b492-08b8127679df}">
+    <GuidSymbol name="guidIconsGraphWindowToolbar" value="{10311B90-33AD-4479-A326-4B40F7F7ACA8}">
+      <IDSymbol name="iconRefresh" value="1" />
+      <IDSymbol name="iconSaveGraph" value="2" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidIconsCommon" value="{dd14909e-b406-4cfa-b492-08b8127679df}">
       <IDSymbol name="iconFormatter" value="1" />
       <IDSymbol name="iconIWYU" value="2" />
       <IDSymbol name="iconTryAndError" value="3" />

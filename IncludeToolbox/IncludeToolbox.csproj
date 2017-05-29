@@ -64,27 +64,43 @@
   <ItemGroup>
     <Compile Include="Commands\CommandBase.cs" />
     <Compile Include="Commands\CommandSetGuids.cs" />
-    <Compile Include="Commands\IncludeViewerToolWindowCommand.cs" />
+    <Compile Include="Commands\IncludeGraphToolWindow.cs" />
     <Compile Include="Commands\IncludeWhatYouUse.cs" />
+    <Compile Include="GraphWindow\Commands\SaveDGML.cs" />
+    <Compile Include="GraphWindow\Commands\RefreshModeComboBoxOptions.cs" />
+    <Compile Include="GraphWindow\Commands\RefreshModeComboBox.cs" />
+    <Compile Include="GraphWindow\Commands\RefreshIncludeGraph.cs" />
+    <Compile Include="GraphWindow\PropertyChangedBase.cs" />
+    <Compile Include="GraphWindow\ViewModel\FolderIncludeTreeItem.cs" />
+    <Compile Include="GraphWindow\ViewModel\HierarchyIncludeTreeViewItem.cs" />
+    <Compile Include="GraphWindow\ViewModel\IncludeGraphViewModel.cs" />
+    <Compile Include="Graph\CustomGraphParser.cs" />
+    <Compile Include="Graph\DGMLGraph.cs" />
+    <Compile Include="Graph\CompilationBasedGraphParser.cs" />
+    <Compile Include="Graph\IncludeGraph.cs" />
     <Compile Include="IncludeWhatYouUse\IWYU.cs" />
     <Compile Include="IncludeWhatYouUse\IWYUDownload.cs" />
     <Compile Include="Options\IncludeWhatYouUseOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Options\ViewerOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="GraphWindow\ViewModel\IncludeTreeViewItem.cs" />
     <Compile Include="TryAndErrorRemoval.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_CodeWindow.cs" />
     <Compile Include="Commands\TryAndErrorRemoval_Project.cs" />
     <Compile Include="Commands\FormatIncludes.cs" />
-    <Compile Include="IncludeFormatter\IncludeFormatter.cs" />
+    <Compile Include="Formatter\IncludeFormatter.cs" />
     <Compile Include="Package\IncludeToolboxPackage.cs" />
-    <Compile Include="IncludeFormatter\IncludeLineInfo.cs" />
+    <Compile Include="Formatter\IncludeLineInfo.cs" />
     <Compile Include="Options\Constants.cs" />
     <Compile Include="Options\TryAndErrorRemovalOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ToolWindows\IncludeViewerToolWindow.cs" />
-    <Compile Include="ToolWindows\IncludeViewerToolWindowControl.xaml.cs">
-      <DependentUpon>IncludeViewerToolWindowControl.xaml</DependentUpon>
+    <Compile Include="GraphWindow\View\IncludeGraphToolWindow.cs" />
+    <Compile Include="GraphWindow\View\IncludeGraphControl.xaml.cs">
+      <DependentUpon>IncludeGraphControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Options\FormatterOptionsPage.cs">
       <SubType>Component</SubType>
@@ -269,7 +285,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <VSCTCompile Include="Package\IncludeToolboxPackage.vsct">
+    <VSCTCompile Include="Package\CommandDefinitions.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
@@ -290,11 +306,16 @@
     <Content Include="Resources\IncludeFormatterPackage.png">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="Resources\IncludeGraphToolbarIcons.png" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="ToolWindows\IncludeViewerToolWindowControl.xaml">
+    <Page Include="GraphWindow\View\IncludeGraphControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="GraphWindow\View\ToolWindowStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>

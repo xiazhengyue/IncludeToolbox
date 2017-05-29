@@ -37,7 +37,7 @@ namespace IncludeToolbox
 
         public static string GetExactPathName(string pathName)
         {
-            if (!(File.Exists(pathName) || Directory.Exists(pathName)))
+            if (!File.Exists(pathName) && !Directory.Exists(pathName))
                 return pathName;
 
             var di = new DirectoryInfo(pathName);
@@ -68,6 +68,18 @@ namespace IncludeToolbox
                 lineEndingToBeUsed = "\r\n";
 
             return lineEndingToBeUsed;
+        }
+
+        /// <summary>
+        /// Prepending a single Item to an to an IEnumerable.
+        /// </summary>
+        public static IEnumerable<T> Prepend<T>(this IEnumerable<T> seq, T val)
+        {
+            yield return val;
+            foreach (T t in seq)
+            {
+                yield return t;
+            }
         }
     }
 }

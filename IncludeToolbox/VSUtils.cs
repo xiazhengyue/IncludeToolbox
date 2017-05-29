@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using VCProjectUtils.Base;
+using EnvDTE;
+using Microsoft.VisualStudio;
 
 namespace IncludeToolbox
 {
@@ -129,6 +131,53 @@ namespace IncludeToolbox
 
                 return viewHost;
             }
+        }
+
+        public static EnvDTE.Window OpenFileAndShowDocument(string filePath)
+        {
+            if (filePath == null)
+                return null;
+
+            var dte = VSUtils.GetDTE();
+            EnvDTE.Window fileWindow = dte.ItemOperations.OpenFile(filePath);
+            if (fileWindow == null)
+            {
+                Output.Instance.WriteLine("Failed to open File {0}", filePath);
+                return null;
+            }
+            fileWindow.Activate();
+            fileWindow.Visible = true;
+
+            return fileWindow;
+        }
+
+        public static string GetOutputText()
+        {
+            var dte = GetDTE();
+            if (dte == null)
+                return "";
+
+
+            OutputWindowPane buildOutputPane = null;
+            foreach (OutputWindowPane pane in dte.ToolWindows.OutputWindow.OutputWindowPanes)
+            {
+                if (pane.Guid == VSConstants.OutputWindowPaneGuid.BuildOutputPane_string)
+                {
+                    buildOutputPane = pane;
+                    break;
+                }
+            }
+            if (buildOutputPane == null)
+            {
+                Output.Instance.ErrorMsg("Failed to query for build output pane!");
+                return null;
+            }
+            TextSelection sel = buildOutputPane.TextDocument.Selection;
+
+            sel.StartOfDocument(false);
+            sel.EndOfDocument(true);
+
+            return sel.Text;
         }
     }
 }

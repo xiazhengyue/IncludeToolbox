@@ -14,7 +14,7 @@ namespace VCProjectUtils.VS15
             return project?.Object is VCProject;
         }
 
-        private VCFileConfiguration GetVCFileConfig(Document document, out string reasonForFailure)
+        private VCFileConfiguration GetVCFileConfigForCompilation(Document document, out string reasonForFailure)
         {
             if (document == null)
             {
@@ -36,7 +36,7 @@ namespace VCProjectUtils.VS15
                 return null;
             }
 
-            if (vcFile.FileType != eFileType.eFileTypeCppCode && vcFile.FileType == eFileType.eFileTypeCppClass)
+            if (vcFile.FileType != eFileType.eFileTypeCppCode)
             {
                 reasonForFailure = "The given document is not a compileable VC++ file.";
                 return null;
@@ -84,13 +84,13 @@ namespace VCProjectUtils.VS15
 
         public bool IsCompilableFile(Document document, out string reasonForFailure)
         {
-            return GetVCFileConfig(document, out reasonForFailure) != null;
+            return GetVCFileConfigForCompilation(document, out reasonForFailure) != null;
         }
 
         public void CompileSingleFile(Document document)
         {
             string reasonForFailure;
-            var fileConfig = GetVCFileConfig(document, out reasonForFailure);
+            var fileConfig = GetVCFileConfigForCompilation(document, out reasonForFailure);
             if(fileConfig != null)
             {
                 fileConfig.Compile(true, false); // WaitOnBuild==true always fails.

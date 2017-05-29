@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using IncludeToolbox.IncludeFormatter;
+using IncludeToolbox.Formatter;
 
 namespace Tests
 {
@@ -16,8 +16,8 @@ namespace Tests
    
 int main () {}";
 
-            var parse = IncludeLineInfo.ParseIncludes(sourceCode, false);
-            Assert.AreEqual(parse.Length, 4);
+            var parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.None);
+            Assert.AreEqual(parse.Count, 4);
 
             Assert.AreEqual("test.h", parse[0].IncludeContent);
             Assert.AreEqual("tüst.hpp", parse[1].IncludeContent);
@@ -35,8 +35,11 @@ int main () {}";
             Assert.AreEqual(IncludeLineInfo.Type.NoInclude, parse[3].LineType);
 
 
-            parse = IncludeLineInfo.ParseIncludes(sourceCode, true);
-            Assert.AreEqual(parse.Length, 3);
+            parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
+            Assert.AreEqual(parse.Count, 3);
+            Assert.AreEqual(0, parse[0].LineNumber);
+            Assert.AreEqual(1, parse[1].LineNumber);
+            Assert.AreEqual(3, parse[2].LineNumber);
         }
 
         [TestMethod]
@@ -46,7 +49,7 @@ int main () {}";
 @"// #include <not included after all>
 #include <include>";
 
-            var parse = IncludeLineInfo.ParseIncludes(sourceCode, true);
+            var parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
             Assert.AreEqual(IncludeLineInfo.Type.NoInclude, parse[0].LineType);
             Assert.AreEqual("", parse[0].IncludeContent);
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[1].LineType);
@@ -60,10 +63,10 @@ int main () {}";
             // But we want to handle this gracefully!
 
             string sourceCode = "/* test // */ #include <there>";
-            var parse = IncludeLineInfo.ParseIncludes(sourceCode, true);
+            var parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
 
-            parse = IncludeLineInfo.ParseIncludes(sourceCode, true);
+            parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
             sourceCode = "#include <there> /* test */ ";
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
 
@@ -74,7 +77,7 @@ int main () {}";
 sdfsdf // #include <commented2>
 dfdf // */ #include <there1>";
 
-            parse = IncludeLineInfo.ParseIncludes(sourceCode, true);
+            parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
             Assert.AreEqual("there0", parse[0].IncludeContent);
             Assert.AreEqual(IncludeLineInfo.Type.NoInclude, parse[1].LineType);
@@ -101,12 +104,21 @@ dfdf // */ #include <there1>";
 #endif
 #include <there1>";
 
-            var parse = IncludeLineInfo.ParseIncludes(sourceCode, true, true);
+            var parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines | ParseOptions.IgnoreIncludesInPreprocessorConditionals);
             Assert.AreEqual(2, parse.Count(x => x.LineType != IncludeLineInfo.Type.NoInclude));
             Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
-            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[parse.Length - 1].LineType);
+            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[parse.Count - 1].LineType);
+            Assert.AreEqual(0, parse[0].LineNumber);
+            Assert.AreEqual(1, parse[1].LineNumber);
 
-            parse = IncludeLineInfo.ParseIncludes(sourceCode, true, false);
+            parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.KeepOnlyValidIncludes | ParseOptions.IgnoreIncludesInPreprocessorConditionals);
+            Assert.AreEqual(2, parse.Count);
+            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
+            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[parse.Count - 1].LineType);
+            Assert.AreEqual(0, parse[0].LineNumber);
+            Assert.AreEqual(12, parse[1].LineNumber);
+
+            parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
             Assert.AreEqual(5, parse.Count(x => x.LineType != IncludeLineInfo.Type.NoInclude));
         }
 
@@ -128,19 +140,36 @@ dfdf // */ #include <there1>";
                 System.IO.Path.Combine(System.Environment.CurrentDirectory, "testdata"),
             };
 
-            var parse = IncludeLineInfo.ParseIncludes(sourceCode, true);
+            var parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
 
-            string resolvedPath = parse[0].TryResolveInclude(includeDirs);
+            bool successfullyResolved = false;
+
+            string resolvedPath = parse[0].TryResolveInclude(includeDirs, out successfullyResolved);
             StringAssert.EndsWith(resolvedPath, "testdata\\subdir\\testinclude.h");
+            Assert.AreEqual(true, successfullyResolved);
 
-            resolvedPath = parse[1].TryResolveInclude(includeDirs);
+            resolvedPath = parse[1].TryResolveInclude(includeDirs, out successfullyResolved);
             StringAssert.EndsWith(resolvedPath, "testdata\\testinclude.h");
+            Assert.AreEqual(true, successfullyResolved);
 
-            resolvedPath = parse[2].TryResolveInclude(includeDirs);
+            resolvedPath = parse[2].TryResolveInclude(includeDirs, out successfullyResolved);
             Assert.AreEqual("unresolvable", resolvedPath);
+            Assert.AreEqual(false, successfullyResolved);
 
-            resolvedPath = parse[3].TryResolveInclude(includeDirs);
+            resolvedPath = parse[3].TryResolveInclude(includeDirs, out successfullyResolved);
             Assert.AreEqual("", resolvedPath);
+            Assert.AreEqual(false, successfullyResolved);
+        }
+
+        [TestMethod]
+        public void MixedLineEndings()
+        {
+            // The end of this string is tricky as it adds a 3 newlines: \r\n (win), \n (unix), \r (mac old)
+            string sourceCode = "#include <a>\n#include <b>\r\n#include <c>\r#include <d>\r\n\n\r";
+            var parseWithoutEmpty = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
+            Assert.AreEqual(4, parseWithoutEmpty.Count);
+            var parseWithEmpty = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.None);
+            Assert.AreEqual(6, parseWithEmpty.Count);
         }
     }
 }

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IncludeToolbox.Commands
 {
@@ -22,5 +18,10 @@ namespace IncludeToolbox.Commands
         /// Command menu group for commands in the project menu.
         /// </summary>
         public static readonly Guid ProjectGroup = new Guid("1970ECF3-6C03-4CCF-B422-8DD07F774ED8");
+
+        /// <summary>
+        /// Commandset for all toolbar elements in the include graph toolwindow.
+        /// </summary>
+        public static readonly Guid GraphWindowToolbarCmdSet = new Guid("0B242452-870A-489B-8336-88FD01AEF0C1");
     }
 }
