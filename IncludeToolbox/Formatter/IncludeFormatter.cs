@@ -95,7 +95,6 @@ namespace IncludeToolbox.Formatter
             FormatterOptionsPage.TypeSorting typeSorting = settings.SortByType;
             bool regexIncludeDelimiter = settings.RegexIncludeDelimiter;
             bool blankAfterRegexGroupMatch = settings.BlankAfterRegexGroupMatch;
-            bool removeEmptyLines = settings.RemoveEmptyLines;
 
             string[] precedenceRegexes = RegexUtils.FixupRegexes(settings.PrecedenceRegexes, documentName);
 
@@ -151,9 +150,10 @@ namespace IncludeToolbox.Formatter
                         var includeLine = sortedIncludesArray[sortedIndex++];
 
                         // Handle prepending a newline if requested, as long as:
-                        // - It's not the first line, and
-                        // - We'll remove empty lines or the previous line isn't already a NoInclude
-                        if (groupStarts.Contains(includeLine) && i > 0 && (removeEmptyLines || !extendedLineList[i - 1].ContainsActiveInclude))
+                        // - this include is the begin of a new group
+                        // - it's not the first line
+                        // - the previous line isn't already a non-include
+                        if (groupStarts.Contains(includeLine) && i > 0 && extendedLineList[i - 1].ContainsActiveInclude)
                         {
                             extendedLineList.Add(new IncludeLineInfo());
                         }
