@@ -157,6 +157,8 @@ namespace IncludeToolbox.Formatter
             {
                 if (ContainsActiveInclude)
                 {
+                    DelimiterSanityCheck();
+
                     if (lineText[delimiter0] == '<')
                         return Type.AngleBrackets;
                     else if (lineText[delimiter0] == '\"')
@@ -173,10 +175,7 @@ namespace IncludeToolbox.Formatter
         /// <remarks>
         /// A line that contains a valid #include may still be ContainsActiveInclude==false if it is commented or (depending on parsing options) #if(def)'ed out.
         /// </remarks>
-        public bool ContainsActiveInclude
-        {
-            get { return delimiter0 != -1; }
-        }
+        public bool ContainsActiveInclude => delimiter0 != -1;
 
         /// <summary>
         /// Changes the type of this line.
@@ -184,8 +183,10 @@ namespace IncludeToolbox.Formatter
         /// <param name="newLineType">Type.NoInclude won't have any effect.</param>
         public void SetLineType(Type newLineType)
         {
-            if (LineType != newLineType)
+            if (LineType != newLineType && ContainsActiveInclude)
             {
+                DelimiterSanityCheck();
+
                 if (newLineType == Type.AngleBrackets)
                 {
                     StringBuilder sb = new StringBuilder(lineText);
@@ -239,7 +240,13 @@ namespace IncludeToolbox.Formatter
         /// </summary>
         public string GetIncludeContentWithDelimiters()
         {
-            return lineText.Substring(delimiter0, delimiter1 - delimiter0 + 1);
+            if (ContainsActiveInclude)
+            {
+                DelimiterSanityCheck();
+                return lineText.Substring(delimiter0, delimiter1 - delimiter0 + 1);
+            }
+            else
+                return string.Empty;
         }
 
 
@@ -251,8 +258,14 @@ namespace IncludeToolbox.Formatter
         {
             get
             {
-                int length = delimiter1 - delimiter0 - 1;
-                return length > 0 ? RawLine.Substring(delimiter0 + 1, length) : "";
+                if (ContainsActiveInclude)
+                {
+                    DelimiterSanityCheck();
+                    int length = delimiter1 - delimiter0 - 1;
+                    return length > 0 ? RawLine.Substring(delimiter0 + 1, length) : "";
+                }
+                else
+                    return string.Empty;
             }
             set
             {
@@ -284,5 +297,13 @@ namespace IncludeToolbox.Formatter
 
         private int delimiter0 = -1;
         private int delimiter1 = -1;
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        private void DelimiterSanityCheck()
+        {
+            System.Diagnostics.Debug.Assert(delimiter0 >= 0 && delimiter0 < lineText.Length);
+            System.Diagnostics.Debug.Assert(delimiter1 >= 0 && delimiter1 < lineText.Length);
+            System.Diagnostics.Debug.Assert(delimiter0 < delimiter1);
+        }
     }
 }
