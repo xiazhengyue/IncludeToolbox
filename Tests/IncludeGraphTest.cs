@@ -172,7 +172,7 @@ namespace Tests
                 Assert.IsNotNull(unresolvedFolder);
                 Assert.IsInstanceOfType(unresolvedFolder, typeof(IncludeToolbox.GraphWindow.FolderIncludeTreeViewItem_Folder));
 
-                var subdirFolder = children.First(x => x.Name.EndsWith("testdata\\subdir"));
+                var subdirFolder = children.First(x => x.Name.EndsWith("testdata\\subdir\\"));
                 Assert.IsTrue(Path.IsPathRooted(subdirFolder.Name));
                 Assert.IsNotNull(unresolvedFolder);
                 Assert.IsInstanceOfType(unresolvedFolder, typeof(IncludeToolbox.GraphWindow.FolderIncludeTreeViewItem_Folder));
@@ -189,7 +189,7 @@ namespace Tests
                     Assert.IsNotNull(inline);
                     Assert.IsInstanceOfType(inline, typeof(IncludeToolbox.GraphWindow.FolderIncludeTreeViewItem_Leaf));
 
-                    var subdirsubdirFolder = subdirFolder.Children.First(x => x.Name == "\\subdir");
+                    var subdirsubdirFolder = subdirFolder.Children.First(x => x.Name == "subdir\\");
                     Assert.IsNotNull(subdirsubdirFolder);
                     Assert.IsInstanceOfType(subdirsubdirFolder, typeof(IncludeToolbox.GraphWindow.FolderIncludeTreeViewItem_Folder));
 

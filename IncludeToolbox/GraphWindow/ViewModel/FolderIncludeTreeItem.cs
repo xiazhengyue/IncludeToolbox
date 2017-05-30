@@ -67,7 +67,7 @@ namespace IncludeToolbox.GraphWindow
             {
                 leafItems.Sort((x, y) => x.ParentFolder.CompareTo(y.ParentFolder));
 
-                var root = new FolderIncludeTreeViewItem_Folder("", "");
+                var root = new FolderIncludeTreeViewItem_Folder("", 0);
                 GroupIncludeRecursively(root, leafItems, 0, leafItems.Count, 0);
                 rootChildren.AddRange(root.ChildrenList);
             }
@@ -119,7 +119,7 @@ namespace IncludeToolbox.GraphWindow
                     {
                         // Find maximal prefix of this group.
                         string largestPrefix = LargestCommonFolderPrefixInRange(allLeafItems, begin, i, currentPrefix);
-                        var newGroup = new FolderIncludeTreeViewItem_Folder(largestPrefix, largestPrefix.Substring(commonPrefixLength));
+                        var newGroup = new FolderIncludeTreeViewItem_Folder(largestPrefix, commonPrefixLength);
                         parentFolder.ChildrenList.Add(newGroup);
 
                         // If there are any direct children, they will be first due to sorting. Add them to the new group and ignore this part of the range.
@@ -156,10 +156,28 @@ namespace IncludeToolbox.GraphWindow
         public override IReadOnlyList<IncludeTreeViewItem> Children => ChildrenList;
         public List<IncludeTreeViewItem> ChildrenList { get; private set; } = new List<IncludeTreeViewItem>();
 
-        public FolderIncludeTreeViewItem_Folder(string absoluteFolderName, string folderPart)
+        public const string UnresolvedFolderName = "<unresolved>";
+
+        public FolderIncludeTreeViewItem_Folder(string largestPrefix, int commonPrefixLength)
         {
-            Name = folderPart;
-            AbsoluteFilename = absoluteFolderName;
+            AbsoluteFilename = largestPrefix;
+
+            largestPrefix.Substring(commonPrefixLength);
+
+            if (largestPrefix != UnresolvedFolderName)
+            {
+                var stringBuilder = new StringBuilder(largestPrefix);
+                stringBuilder.Remove(0, commonPrefixLength);
+                stringBuilder.Append(Path.DirectorySeparatorChar);
+                if (stringBuilder[0] == Path.DirectorySeparatorChar)
+                    stringBuilder.Remove(0, 1);
+
+                Name = stringBuilder.ToString();
+            }
+            else
+            {
+                Name = largestPrefix;
+            }
         }
 
         public override void NavigateToInclude()
@@ -190,7 +208,7 @@ namespace IncludeToolbox.GraphWindow
             AbsoluteFilename = item?.AbsoluteFilename;
 
             if (string.IsNullOrWhiteSpace(AbsoluteFilename) || !Path.IsPathRooted(AbsoluteFilename))
-                ParentFolder = "<unresolved>";
+                ParentFolder = FolderIncludeTreeViewItem_Folder.UnresolvedFolderName;
             else
                 ParentFolder = Path.GetDirectoryName(AbsoluteFilename);
         }
