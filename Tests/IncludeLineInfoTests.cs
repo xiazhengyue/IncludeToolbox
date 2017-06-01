@@ -12,34 +12,57 @@ namespace Tests
         {
             string sourceCode =
 @"#include ""test.h""
-#include <tüst.hpp>
+  #include <tüst.hpp>
    
+	#pragma once
+ #if
+#endif
 int main () {}";
 
             var parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.None);
-            Assert.AreEqual(parse.Count, 4);
+            Assert.AreEqual(parse.Count, 7);
 
             Assert.AreEqual("test.h", parse[0].IncludeContent);
             Assert.AreEqual("tüst.hpp", parse[1].IncludeContent);
             Assert.AreEqual("", parse[2].IncludeContent);
             Assert.AreEqual("", parse[3].IncludeContent);
+            Assert.AreEqual("", parse[4].IncludeContent);
+            Assert.AreEqual("", parse[5].IncludeContent);
+            Assert.AreEqual("", parse[6].IncludeContent);
 
             Assert.AreEqual("#include \"test.h\"", parse[0].RawLine);
-            Assert.AreEqual("#include <tüst.hpp>", parse[1].RawLine);
+            Assert.AreEqual("  #include <tüst.hpp>", parse[1].RawLine);
             Assert.AreEqual("   ", parse[2].RawLine);
-            Assert.AreEqual("int main () {}", parse[3].RawLine);
+            Assert.AreEqual("	#pragma once", parse[3].RawLine);
+            Assert.AreEqual(" #if", parse[4].RawLine);
+            Assert.AreEqual("#endif", parse[5].RawLine);
+            Assert.AreEqual("int main () {}", parse[6].RawLine);
 
-            Assert.AreEqual(IncludeLineInfo.Type.Quotes, parse[0].LineType);
-            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[1].LineType);
-            Assert.AreEqual(IncludeLineInfo.Type.NoInclude, parse[2].LineType);
-            Assert.AreEqual(IncludeLineInfo.Type.NoInclude, parse[3].LineType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.Quotes, parse[0].LineDelimiterType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.AngleBrackets, parse[1].LineDelimiterType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.None, parse[2].LineDelimiterType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.None, parse[3].LineDelimiterType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.None, parse[4].LineDelimiterType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.None, parse[5].LineDelimiterType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.None, parse[6].LineDelimiterType);
+
+            Assert.AreEqual(true, parse[0].ContainsPreProcessorDirective);
+            Assert.AreEqual(true, parse[1].ContainsPreProcessorDirective);
+            Assert.AreEqual(false, parse[2].ContainsPreProcessorDirective);
+            Assert.AreEqual(true, parse[3].ContainsPreProcessorDirective);
+            Assert.AreEqual(true, parse[4].ContainsPreProcessorDirective);
+            Assert.AreEqual(true, parse[5].ContainsPreProcessorDirective);
+            Assert.AreEqual(false, parse[6].ContainsPreProcessorDirective);
 
 
             parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
-            Assert.AreEqual(parse.Count, 3);
+            Assert.AreEqual(parse.Count, 6);
             Assert.AreEqual(0, parse[0].LineNumber);
             Assert.AreEqual(1, parse[1].LineNumber);
             Assert.AreEqual(3, parse[2].LineNumber);
+            Assert.AreEqual(4, parse[3].LineNumber);
+            Assert.AreEqual(5, parse[4].LineNumber);
+            Assert.AreEqual(6, parse[5].LineNumber);
         }
 
         [TestMethod]
@@ -50,9 +73,9 @@ int main () {}";
 #include <include>";
 
             var parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
-            Assert.AreEqual(IncludeLineInfo.Type.NoInclude, parse[0].LineType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.None, parse[0].LineDelimiterType);
             Assert.AreEqual("", parse[0].IncludeContent);
-            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[1].LineType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.AngleBrackets, parse[1].LineDelimiterType);
             Assert.AreEqual("include", parse[1].IncludeContent);
         }
 
@@ -64,11 +87,11 @@ int main () {}";
 
             string sourceCode = "/* test // */ #include <there>";
             var parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
-            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.AngleBrackets, parse[0].LineDelimiterType);
 
             parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
             sourceCode = "#include <there> /* test */ ";
-            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.AngleBrackets, parse[0].LineDelimiterType);
 
 
             sourceCode =
@@ -78,11 +101,11 @@ sdfsdf // #include <commented2>
 dfdf // */ #include <there1>";
 
             parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
-            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.AngleBrackets, parse[0].LineDelimiterType);
             Assert.AreEqual("there0", parse[0].IncludeContent);
-            Assert.AreEqual(IncludeLineInfo.Type.NoInclude, parse[1].LineType);
-            Assert.AreEqual(IncludeLineInfo.Type.NoInclude, parse[2].LineType);
-            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[3].LineType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.None, parse[1].LineDelimiterType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.None, parse[2].LineDelimiterType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.AngleBrackets, parse[3].LineDelimiterType);
             Assert.AreEqual("there1", parse[3].IncludeContent);
         }
 
@@ -105,21 +128,21 @@ dfdf // */ #include <there1>";
 #include <there1>";
 
             var parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines | ParseOptions.IgnoreIncludesInPreprocessorConditionals);
-            Assert.AreEqual(2, parse.Count(x => x.LineType != IncludeLineInfo.Type.NoInclude));
-            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
-            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[parse.Count - 1].LineType);
+            Assert.AreEqual(2, parse.Count(x => x.LineDelimiterType != IncludeLineInfo.DelimiterType.None));
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.AngleBrackets, parse[0].LineDelimiterType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.AngleBrackets, parse[parse.Count - 1].LineDelimiterType);
             Assert.AreEqual(0, parse[0].LineNumber);
             Assert.AreEqual(1, parse[1].LineNumber);
 
             parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.KeepOnlyValidIncludes | ParseOptions.IgnoreIncludesInPreprocessorConditionals);
             Assert.AreEqual(2, parse.Count);
-            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[0].LineType);
-            Assert.AreEqual(IncludeLineInfo.Type.AngleBrackets, parse[parse.Count - 1].LineType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.AngleBrackets, parse[0].LineDelimiterType);
+            Assert.AreEqual(IncludeLineInfo.DelimiterType.AngleBrackets, parse[parse.Count - 1].LineDelimiterType);
             Assert.AreEqual(0, parse[0].LineNumber);
             Assert.AreEqual(12, parse[1].LineNumber);
 
             parse = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.RemoveEmptyLines);
-            Assert.AreEqual(5, parse.Count(x => x.LineType != IncludeLineInfo.Type.NoInclude));
+            Assert.AreEqual(5, parse.Count(x => x.LineDelimiterType != IncludeLineInfo.DelimiterType.None));
         }
 
         [TestMethod]

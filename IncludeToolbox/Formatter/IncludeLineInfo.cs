@@ -93,6 +93,7 @@ namespace IncludeToolbox.Formatter
                 if (options.HasFlag(ParseOptions.IgnoreIncludesInPreprocessorConditionals))
                 {
                     // There can be only a single preprocessor directive per line, so no need to parse more than this.
+                    // (in theory it must be the first thing in the line, but MSVC is not strict on this, so we aren't either.
                     int ifdefStart = lineText.IndexOf("#if");
                     int ifdefEnd = lineText.IndexOf("#endif");
                     if (ifdefStart > -1 && !isCommented(ifdefStart))
@@ -143,32 +144,6 @@ namespace IncludeToolbox.Formatter
             return outInfo;
         }
 
-
-        public enum Type
-        {
-            Quotes,
-            AngleBrackets,
-            NoInclude
-        }
-
-        public Type LineType
-        {
-            get
-            {
-                if (ContainsActiveInclude)
-                {
-                    DelimiterSanityCheck();
-
-                    if (lineText[delimiter0] == '<')
-                        return Type.AngleBrackets;
-                    else if (lineText[delimiter0] == '\"')
-                        return Type.Quotes;
-                }
-
-                return Type.NoInclude;
-            }
-        }
-
         /// <summary>
         /// Whether the line includes an enabled include.
         /// </summary>
@@ -177,24 +152,48 @@ namespace IncludeToolbox.Formatter
         /// </remarks>
         public bool ContainsActiveInclude => delimiter0 != -1;
 
+        public enum DelimiterType
+        {
+            Quotes,
+            AngleBrackets,
+            None
+        }
+
+        public DelimiterType LineDelimiterType
+        {
+            get
+            {
+                if (ContainsActiveInclude)
+                {
+                    DelimiterSanityCheck();
+
+                    if (lineText[delimiter0] == '<')
+                        return DelimiterType.AngleBrackets;
+                    else if (lineText[delimiter0] == '\"')
+                        return DelimiterType.Quotes;
+                }
+                return DelimiterType.None;
+            }
+        }
+
         /// <summary>
         /// Changes the type of this line.
+        /// Has only an effect if ContainsActiveInclude is true.
         /// </summary>
-        /// <param name="newLineType">Type.NoInclude won't have any effect.</param>
-        public void SetLineType(Type newLineType)
+        public void SetDelimiterType(DelimiterType newDelimiterType)
         {
-            if (LineType != newLineType && ContainsActiveInclude)
+            if (LineDelimiterType != newDelimiterType && ContainsActiveInclude)
             {
                 DelimiterSanityCheck();
 
-                if (newLineType == Type.AngleBrackets)
+                if (newDelimiterType == DelimiterType.AngleBrackets)
                 {
                     StringBuilder sb = new StringBuilder(lineText);
                     sb[delimiter0] = '<';
                     sb[delimiter1] = '>';
                     lineText = sb.ToString();
                 }
-                else if (newLineType == Type.Quotes)
+                else if (newDelimiterType == DelimiterType.Quotes)
                 {
                     StringBuilder sb = new StringBuilder(lineText);
                     sb[delimiter0] = '"';
@@ -204,6 +203,26 @@ namespace IncludeToolbox.Formatter
             }
         }
 
+        /// <summary>
+        /// Wheather the line contains a preprocessor directive.
+        /// Does not take into account surrounding block comments.
+        /// </summary>
+        public bool ContainsPreProcessorDirective
+        {   
+            get
+            {
+                // In theory the '#' of a preprocessor directive MUST come first, but just like MSVC we relax the rules a bit here.
+                foreach (char c in lineText)
+                {
+                    if (c == '#')
+                        return true;
+                    else if (!char.IsWhiteSpace(c))
+                        return false;
+                }
+
+                return false;
+            }
+        }
 
         /// <summary>
         /// Tries to resolve the include (if any) using a list of directories.

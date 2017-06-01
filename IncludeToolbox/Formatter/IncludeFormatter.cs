@@ -66,11 +66,11 @@ namespace IncludeToolbox.Formatter
             {
                 case FormatterOptionsPage.DelimiterMode.AngleBrackets:
                     foreach (var line in lines)
-                        line.SetLineType(IncludeLineInfo.Type.AngleBrackets);
+                        line.SetDelimiterType(IncludeLineInfo.DelimiterType.AngleBrackets);
                     break;
                 case FormatterOptionsPage.DelimiterMode.Quotes:
                     foreach (var line in lines)
-                        line.SetLineType(IncludeLineInfo.Type.Quotes);
+                        line.SetDelimiterType(IncludeLineInfo.DelimiterType.Quotes);
                     break;
             }
         }
@@ -101,7 +101,7 @@ namespace IncludeToolbox.Formatter
             // Select only valid include lines and sort them. They'll stay in this relative sorted
             // order when rearranged by regex precedence groups.
             var includeLines = lines
-                .Where(x => x.LineType != IncludeLineInfo.Type.NoInclude)
+                .Where(x => x.ContainsActiveInclude)
                 .OrderBy(x => x.IncludeContent);
 
             // Group the includes by the index of the precedence regex they match, or
@@ -134,9 +134,9 @@ namespace IncludeToolbox.Formatter
 
             // Sort by angle or quoted delimiters if either of those options were selected
             if (typeSorting == FormatterOptionsPage.TypeSorting.AngleBracketsFirst)
-                sortedIncludes = sortedIncludes.OrderBy(x => x.LineType == IncludeLineInfo.Type.AngleBrackets ? 0 : 1);
+                sortedIncludes = sortedIncludes.OrderBy(x => x.LineDelimiterType == IncludeLineInfo.DelimiterType.AngleBrackets ? 0 : 1);
             else if (typeSorting == FormatterOptionsPage.TypeSorting.QuotedFirst)
-                sortedIncludes = sortedIncludes.OrderBy(x => x.LineType == IncludeLineInfo.Type.Quotes ? 0 : 1);
+                sortedIncludes = sortedIncludes.OrderBy(x => x.LineDelimiterType == IncludeLineInfo.DelimiterType.Quotes ? 0 : 1);
 
             // Finally, update the actual lines
             List<IncludeLineInfo> extendedLineList = new List<IncludeLineInfo>(lines.Count);
