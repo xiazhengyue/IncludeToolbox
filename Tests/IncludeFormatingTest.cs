@@ -124,5 +124,75 @@ namespace Tests
             string formatedCode = IncludeFormatter.FormatIncludes(sourceCode_WithBlanks, "filename.cpp", new string[] { }, settings);
             Assert.AreEqual(expectedFormatedCode_WithBlanks, formatedCode);
         }
-    }
+
+        [TestMethod]
+        public void EmptySelection()
+        {
+            // Activate all features
+            var settings = new IncludeToolbox.FormatterOptionsPage();
+            settings.SortByType = IncludeToolbox.FormatterOptionsPage.TypeSorting.AngleBracketsFirst;
+            settings.PrecedenceRegexes = new string[] { IncludeToolbox.RegexUtils.CurrentFileNameKey };
+            settings.BlankAfterRegexGroupMatch = true;
+            settings.RemoveEmptyLines = true;
+            settings.DelimiterFormatting = IncludeToolbox.FormatterOptionsPage.DelimiterMode.AngleBrackets;
+            settings.SlashFormatting = IncludeToolbox.FormatterOptionsPage.SlashMode.BackSlash;
+
+            string formatedCode = IncludeFormatter.FormatIncludes("", "filename.cpp", new string[] { }, settings);
+            Assert.AreEqual("", formatedCode);
+        }
+
+        [TestMethod]
+        public void OtherPreprocessorDirectives()
+        {
+            string source =
+@"#pragma once
+// SomeComment
+#include ""z""
+
+#include ""filename.h""
+
+#if test
+#include <d>
+// A comment
+#include ""a9""
+#else
+#include <d>
+
+#include <a3>   // comment
+//#endif
+
+#include <a2>
+#endif
+#include <a1>";
+
+            string expectedFormatedCode =
+@"#pragma once
+// SomeComment
+#include ""filename.h""
+
+#include ""z""
+#if test
+#include <d>
+// A comment
+#include ""a9""
+#else
+#include <a2>
+
+#include <a3>   // comment
+//#endif
+
+#include <d>
+#endif
+#include <a1>";
+
+            var settings = new IncludeToolbox.FormatterOptionsPage();
+            settings.SortByType = IncludeToolbox.FormatterOptionsPage.TypeSorting.AngleBracketsFirst;
+            settings.PrecedenceRegexes = new string[] { IncludeToolbox.RegexUtils.CurrentFileNameKey };
+            settings.BlankAfterRegexGroupMatch = false;
+            settings.RemoveEmptyLines = false;
+
+            string formatedCode = IncludeFormatter.FormatIncludes(source, "filename.cpp", new string[] { }, settings);
+            Assert.AreEqual(expectedFormatedCode, formatedCode);
+        }
+}
 }
