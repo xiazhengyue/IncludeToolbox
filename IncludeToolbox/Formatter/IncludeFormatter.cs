@@ -90,17 +90,49 @@ namespace IncludeToolbox.Formatter
             }
         }
 
-        private static void SortIncludes(ref List<IncludeLineInfo> lines, FormatterOptionsPage settings, string documentName)
+        private static List<IncludeLineInfo> SortIncludes(IList<IncludeLineInfo> lines, FormatterOptionsPage settings, string documentName)
         {
+            string[] precedenceRegexes = RegexUtils.FixupRegexes(settings.PrecedenceRegexes, documentName);
+
+            List<IncludeLineInfo> outSortedList = new List<IncludeLineInfo>(lines.Count);
+
+            IEnumerable<IncludeLineInfo> includeBatch;
+            int numConsumedItems = 0;
+
+            do
+            {
+                // Fill in all non-include items between batches.
+                var nonIncludeItems = lines.Skip(numConsumedItems).TakeWhile(x => !x.ContainsActiveInclude);
+                numConsumedItems += nonIncludeItems.Count();
+                outSortedList.AddRange(nonIncludeItems);
+
+                // Process until we hit a preprocessor directive that is not an include.
+                // Those are boundaries for the sorting which we do not want to cross.
+                includeBatch = lines.Skip(numConsumedItems).TakeWhile(x => x.ContainsActiveInclude || !x.ContainsPreProcessorDirective);
+                numConsumedItems += includeBatch.Count();
+
+            } while (SortIncludeBatch(settings, precedenceRegexes, outSortedList, includeBatch) && numConsumedItems != lines.Count);
+
+            return outSortedList;
+        }
+
+        private static bool SortIncludeBatch(FormatterOptionsPage settings, string[] precedenceRegexes,
+                                            List<IncludeLineInfo> outSortedList, IEnumerable<IncludeLineInfo> includeBatch)
+        {
+            // Get enumerator and cancel if batch is empty.
+            var originalLineEnumerator = includeBatch.GetEnumerator();
+            bool hasElements = originalLineEnumerator.MoveNext();
+            if (!hasElements)
+                return false;
+
+            // Fetch settings.
             FormatterOptionsPage.TypeSorting typeSorting = settings.SortByType;
             bool regexIncludeDelimiter = settings.RegexIncludeDelimiter;
             bool blankAfterRegexGroupMatch = settings.BlankAfterRegexGroupMatch;
 
-            string[] precedenceRegexes = RegexUtils.FixupRegexes(settings.PrecedenceRegexes, documentName);
-
             // Select only valid include lines and sort them. They'll stay in this relative sorted
             // order when rearranged by regex precedence groups.
-            var includeLines = lines
+            var includeLines = includeBatch
                 .Where(x => x.ContainsActiveInclude)
                 .OrderBy(x => x.IncludeContent);
 
@@ -139,37 +171,37 @@ namespace IncludeToolbox.Formatter
                 sortedIncludes = sortedIncludes.OrderBy(x => x.LineDelimiterType == IncludeLineInfo.DelimiterType.Quotes ? 0 : 1);
 
             // Finally, update the actual lines
-            List<IncludeLineInfo> extendedLineList = new List<IncludeLineInfo>(lines.Count);
             {
-                var sortedIncludesArray = sortedIncludes.ToArray();
-                int sortedIndex = 0;
-                for (int i = 0; i < lines.Count; ++i)
+                bool firstLine = true;
+
+                foreach (var sortedLine in sortedIncludes)
                 {
-                    if (lines[i].ContainsActiveInclude)
+                    // Advance until there is a include line to replace. There *must* be one left if sortedIncludes is not empty.
+                    while (!originalLineEnumerator.Current.ContainsActiveInclude)
                     {
-                        var includeLine = sortedIncludesArray[sortedIndex++];
-
-                        // Handle prepending a newline if requested, as long as:
-                        // - this include is the begin of a new group
-                        // - it's not the first line
-                        // - the previous line isn't already a non-include
-                        if (groupStarts.Contains(includeLine) && i > 0 && extendedLineList[i - 1].ContainsActiveInclude)
-                        {
-                            extendedLineList.Add(new IncludeLineInfo());
-                        }
-
-                        lines[i] = includeLine;
+                        outSortedList.Add(originalLineEnumerator.Current);
+                        hasElements = originalLineEnumerator.MoveNext();
+                        System.Diagnostics.Debug.Assert(hasElements, "There must be an element left in the original list if there are still sorted elements to put back in.");
                     }
 
-                    extendedLineList.Add(lines[i]);
+                    bool isLastLine = !originalLineEnumerator.MoveNext();
+
+                    // Handle prepending a newline if requested, as long as:
+                    // - this include is the begin of a new group
+                    // - it's not the first line
+                    // - it's not the last line of the batch.
+                    // - the previous line isn't already a non-include
+                    if (groupStarts.Contains(sortedLine) && !firstLine && !isLastLine && outSortedList[outSortedList.Count - 1].ContainsActiveInclude)
+                    {
+                        outSortedList.Add(new IncludeLineInfo());
+                    }
+                    outSortedList.Add(sortedLine);
+                    firstLine = false;
                 }
             }
 
-            // Only overwrite original array if we've added lines.
-            if(lines.Count != extendedLineList.Count)
-                lines = extendedLineList;
+            return true;
         }
-
 
         /// <summary>
         /// Formats all includes in a given piece of text.
@@ -201,7 +233,7 @@ namespace IncludeToolbox.Formatter
             FormatSlashes(lines, settings.SlashFormatting);
 
             // Sorting. Ignores non-include lines.
-            SortIncludes(ref lines, settings, documentName);
+            lines = SortIncludes(lines, settings, documentName);
 
             // Combine again.
             return string.Join(newLineChars, lines.Select(x => x.RawLine));
