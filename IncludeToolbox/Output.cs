@@ -9,7 +9,13 @@ namespace IncludeToolbox
     {
         static public Output Instance { private set; get; } = new Output();
 
-        public const int MessageBoxResult_Yes = 6;
+        public enum MessageResult
+        {
+            Yes,
+            No
+        }
+
+        private const int VsMessageBoxResult_Yes = 6;
 
         private Output()
         {
@@ -78,6 +84,12 @@ namespace IncludeToolbox
             string output = string.Format(message, stringParams);
             WriteLine(output);
             VsShellUtilities.ShowMessageBox(ServiceProvider.GlobalProvider, output, "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+        }
+
+        public MessageResult YesNoMsg(string message)
+        {
+            int result = VsShellUtilities.ShowMessageBox(ServiceProvider.GlobalProvider, message, "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+            return result == VsMessageBoxResult_Yes ? MessageResult.Yes : MessageResult.No;
         }
 
         public void OutputToForeground()

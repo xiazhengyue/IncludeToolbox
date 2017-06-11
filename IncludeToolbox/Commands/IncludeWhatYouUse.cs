@@ -98,10 +98,7 @@ namespace IncludeToolbox.Commands
             bool downloadedNewIwyu = false;
             if (!File.Exists(settings.ExecutablePath))
             {
-                int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider,
-                                                $"Can't find include-what-you-use in '{settings.ExecutablePath}'. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?",
-                                                "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                if (result != Output.MessageBoxResult_Yes)
+                if (Output.Instance.YesNoMsg($"Can't find include-what-you-use in '{settings.ExecutablePath}'. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?") != Output.MessageResult.Yes)
                 {
                     return;
                 }
@@ -121,10 +118,7 @@ namespace IncludeToolbox.Commands
                 if (newVersionAvailable)
                 {
                     checkedForUpdatesThisSession = true;
-                    int result = VsShellUtilities.ShowMessageBox(Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider,
-                                    $"There is a new version of include-what-you-use available. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?",
-                                    "Include Toolbox", OLEMSGICON.OLEMSGICON_INFO, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                    if (result == Output.MessageBoxResult_Yes)
+                    if (Output.Instance.YesNoMsg($"There is a new version of include-what-you-use available. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?") == Output.MessageResult.Yes)
                     {
                         downloadedNewIwyu = await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
                     }
