@@ -49,9 +49,20 @@ namespace IncludeToolbox.GraphWindow.Commands
             // Process save file dialog box results
             if (result ?? false)
             {
-                viewModel.SaveGraph(dlg.FileName);
+                try
+                {
+                    viewModel.SaveGraph(dlg.FileName);
+                }
+                catch
+                {
+                    Output.Instance.ErrorMsg($"Failed to safe dgml to {dlg.FileName}");
+                    return;
+                }
 
-                // Todo: Some feedback
+                if (Output.Instance.YesNoMsg("Saved dgml successfully. Do you want to open it in Visual Studio?") == Output.MessageResult.Yes)
+                {
+                    VSUtils.OpenFileAndShowDocument(dlg.FileName);
+                }
             }
         }
     }
