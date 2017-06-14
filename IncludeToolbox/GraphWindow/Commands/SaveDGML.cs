@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IncludeToolbox.Graph;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
@@ -49,13 +50,28 @@ namespace IncludeToolbox.GraphWindow.Commands
             // Process save file dialog box results
             if (result ?? false)
             {
+                var settings = (ViewerOptionsPage)IncludeToolboxPackage.Instance.GetDialogPage(typeof(ViewerOptionsPage));
+                DGMLGraph dgmlGraph;
+
                 try
                 {
-                    viewModel.SaveGraph(dlg.FileName);
+                    dgmlGraph = viewModel.Graph.ToDGMLGraph();
+                    if (settings.ColorCodeNumTransitiveIncludes)
+                        dgmlGraph.ColorizeByTransitiveChildCount(settings.NoChildrenColor, settings.MaxChildrenColor);
                 }
                 catch
                 {
-                    Output.Instance.ErrorMsg($"Failed to safe dgml to {dlg.FileName}");
+                    Output.Instance.ErrorMsg($"Failed to create dgml graph.");
+                    return;
+                }
+
+                try
+                {
+                    dgmlGraph.Serialize(dlg.FileName);
+                }
+                catch
+                {
+                    Output.Instance.ErrorMsg($"Failed to safe dgml to {dlg.FileName}.");
                     return;
                 }
 

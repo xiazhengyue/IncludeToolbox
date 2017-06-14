@@ -14,7 +14,7 @@ namespace IncludeToolbox.GraphWindow
         public HierarchyIncludeTreeViewItem HierarchyIncludeTreeModel { get; set; } = new HierarchyIncludeTreeViewItem(new IncludeGraph.Include(), "");
         public FolderIncludeTreeViewItem_Root FolderGroupedIncludeTreeModel { get; set; } = new FolderIncludeTreeViewItem_Root(null, null);
 
-        private IncludeGraph graph = null;
+        public IncludeGraph Graph { get; private set; }
         private EnvDTE.Document currentDocument = null;
 
 
@@ -79,12 +79,12 @@ namespace IncludeToolbox.GraphWindow
 
         public int NumIncludes
         {
-            get => (graph?.GraphItems.Count ?? 1) - 1;
+            get => (Graph?.GraphItems.Count ?? 1) - 1;
         }
 
         public bool CanSave
         {
-            get => !refreshInProgress && graph != null && graph.GraphItems.Count > 0;
+            get => !refreshInProgress && Graph != null && Graph.GraphItems.Count > 0;
         }
 
         // Need to keep these guys alive.
@@ -187,18 +187,12 @@ namespace IncludeToolbox.GraphWindow
             }
         }
 
-        public void SaveGraph(string filename)
-        {
-            DGMLGraph dgmlGraph = graph.ToDGMLGraph();
-            dgmlGraph.Serialize(filename);
-        }
-
         private void ResetIncludeTreeModel(IncludeGraph.GraphItem root)
         {
             HierarchyIncludeTreeModel.Reset(new IncludeGraph.Include() { IncludedFile = root }, "<root>");
             OnNotifyPropertyChanged(nameof(HierarchyIncludeTreeModel));
 
-            FolderGroupedIncludeTreeModel.Reset(graph?.GraphItems, root);
+            FolderGroupedIncludeTreeModel.Reset(Graph?.GraphItems, root);
             OnNotifyPropertyChanged(nameof(FolderGroupedIncludeTreeModel));
 
             OnNotifyPropertyChanged(nameof(CanSave));
@@ -210,15 +204,15 @@ namespace IncludeToolbox.GraphWindow
 
             if (success)
             {
-                this.graph = graph;
+                this.Graph = graph;
 
                 var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
                 includeDirectories.Insert(0, PathUtil.Normalize(currentDocument.Path) + Path.DirectorySeparatorChar);
 
-                foreach (var item in graph.GraphItems)
+                foreach (var item in Graph.GraphItems)
                     item.FormattedName = IncludeFormatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
 
-                ResetIncludeTreeModel(graph.CreateOrGetItem(currentDocument.FullName, out _));
+                ResetIncludeTreeModel(Graph.CreateOrGetItem(currentDocument.FullName, out _));
             }
 
             OnNotifyPropertyChanged(nameof(NumIncludes));
