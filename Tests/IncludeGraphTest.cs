@@ -129,6 +129,7 @@ namespace Tests
         {
             string filenameTestOutput = "testdata/output.dgml";
             string filenameComparision = "testdata/includegraph.dgml";
+            string filenameComparision_color = "testdata/includegraph_withcolors.dgml";
 
             string[] noParseDirectories = new[] { Utils.GetExactPathName("testdata/subdir/subdir") };
 
@@ -144,11 +145,23 @@ namespace Tests
             // To DGML and save.
             // Since we don't want to have absolute paths in our compare/output dgml we hack the graph before writing it out.
             var dgml = RemoveAbsolutePathsFromDGML(graph.ToDGMLGraph(), new[] { System.Environment.CurrentDirectory });
-            dgml.Serialize(filenameTestOutput);
 
-            string expectedFile = File.ReadAllText(filenameComparision);
-            string writtenFile = File.ReadAllText(filenameTestOutput);
-            Assert.AreEqual(expectedFile, writtenFile);
+            // Without colors.
+            {
+                dgml.Serialize(filenameTestOutput);
+                string expectedFile = File.ReadAllText(filenameComparision);
+                string writtenFile = File.ReadAllText(filenameTestOutput);
+                Assert.AreEqual(expectedFile, writtenFile);
+            }
+
+            // With colors.
+            {
+                dgml.ColorizeByTransitiveChildCount(System.Drawing.Color.White, System.Drawing.Color.Black);
+                dgml.Serialize(filenameTestOutput);
+                string expectedFile = File.ReadAllText(filenameComparision_color);
+                string writtenFile = File.ReadAllText(filenameTestOutput);
+                Assert.AreEqual(expectedFile, writtenFile);
+            }
 
             // For a clean environment!
             File.Delete(filenameTestOutput);
