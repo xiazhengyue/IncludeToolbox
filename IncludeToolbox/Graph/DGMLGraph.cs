@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -9,12 +10,28 @@ namespace IncludeToolbox.Graph
     /// </summary>
     public class DGMLGraph
     {
-        public struct Node
+        public class Node
         {
             [XmlAttribute]
             public string Id;
             [XmlAttribute]
             public string Label;
+            [XmlAttribute]
+            public string Background;
+            [XmlAttribute]
+            public int NumIncludes = 0;
+            [XmlAttribute]
+            public int NumUniqueTransitiveChildren = 0;
+
+
+            public bool ShouldSerializeNumIncludes()
+            {
+                return NumIncludes != 0;
+            }
+            public bool ShouldSerializeNumUniqueTransitiveChildren()
+            {
+                return NumUniqueTransitiveChildren != 0;
+            }
         }
 
         public struct Link
@@ -54,6 +71,26 @@ namespace IncludeToolbox.Graph
             using (XmlWriter xmlWriter = XmlWriter.Create(xmlpath, settings))
             {
                 serializer.Serialize(xmlWriter, g);
+            }
+        }
+
+        public void ColorizeByTransitiveChildCount(System.Drawing.Color noChildrenColor, System.Drawing.Color maxChildrenColor)
+        {
+            int maxChildCount = Nodes.Max(x => x.NumUniqueTransitiveChildren);
+            if (maxChildCount == 0)
+                maxChildCount = 1; // Avoid division by zero later on.
+
+            foreach(var node in Nodes)
+            {
+                float intensity = (float)node.NumUniqueTransitiveChildren / maxChildCount;
+                System.Drawing.Color color = System.Drawing.Color.FromArgb
+                (
+                    red: (int)(noChildrenColor.R + (maxChildrenColor.R - noChildrenColor.R) * intensity + 0.5f),
+                    green: (int)(noChildrenColor.G + (maxChildrenColor.G - noChildrenColor.G) * intensity + 0.5f),
+                    blue: (int)(noChildrenColor.B + (maxChildrenColor.B - noChildrenColor.B) * intensity + 0.5f)
+                );
+
+                node.Background = System.Drawing.ColorTranslator.ToHtml(color);
             }
         }
     }

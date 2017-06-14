@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.PlatformUI;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace IncludeToolbox.Graph
 {
@@ -88,10 +89,19 @@ namespace IncludeToolbox.Graph
 
         public DGMLGraph ToDGMLGraph()
         {
+            var uniqueTransitiveChildrenMap = FindUniqueChildren();
+            
             DGMLGraph dgmlGraph = new DGMLGraph();
             foreach (GraphItem node in graphItems.Values)
             {
-                dgmlGraph.Nodes.Add(new DGMLGraph.Node { Id = node.AbsoluteFilename, Label = node.FormattedName });
+                dgmlGraph.Nodes.Add(new DGMLGraph.Node
+                {
+                    Id = node.AbsoluteFilename,
+                    Label = node.FormattedName,
+                    Background = null,
+                    NumIncludes = node.Includes.Count,
+                    NumUniqueTransitiveChildren = uniqueTransitiveChildrenMap[node].Count,
+                });
                 foreach (Include include in node.Includes)
                 {
                     dgmlGraph.Links.Add(new DGMLGraph.Link { Source = node.AbsoluteFilename, Target = include.IncludedFile?.AbsoluteFilename ?? null });
@@ -99,6 +109,44 @@ namespace IncludeToolbox.Graph
             }
 
             return dgmlGraph;
+        }
+
+        /// <summary>
+        /// Creates hashlist of all transitive children for all graph items.
+        /// </summary>
+        private Dictionary<GraphItem, HashSet<GraphItem>> FindUniqueChildren()
+        {
+            var uniqueChildrenLists = new Dictionary<GraphItem, HashSet<GraphItem>>(GraphItems.Count);
+
+            // We do not assume that there is a single root node. The graph might contain several independent cpp files.
+            foreach (var node in GraphItems)
+            {
+                FindUnqiueChildrenRec(node, uniqueChildrenLists);
+                if (uniqueChildrenLists.Count == GraphItems.Count)
+                    break;
+            }
+
+            return uniqueChildrenLists;
+        }
+
+        private IEnumerable<GraphItem> FindUnqiueChildrenRec(GraphItem node, Dictionary<GraphItem, HashSet<GraphItem>> uniqueChildrenMap)
+        {
+            if (node == null)
+                return Enumerable.Empty<GraphItem>();
+
+            HashSet<GraphItem> uniqueChildren;
+            if (!uniqueChildrenMap.TryGetValue(node, out uniqueChildren))
+            {
+                uniqueChildren = new HashSet<GraphItem>();
+                uniqueChildrenMap.Add(node, uniqueChildren);    // Add immediately to avoid problems with graph circles.
+
+                foreach (var include in node.Includes)
+                {
+                    uniqueChildren.Add(include.IncludedFile);
+                    uniqueChildren.UnionWith(FindUnqiueChildrenRec(include.IncludedFile, uniqueChildrenMap));
+                }
+            }
+            return uniqueChildren;
         }
     }
 }
