@@ -17,13 +17,13 @@ namespace IncludeToolbox.Commands
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class TryAndErrorRemoval_CodeWindow : CommandBase<TryAndErrorRemoval_CodeWindow>
+    internal sealed class TrialAndErrorRemoval_CodeWindow : CommandBase<TrialAndErrorRemoval_CodeWindow>
     {
         public override CommandID CommandID => new CommandID(CommandSetGuids.MenuGroup, 0x0104);
 
-        private TryAndErrorRemoval impl;
+        private TrialAndErrorRemoval impl;
 
-        public TryAndErrorRemoval_CodeWindow()
+        public TrialAndErrorRemoval_CodeWindow()
         {
         }
 
@@ -31,7 +31,7 @@ namespace IncludeToolbox.Commands
         {
             base.SetupMenuCommand();
 
-            impl = new TryAndErrorRemoval();
+            impl = new TrialAndErrorRemoval();
             menuCommand.BeforeQueryStatus += UpdateVisibility;
         }
 
@@ -53,7 +53,7 @@ namespace IncludeToolbox.Commands
             var document = VSUtils.GetDTE().ActiveDocument;
             if (document != null)
             {
-                impl.PerformTryAndErrorRemoval(document, (TryAndErrorRemovalOptionsPage)Package.GetDialogPage(typeof(TryAndErrorRemovalOptionsPage)));
+                impl.PerformTrialAndErrorIncludeRemoval(document, (TrialAndErrorRemovalOptionsPage)Package.GetDialogPage(typeof(TrialAndErrorRemovalOptionsPage)));
             }
         }
     }

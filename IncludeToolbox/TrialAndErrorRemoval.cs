@@ -12,9 +12,9 @@ using System.IO;
 namespace IncludeToolbox
 {
     /// <summary>
-    /// Command handler for try and error include removal
+    /// Command handler for trial and error include removal
     /// </summary>
-    internal sealed class TryAndErrorRemoval
+    internal sealed class TrialAndErrorRemoval
     {
         public delegate void FinishedEvent(int numRemovedIncludes, bool canceled);
         public event FinishedEvent OnFileFinished;
@@ -26,7 +26,7 @@ namespace IncludeToolbox
         private const int timeoutMS = 30000; // 30 seconds
 
 
-        public void PerformTryAndErrorRemoval(EnvDTE.Document document, TryAndErrorRemovalOptionsPage settings)
+        public void PerformTrialAndErrorIncludeRemoval(EnvDTE.Document document, TrialAndErrorRemovalOptionsPage settings)
         {
             if (document == null)
                 return;
@@ -41,7 +41,7 @@ namespace IncludeToolbox
 
             if (WorkInProgress)
             {
-                Output.Instance.ErrorMsg("Try and error include removal already in progress!");
+                Output.Instance.ErrorMsg("Trial and error include removal already in progress!");
                 return;
             }
             WorkInProgress = true;
@@ -63,11 +63,11 @@ namespace IncludeToolbox
                 }
                 string waitMessage = $"Parsing '{document.Name}' ... ";
                 progressDialog.StartWaitDialogWithPercentageProgress(
-                    szWaitCaption: "Include Toolbox - Running Try & Error Include Removal",
+                    szWaitCaption: "Include Toolbox - Running Trial & Error Include Removal",
                     szWaitMessage: waitMessage,
                     szProgressText: null,
                     varStatusBmpAnim: null,
-                    szStatusBarText: "Running Try & Error Removal - " + waitMessage,
+                    szStatusBarText: "Running Trial & Error Removal - " + waitMessage,
                     fIsCancelable: true,
                     iDelayToShowDialog: 0,
                     iTotalSteps: 20,    // Will be replaced.
@@ -105,7 +105,7 @@ namespace IncludeToolbox
                                                      new System.Text.RegularExpressions.Regex(regexPattern).Match(line.IncludeContent).Success));
                 }
                 // Reverse order if necessary.
-                if (settings.RemovalOrder == TryAndErrorRemovalOptionsPage.IncludeRemovalOrder.BottomToTop)
+                if (settings.RemovalOrder == TrialAndErrorRemovalOptionsPage.IncludeRemovalOrder.BottomToTop)
                     includeLines = includeLines.Reverse();
 
                 includeLines = includeLines.ToArray();
@@ -135,7 +135,7 @@ namespace IncludeToolbox
                     {
                         // If we are working from top to bottom, the line number may have changed!
                         int currentLine = line.LineNumber;
-                        if (settings.RemovalOrder == TryAndErrorRemovalOptionsPage.IncludeRemovalOrder.TopToBottom)
+                        if (settings.RemovalOrder == TrialAndErrorRemovalOptionsPage.IncludeRemovalOrder.TopToBottom)
                             currentLine -= numRemovedIncludes;
 
                         // Update progress.
@@ -144,7 +144,7 @@ namespace IncludeToolbox
                         progressDialog.UpdateProgress(
                             szUpdatedWaitMessage: waitMessage,
                             szProgressText: progressText,
-                            szStatusBarText: "Running Try & Error Removal - " + waitMessage + " - " + progressText,
+                            szStatusBarText: "Running Trial & Error Removal - " + waitMessage + " - " + progressText,
                             iCurrentStep: currentProgressStep + 1,
                             iTotalSteps: numIncludes + 1,
                             fDisableCancel: false,

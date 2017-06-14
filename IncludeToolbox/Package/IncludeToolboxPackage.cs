@@ -13,7 +13,7 @@ namespace IncludeToolbox
 
     [ProvideOptionPage(typeof(FormatterOptionsPage), Options.Constants.Category, FormatterOptionsPage.SubCategory, 1000, 1001, true)]
     [ProvideOptionPage(typeof(IncludeWhatYouUseOptionsPage), Options.Constants.Category, IncludeWhatYouUseOptionsPage.SubCategory, 1000, 1002, true)]
-    [ProvideOptionPage(typeof(TryAndErrorRemovalOptionsPage), Options.Constants.Category, TryAndErrorRemovalOptionsPage.SubCategory, 1000, 1003, true)]
+    [ProvideOptionPage(typeof(TrialAndErrorRemovalOptionsPage), Options.Constants.Category, TrialAndErrorRemovalOptionsPage.SubCategory, 1000, 1003, true)]
     [ProvideOptionPage(typeof(ViewerOptionsPage), Options.Constants.Category, ViewerOptionsPage.SubCategory, 1000, 1004, true)]
 
     [ProvideToolWindow(typeof(GraphWindow.IncludeGraphToolWindow))]
@@ -49,8 +49,8 @@ namespace IncludeToolbox
             Commands.IncludeGraphToolWindow.Initialize(this);
             Commands.FormatIncludes.Initialize(this);
             Commands.IncludeWhatYouUse.Initialize(this);
-            Commands.TryAndErrorRemoval_CodeWindow.Initialize(this);
-            Commands.TryAndErrorRemoval_Project.Initialize(this);
+            Commands.TrialAndErrorRemoval_CodeWindow.Initialize(this);
+            Commands.TrialAndErrorRemoval_Project.Initialize(this);
 
             base.Initialize();            
         }

@@ -10,18 +10,18 @@ namespace IncludeToolbox.Commands
     /// <summary>
     /// Command handler
     /// </summary>
-    internal sealed class TryAndErrorRemoval_Project : CommandBase<TryAndErrorRemoval_Project>
+    internal sealed class TrialAndErrorRemoval_Project : CommandBase<TrialAndErrorRemoval_Project>
     {
         public override CommandID CommandID => new CommandID(CommandSetGuids.ProjectGroup, 0x0100);
 
-        private TryAndErrorRemoval impl;
-        private TryAndErrorRemovalOptionsPage settings;
+        private TrialAndErrorRemoval impl;
+        private TrialAndErrorRemovalOptionsPage settings;
 
         private ProjectItems projectItems = null;
         private int numTotalRemovedIncludes = 0;
         private Queue<ProjectItem> projectFiles;
 
-        public TryAndErrorRemoval_Project()
+        public TrialAndErrorRemoval_Project()
         {
             projectFiles = new Queue<ProjectItem>();
         }
@@ -30,11 +30,11 @@ namespace IncludeToolbox.Commands
         {
             base.SetupMenuCommand();
 
-            impl = new TryAndErrorRemoval();
+            impl = new TrialAndErrorRemoval();
             impl.OnFileFinished += OnDocumentIncludeRemovalFinished;
             menuCommand.BeforeQueryStatus += UpdateVisibility;
 
-            settings = (TryAndErrorRemovalOptionsPage)Package.GetDialogPage(typeof(TryAndErrorRemovalOptionsPage));
+            settings = (TrialAndErrorRemovalOptionsPage)Package.GetDialogPage(typeof(TrialAndErrorRemovalOptionsPage));
         }
 
         private void OnDocumentIncludeRemovalFinished(int removedIncludes, bool canceled)
@@ -96,7 +96,7 @@ namespace IncludeToolbox.Commands
                 if (document == null)
                     continue;
 
-                impl.PerformTryAndErrorRemoval(document, settings);
+                impl.PerformTrialAndErrorIncludeRemoval(document, settings);
                 return true;
             }
             return false;
@@ -131,7 +131,7 @@ namespace IncludeToolbox.Commands
             }
         }
 
-        private void PerformTryAndErrorRemoval(Project project)
+        private void PerformTrialAndErrorRemoval(Project project)
         {
             projectItems = project.ProjectItems;
 
@@ -140,7 +140,7 @@ namespace IncludeToolbox.Commands
 
             if (projectFiles.Count > 2)
             {
-                if (Output.Instance.YesNoMsg("Attention! Try and error include removal on large projects make take up to several hours! In this time you will not be able to use Visual Studio. Are you sure you want to continue?")
+                if (Output.Instance.YesNoMsg("Attention! Trial and error include removal on large projects make take up to several hours! In this time you will not be able to use Visual Studio. Are you sure you want to continue?")
                     != Output.MessageResult.Yes)
                 {
                     return;
@@ -161,9 +161,9 @@ namespace IncludeToolbox.Commands
         /// <param name="e">Event args.</param>
         protected override void MenuItemCallback(object sender, EventArgs e)
         {
-            if (TryAndErrorRemoval.WorkInProgress)
+            if (TrialAndErrorRemoval.WorkInProgress)
             {
-                Output.Instance.ErrorMsg("Try and error include removal already in progress!");
+                Output.Instance.ErrorMsg("Trial and error include removal already in progress!");
                 return;
             }
 
@@ -177,7 +177,7 @@ namespace IncludeToolbox.Commands
                     return;
                 }
 
-                PerformTryAndErrorRemoval(project);
+                PerformTrialAndErrorRemoval(project);
             }
             catch (Exception ex)
             {

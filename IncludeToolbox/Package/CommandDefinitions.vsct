@@ -90,21 +90,21 @@
           <ButtonText>Run Include-What-You-Use</ButtonText>
         </Strings>
       </Button>
-      <Button guid="guidCodeMenuCmdSet" id="TryAndErrorRemovalId" priority="0x0102" type="Button">
+      <Button guid="guidCodeMenuCmdSet" id="TrialAndErrorRemovalId" priority="0x0102" type="Button">
         <Parent guid="guidCodeMenuCmdSet" id="EditMenuGroup" />
-        <Icon guid="guidIconsCommon" id="iconTryAndError" />
+        <Icon guid="guidIconsCommon" id="iconTrialAndError" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>Try and Error Include Removal</ButtonText>
+          <ButtonText>Trial and Error Include Removal</ButtonText>
         </Strings>
       </Button>
 
-      <Button guid="guidProjectMenuCmdSet" id="ProjectWideTryAndErrorRemovalId" priority="0x2000" type="Button">
+      <Button guid="guidProjectMenuCmdSet" id="ProjectWideTrialAndErrorRemovalId" priority="0x2000" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD" />
-        <Icon guid="guidIconsCommon" id="iconTryAndError" />
+        <Icon guid="guidIconsCommon" id="iconTrialAndError" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
-          <ButtonText>Try and Error Include Removal</ButtonText>
+          <ButtonText>Trial and Error Include Removal</ButtonText>
         </Strings>
       </Button>
 
@@ -155,7 +155,7 @@
             bitmap strip containing the bitmaps and then there are the numeric ids of the elements used
             inside a button definition. An important aspect of this declaration is that the element id
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <Bitmap guid="guidIconsCommon" href="..\Resources\IncludeFormatterIcons.png" usedList="iconFormatter, iconIWYU, iconTryAndError, iconExplorer"/>
+      <Bitmap guid="guidIconsCommon" href="..\Resources\IncludeFormatterIcons.png" usedList="iconFormatter, iconIWYU, iconTrialAndError, iconExplorer"/>
       <Bitmap guid="guidIconsGraphWindowToolbar" href="..\Resources\IncludeGraphToolbarIcons.png" usedList="iconRefresh, iconSaveGraph"/>
     </Bitmaps>
   </Commands>
@@ -168,7 +168,7 @@
       <IDSymbol name="EditMenuGroup" value="0x1020" />
       <IDSymbol name="FormatIncludesId" value="0x0100" />
       <IDSymbol name="IncludeWhatYouUseId" value="0x0103" />
-      <IDSymbol name="TryAndErrorRemovalId" value="0x0104" />
+      <IDSymbol name="TrialAndErrorRemovalId" value="0x0104" />
     </GuidSymbol>
 
     <GuidSymbol name="guidIncludeGraphWindowCmdSet" value="{032eb795-1f1c-440d-af98-43cdc1de7a8b}">
@@ -178,7 +178,7 @@
 
     <GuidSymbol name="guidProjectMenuCmdSet" value="{1970ECF3-6C03-4CCF-B422-8DD07F774ED8}">
       <IDSymbol name="ProjectMenuGroup" value="0x1000" />
-      <IDSymbol name="ProjectWideTryAndErrorRemovalId" value="0x0100" />
+      <IDSymbol name="ProjectWideTrialAndErrorRemovalId" value="0x0100" />
     </GuidSymbol>
 
     <GuidSymbol name="guidGraphWindowToolbarCmdSet" value="{0B242452-870A-489B-8336-88FD01AEF0C1}">
@@ -202,7 +202,7 @@
     <GuidSymbol name="guidIconsCommon" value="{dd14909e-b406-4cfa-b492-08b8127679df}">
       <IDSymbol name="iconFormatter" value="1" />
       <IDSymbol name="iconIWYU" value="2" />
-      <IDSymbol name="iconTryAndError" value="3" />
+      <IDSymbol name="iconTrialAndError" value="3" />
       <IDSymbol name="iconExplorer" value="4" />
     </GuidSymbol>
   </Symbols>
