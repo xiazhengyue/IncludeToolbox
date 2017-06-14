@@ -38,7 +38,7 @@
 
         <TabControl Grid.Row="1">
             <TabItem Header="Include Hierarchy">
-                <TreeView Grid.Row="1" ItemsSource="{Binding HierarchyIncludeTreeModel.Children}">
+                <TreeView ItemsSource="{Binding HierarchyIncludeTreeModel.Children}" KeyDown="OnIncludeTreeItemKeyDown">
                     <TreeView.ItemTemplate>
                         <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
                             <TextBlock Text="{Binding Name}" ToolTip="{Binding AbsoluteFilename}" MouseDown="OnIncludeTreeItemMouseDown"/>
@@ -47,7 +47,7 @@
                 </TreeView>
             </TabItem>
             <TabItem Header="Grouped by Folder">
-                <TreeView Grid.Row="1" ItemsSource="{Binding FolderGroupedIncludeTreeModel.Children}">
+                <TreeView ItemsSource="{Binding FolderGroupedIncludeTreeModel.Children}" KeyDown="OnIncludeTreeItemKeyDown">
                     <TreeView.ItemTemplate>
                         <HierarchicalDataTemplate ItemsSource="{Binding Children}" DataType="{x:Type local:IncludeTreeViewItem}">
                             <TextBlock Text="{Binding Name}" ToolTip="{Binding AbsoluteFilename}" MouseDown="OnIncludeTreeItemMouseDown"/>

@@ -27,5 +27,19 @@ namespace IncludeToolbox.GraphWindow
                 }
             }
         }
+
+        private void OnIncludeTreeItemKeyDown(object sender, KeyEventArgs e)
+        {
+            if(e.Key == Key.Enter)
+            {
+                if (sender is TreeView treeView)
+                {
+                    if (treeView.SelectedItem is IncludeTreeViewItem treeItem)
+                    {
+                        treeItem.NavigateToInclude();
+                    }
+                }
+            }
+        }
     }
 }
