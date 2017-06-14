@@ -15,7 +15,6 @@ namespace IncludeToolbox.GraphWindow
         public FolderIncludeTreeViewItem_Root FolderGroupedIncludeTreeModel { get; set; } = new FolderIncludeTreeViewItem_Root(null, null);
 
         public IncludeGraph Graph { get; private set; }
-        private EnvDTE.Document currentDocument = null;
 
 
         public enum RefreshMode
@@ -97,29 +96,24 @@ namespace IncludeToolbox.GraphWindow
             if (dte != null)
             {
                 windowEvents = dte.Events.WindowEvents;
-                windowEvents.WindowActivated += (x, y) => UpdateActiveDoc();
+                windowEvents.WindowActivated += (x, y) => UpdateCanRefresh();
             }
 
-            UpdateActiveDoc();
-        }
-
-        private void UpdateActiveDoc()
-        {
-            var dte = VSUtils.GetDTE();
-            var newDoc = dte?.ActiveDocument;
-            if (newDoc != currentDocument)
-            {
-                currentDocument = newDoc;
-                UpdateCanRefresh();
-            }
+            UpdateCanRefresh();
         }
 
         private void UpdateCanRefresh()
         {
-            // In any case we need a it to be a document.
+            var currentDocument = VSUtils.GetDTE()?.ActiveDocument;
+
+            if (RefreshInProgress)
+            {
+                CanRefresh = false;
+                RefreshTooltip = "Refresh in progress";
+            }
             // Limiting to C++ document is a bit harsh though for the general case as we might not have this information depending on the project type.
             // This is why we just check for "having a document" here for now.
-            if (currentDocument == null || RefreshInProgress)
+            else if (currentDocument == null)
             {
                 CanRefresh = false;
                 RefreshTooltip = "No open document";
@@ -141,12 +135,12 @@ namespace IncludeToolbox.GraphWindow
 
         public void RefreshIncludeGraph()
         {
-            UpdateActiveDoc();
+            var currentDocument = VSUtils.GetDTE()?.ActiveDocument;
+            GraphRootFilename = currentDocument.Name ?? "<No File>";
+            if (currentDocument == null)
+                return;
 
             var newGraph = new IncludeGraph();
-
-            RefreshTooltip = "Update in Progress";
-            GraphRootFilename = currentDocument?.Name ?? "<No File>";
             RefreshInProgress = true;
 
             try
@@ -172,7 +166,7 @@ namespace IncludeToolbox.GraphWindow
                             }).ContinueWith(
                             (x) =>
                             {
-                                uiThreadDispatcher.BeginInvoke((Action)(() => OnNewTreeComputed(newGraph, true)));
+                                uiThreadDispatcher.BeginInvoke((Action)(() => OnNewTreeComputed(newGraph, currentDocument, true)));
                             });
                         break;
 
@@ -183,7 +177,7 @@ namespace IncludeToolbox.GraphWindow
             catch(Exception e)
             {
                 Output.Instance.WriteLine("Unexpected error when refreshing Include Graph: {0}", e);
-                OnNewTreeComputed(newGraph, false);
+                OnNewTreeComputed(newGraph, currentDocument, false);
             }
         }
 
@@ -198,7 +192,13 @@ namespace IncludeToolbox.GraphWindow
             OnNotifyPropertyChanged(nameof(CanSave));
         }
 
-        private void OnNewTreeComputed(IncludeGraph graph, bool success)
+        /// <summary>
+        /// Should be called after a tree was computed. Refreshes tree model.
+        /// </summary>
+        /// <param name="graph">The include tree</param>
+        /// <param name="documentTreeComputedFor">This can be different from the active document at the time the refresh button was clicked.</param>
+        /// <param name="success">Wheather the tree was created successfully</param>
+        private void OnNewTreeComputed(IncludeGraph graph, EnvDTE.Document documentTreeComputedFor, bool success)
         {
             RefreshInProgress = false;
 
@@ -206,13 +206,13 @@ namespace IncludeToolbox.GraphWindow
             {
                 this.Graph = graph;
 
-                var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
-                includeDirectories.Insert(0, PathUtil.Normalize(currentDocument.Path) + Path.DirectorySeparatorChar);
+                var includeDirectories = VSUtils.GetProjectIncludeDirectories(documentTreeComputedFor.ProjectItem.ContainingProject);
+                includeDirectories.Insert(0, PathUtil.Normalize(documentTreeComputedFor.Path) + Path.DirectorySeparatorChar);
 
                 foreach (var item in Graph.GraphItems)
                     item.FormattedName = IncludeFormatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
 
-                ResetIncludeTreeModel(Graph.CreateOrGetItem(currentDocument.FullName, out _));
+                ResetIncludeTreeModel(Graph.CreateOrGetItem(documentTreeComputedFor.FullName, out _));
             }
 
             OnNotifyPropertyChanged(nameof(NumIncludes));

@@ -9,7 +9,7 @@ namespace IncludeToolbox.Graph
 {
     public static class CompilationBasedGraphParser
     {
-        public delegate void OnCompleteCallback(IncludeGraph graph, bool success);
+        public delegate void OnCompleteCallback(IncludeGraph graph, Document document, bool success);
 
         // There can always be only one compilation operation and it takes a while.
         // This makes the whole mechanism effectively a singletonish thing.
@@ -195,7 +195,7 @@ namespace IncludeToolbox.Graph
             {
                 try
                 {
-                    onCompleted(graphBeingExtended, successfulParsing);
+                    onCompleted(graphBeingExtended, documentBeingCompiled, successfulParsing);
                 }
                 finally
                 {
