@@ -73,6 +73,12 @@
     <Content Include="testdata\includegraph_withcolors.dgml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="testdata\includegraph_grouped.dgml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="testdata\includegraph_withcolors_grouped.dgml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IncludeToolBox\IncludeToolbox.csproj">

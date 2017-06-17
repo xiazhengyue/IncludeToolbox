@@ -125,11 +125,22 @@ namespace Tests
         }
 
         [TestMethod]
-        public void CustomGraphParseDGML()
+        public void CustomGraphParseToDGML_NoGrouping()
+        {
+            CustomGraphParseToDGML(false);
+        }
+
+        [TestMethod]
+        public void CustomGraphParseToDGML_WithGrouping()
+        {
+            CustomGraphParseToDGML(true);
+        }
+
+        public void CustomGraphParseToDGML(bool grouping)
         {
             string filenameTestOutput = "testdata/output.dgml";
-            string filenameComparision = "testdata/includegraph.dgml";
-            string filenameComparision_color = "testdata/includegraph_withcolors.dgml";
+            string filenameComparision = grouping ? "testdata/includegraph_grouped.dgml" : "testdata/includegraph.dgml";
+            string filenameComparision_color = grouping ? "testdata/includegraph_withcolors_grouped.dgml" : "testdata/includegraph_withcolors.dgml";
 
             string[] noParseDirectories = new[] { Utils.GetExactPathName("testdata/subdir/subdir") };
 
@@ -144,7 +155,7 @@ namespace Tests
 
             // To DGML and save.
             // Since we don't want to have absolute paths in our compare/output dgml we hack the graph before writing it out.
-            var dgml = RemoveAbsolutePathsFromDGML(graph.ToDGMLGraph(), new[] { System.Environment.CurrentDirectory });
+            var dgml = RemoveAbsolutePathsFromDGML(graph.ToDGMLGraph(grouping, true), new[] { System.Environment.CurrentDirectory });
 
             // Without colors.
             {
