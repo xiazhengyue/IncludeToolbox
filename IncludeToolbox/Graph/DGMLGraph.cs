@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
@@ -12,12 +13,41 @@ namespace IncludeToolbox.Graph
     {
         public class Node
         {
+            // Standard DGML attributes.
             [XmlAttribute]
             public string Id;
             [XmlAttribute]
             public string Label;
             [XmlAttribute]
             public string Background;
+            [XmlAttribute]
+            public string Group
+            {
+                get
+                {
+                    switch(GroupCollapse)
+                    {
+                        case GroupCollapseState.Expanded:
+                            return "Expanded";
+                        case GroupCollapseState.Collapsed:
+                            return "Collapsed";
+                    }
+                    return null;
+                }
+                set { throw new NotSupportedException(); } // setter required for xml serialization
+            }
+
+            public enum GroupCollapseState
+            {
+                None,
+                Expanded,
+                Collapsed
+            }
+
+            [XmlIgnore]
+            public GroupCollapseState GroupCollapse = GroupCollapseState.None;
+
+            // Extra attributes.
             [XmlAttribute]
             public int NumIncludes = 0;
             [XmlAttribute]
@@ -34,14 +64,30 @@ namespace IncludeToolbox.Graph
             }
         }
 
-        public struct Link
+        public class Link
         {
+            public enum LinkType
+            {
+                Normal,
+                GroupContains
+            }
+
             [XmlAttribute]
             public string Source;
             [XmlAttribute]
             public string Target;
             [XmlAttribute]
             public string Label;
+            [XmlAttribute]
+            public string Category
+            {
+                get { return Type == LinkType.Normal ? null : "Contains"; }
+                set { throw new NotSupportedException(); } // setter required for xml serialization
+            }
+
+
+            [XmlIgnore]
+            public LinkType Type = LinkType.Normal;
         }
 
         public List<Node> Nodes { get; private set; } = new List<Node>();

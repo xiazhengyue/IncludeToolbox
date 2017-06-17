@@ -55,7 +55,7 @@ namespace IncludeToolbox.GraphWindow.Commands
 
                 try
                 {
-                    dgmlGraph = viewModel.Graph.ToDGMLGraph();
+                    dgmlGraph = viewModel.Graph.ToDGMLGraph(settings.CreateGroupNodesForFolders, settings.ExpandFolderGroupNodes);
                     if (settings.ColorCodeNumTransitiveIncludes)
                         dgmlGraph.ColorizeByTransitiveChildCount(settings.NoChildrenColor, settings.MaxChildrenColor);
                 }

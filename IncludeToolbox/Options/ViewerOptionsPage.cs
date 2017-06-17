@@ -31,6 +31,15 @@ namespace IncludeToolbox
         }
         private string[] noParsePaths;
 
+        [Category("Include Graph DGML")]
+        [DisplayName("Create Group Nodes by Folders")]
+        [Description("Creates folders like in the folder hierarchy view of Include Graph.")]
+        public bool CreateGroupNodesForFolders { get; set; } = true;
+
+        [Category("Include Graph DGML")]
+        [DisplayName("Expand Folder Group Nodes")]
+        [Description("If true all folder nodes start out expanded, otherwise they are collapsed.")]
+        public bool ExpandFolderGroupNodes { get; set; } = false;
 
         [Category("Include Graph DGML")]
         [DisplayName("Colorize by Number of Includes")]
@@ -64,6 +73,8 @@ namespace IncludeToolbox
             settingsStore.SetString(collectionName, nameof(NoParsePaths), value);
 
 
+            settingsStore.SetBoolean(collectionName, nameof(CreateGroupNodesForFolders), CreateGroupNodesForFolders);
+            settingsStore.SetBoolean(collectionName, nameof(ExpandFolderGroupNodes), ExpandFolderGroupNodes);
             settingsStore.SetBoolean(collectionName, nameof(ColorCodeNumTransitiveIncludes), ColorCodeNumTransitiveIncludes);
             settingsStore.SetInt32(collectionName, nameof(NoChildrenColor), NoChildrenColor.ToArgb());
             settingsStore.SetInt32(collectionName, nameof(MaxChildrenColor), MaxChildrenColor.ToArgb());
@@ -90,6 +101,12 @@ namespace IncludeToolbox
                 else
                     NoParsePaths = new string[] { programFiles, programFilesX86 };
             }
+
+
+            if (settingsStore.PropertyExists(collectionName, nameof(CreateGroupNodesForFolders)))
+                CreateGroupNodesForFolders = settingsStore.GetBoolean(collectionName, nameof(CreateGroupNodesForFolders));
+            if (settingsStore.PropertyExists(collectionName, nameof(ExpandFolderGroupNodes)))
+                ExpandFolderGroupNodes = settingsStore.GetBoolean(collectionName, nameof(ExpandFolderGroupNodes));
 
             if (settingsStore.PropertyExists(collectionName, nameof(ColorCodeNumTransitiveIncludes)))
                 ColorCodeNumTransitiveIncludes = settingsStore.GetBoolean(collectionName, nameof(ColorCodeNumTransitiveIncludes));

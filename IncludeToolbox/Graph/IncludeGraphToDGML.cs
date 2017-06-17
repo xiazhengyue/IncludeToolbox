@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using IncludeToolbox.GraphWindow;
+using System.Collections.Generic;
 using System.Linq;
 using static IncludeToolbox.Graph.IncludeGraph;
+using System;
 
 namespace IncludeToolbox.Graph
 {
@@ -9,7 +11,7 @@ namespace IncludeToolbox.Graph
     /// </summary>
     public static class IncludeGraphToDGML
     {
-        static public DGMLGraph ToDGMLGraph(this IncludeGraph graph)
+        static public DGMLGraph ToDGMLGraph(this IncludeGraph graph, bool folderGrouping, bool expandGroups)
         {
             var uniqueTransitiveChildrenMap = FindUniqueChildren(graph.GraphItems);
 
@@ -30,7 +32,37 @@ namespace IncludeToolbox.Graph
                 }
             }
 
+            if (folderGrouping)
+            {
+                // Reusing a ViewModel datastructure is arguably a bit ugly, but it matches exactly what we want.
+                // TODO: Consider splitting functionallity out.
+                var folderGroupingRoot = new FolderIncludeTreeViewItem_Root(graph.GraphItems, null);
+                foreach (var child in folderGroupingRoot.Children)
+                    AddFolderGroupingRecursive(dgmlGraph, child, null, expandGroups);
+            }
+
+
             return dgmlGraph;
+        }
+
+        private static void AddFolderGroupingRecursive(DGMLGraph dgml, IncludeTreeViewItem child, FolderIncludeTreeViewItem_Folder parent, bool expandGroups)
+        {
+            if (parent != null)
+            {
+                dgml.Links.Add(new DGMLGraph.Link { Type =  DGMLGraph.Link.LinkType.GroupContains, Source = parent.AbsoluteFilename, Target = child.AbsoluteFilename });
+            }
+
+            if (child is FolderIncludeTreeViewItem_Folder folder)
+            {
+                dgml.Nodes.Add(new DGMLGraph.Node
+                {
+                    Id = folder.AbsoluteFilename,
+                    Label = folder.Name,
+                    GroupCollapse = expandGroups ? DGMLGraph.Node.GroupCollapseState.Expanded : DGMLGraph.Node.GroupCollapseState.Collapsed
+                });
+                foreach (var subChild in folder.Children)
+                    AddFolderGroupingRecursive(dgml, subChild, folder, expandGroups);
+            }
         }
 
         /// <summary>
