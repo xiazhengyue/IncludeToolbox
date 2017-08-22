@@ -25,6 +25,11 @@ namespace IncludeToolbox
         private AutoResetEvent outputWaitEvent = new AutoResetEvent(false);
         private const int timeoutMS = 30000; // 30 seconds
 
+        /// <summary>
+        /// Need to keep build events object around as long as it is used, otherwise the events may not be fired!
+        /// </summary>
+        private BuildEvents buildEvents;
+
         public void PerformTrialAndErrorIncludeRemoval(EnvDTE.Document document, TrialAndErrorRemovalOptionsPage settings)
         {
             if (document == null)
@@ -64,8 +69,7 @@ namespace IncludeToolbox
             }
 
             // Hook into build events.
-            document.DTE.Events.BuildEvents.OnBuildProjConfigDone += OnBuildConfigFinished;
-            document.DTE.Events.BuildEvents.OnBuildDone += OnBuildFinished;
+            SubscribeBuildEvents();
 
             // The rest runs in a separate thread since the compile function is non blocking and we want to use BuildEvents
             // We are not using Task, since we want to make use of WaitHandles - using this together with Task is a bit more complicated to get right.
@@ -114,7 +118,6 @@ namespace IncludeToolbox
             textBuffer = documentTextView.TextView.TextBuffer;
             string documentText = documentTextView.TextView.TextSnapshot.GetText();
             IEnumerable<Formatter.IncludeLineInfo> includeLines = Formatter.IncludeLineInfo.ParseIncludes(documentText, Formatter.ParseOptions.IgnoreIncludesInPreprocessorConditionals | Formatter.ParseOptions.KeepOnlyValidIncludes);
-
 
             // Optionally skip top most include.
             if (settings.IgnoreFirstInclude)
@@ -249,8 +252,7 @@ namespace IncludeToolbox
             progressDialog.EndWaitDialog();
 
             // Remove build hook again.
-            document.DTE.Events.BuildEvents.OnBuildDone -= OnBuildFinished;
-            document.DTE.Events.BuildEvents.OnBuildProjConfigDone -= OnBuildConfigFinished;
+            UnsubscribeBuildEvents();
 
             // Message.
             Output.Instance.WriteLine("Removed {0} #include directives from '{1}'", numRemovedIncludes, document.Name);
@@ -259,6 +261,20 @@ namespace IncludeToolbox
             // Notify that we are done.
             WorkInProgress = false;
             OnFileFinished?.Invoke(numRemovedIncludes, canceled);
+        }
+
+        private void SubscribeBuildEvents()
+        {
+            buildEvents = VSUtils.GetDTE().Events.BuildEvents;
+            buildEvents.OnBuildDone += OnBuildFinished;
+            buildEvents.OnBuildProjConfigDone += OnBuildConfigFinished;
+        }
+
+        private void UnsubscribeBuildEvents()
+        {
+            buildEvents.OnBuildDone -= OnBuildFinished;
+            buildEvents.OnBuildProjConfigDone -= OnBuildConfigFinished;
+            buildEvents = null;
         }
 
         private void OnBuildFinished(vsBuildScope scope, vsBuildAction action)
