@@ -104,24 +104,18 @@ namespace Tests
             Assert.AreEqual(0, broken.Includes.Count);
         }
 
-        private DGMLGraph RemoveAbsolutePathsFromDGML(DGMLGraph dgml, IEnumerable<string> includeDirectories)
+        private void RemoveAbsolutePathsFromDGML(DGMLGraph dgml, IEnumerable<string> includeDirectories)
         {
-            var dgml2 = new DGMLGraph();
             foreach (var item in dgml.Nodes)
             {
-                DGMLGraph.Node newNode = item;
-                newNode.Id = IncludeFormatter.FormatPath(item.Id, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
-                dgml2.Nodes.Add(newNode);
+                item.Id = IncludeFormatter.FormatPath(item.Id, FormatterOptionsPage.PathMode.Shortest, includeDirectories);
+                item.Label = IncludeFormatter.FormatPath(item.Label, FormatterOptionsPage.PathMode.Shortest, includeDirectories);
             }
             foreach (var link in dgml.Links)
             {
-                DGMLGraph.Link newLink = link;
-                newLink.Source = IncludeFormatter.FormatPath(newLink.Source, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
-                newLink.Target = IncludeFormatter.FormatPath(newLink.Target, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
-                dgml2.Links.Add(newLink);
+                link.Source = IncludeFormatter.FormatPath(link.Source, FormatterOptionsPage.PathMode.Shortest, includeDirectories);
+                link.Target = IncludeFormatter.FormatPath(link.Target, FormatterOptionsPage.PathMode.Shortest, includeDirectories);
             }
-
-            return dgml2;
         }
 
         [TestMethod]
@@ -151,11 +145,12 @@ namespace Tests
             // Formatting...
             var includeDirectories = new[] { Path.Combine(System.Environment.CurrentDirectory, "testdata") };
             foreach (var item in graph.GraphItems)
-                item.FormattedName = IncludeFormatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest_AvoidUpSteps, includeDirectories);
+                item.FormattedName = IncludeFormatter.FormatPath(item.AbsoluteFilename, FormatterOptionsPage.PathMode.Shortest, includeDirectories);
 
             // To DGML and save.
             // Since we don't want to have absolute paths in our compare/output dgml we hack the graph before writing it out.
-            var dgml = RemoveAbsolutePathsFromDGML(graph.ToDGMLGraph(grouping, true), new[] { System.Environment.CurrentDirectory });
+            var dgml = graph.ToDGMLGraph(grouping, true);
+            RemoveAbsolutePathsFromDGML(dgml, new[] { System.Environment.CurrentDirectory });
 
             // Without colors.
             {

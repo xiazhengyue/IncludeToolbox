@@ -9,7 +9,7 @@
     <Node Id="Debug/testdata/source1.cpp" Label="testdata/source1.cpp" NumIncludes="1" NumUniqueTransitiveChildren="5" />
     <Node Id="Debug/testdata/testinclude.h" Label="testdata/testinclude.h" NumIncludes="1" NumUniqueTransitiveChildren="4" />
     <Node Id="&lt;unresolved&gt;" Label="&lt;unresolved&gt;" Group="Expanded" />
-    <Node Id="Debug/testdata" Label="F:\Development\current_development\IncludeToolbox\Tests\bin\Debug\testdata\" Group="Expanded" />
+    <Node Id="Debug/testdata" Label="Debug/testdata/" Group="Expanded" />
     <Node Id="Debug/testdata/subdir" Label="subdir\" Group="Expanded" />
     <Node Id="Debug/testdata/subdir/subdir" Label="subdir\" Group="Expanded" />
   </Nodes>
