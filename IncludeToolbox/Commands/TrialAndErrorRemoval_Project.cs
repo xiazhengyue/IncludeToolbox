@@ -169,8 +169,7 @@ namespace IncludeToolbox.Commands
 
             try
             {
-                string reasonForFailure;
-                Project project = GetSelectedCppProject(out reasonForFailure);
+                Project project = GetSelectedCppProject(out string reasonForFailure);
                 if (project == null)
                 {
                     Output.Instance.WriteLine(reasonForFailure);
@@ -178,10 +177,6 @@ namespace IncludeToolbox.Commands
                 }
 
                 PerformTrialAndErrorRemoval(project);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
             }
             finally
             {
