@@ -250,7 +250,35 @@ namespace IncludeToolbox.IncludeWhatYouUse
                 // MSVC specific. See https://clang.llvm.org/docs/UsersManual.html#microsoft-extensions
                 process.StartInfo.Arguments += "-fms-compatibility -fms-extensions -fdelayed-template-parsing ";
                 process.StartInfo.Arguments += $"-fmsc-version={VSUtils.GetMSCVerString()} ";
+                // Architecture
+                var targetMachine = VSUtils.VCUtils.GetLinkerSetting_TargetMachine(project, out reasonForFailure);
+                if(!targetMachine.HasValue)
+                    Output.Instance.ErrorMsg("Failed to query for target machine: {0}", reasonForFailure);
+                else
+                {
+                    switch (targetMachine.Value)
+                    {
+                        // Most targets give an error of this form:
+                        // "error: unknown target CPU 'x86'"
+                        // It seems iwyu is only really fine with x86-64
 
+                        /*case VCProjectUtils.Base.TargetMachineType.X86:
+                            process.StartInfo.Arguments += "-march=x86 ";
+                            break;*/
+                        case VCProjectUtils.Base.TargetMachineType.AMD64:
+                            process.StartInfo.Arguments += "-march=x86-64 ";
+                            break;
+                        /*case VCProjectUtils.Base.TargetMachineType.ARM:
+                            process.StartInfo.Arguments += "-march=arm ";
+                            break;
+                        case VCProjectUtils.Base.TargetMachineType.MIPS:
+                            process.StartInfo.Arguments += "-march=mips ";
+                            break;
+                        case VCProjectUtils.Base.TargetMachineType.THUMB:
+                            process.StartInfo.Arguments += "-march=thumb ";
+                            break;*/
+                    }
+                }
 
                 // icwyu options
                 {

@@ -1,5 +1,6 @@
 ﻿using EnvDTE;
 using Microsoft.VisualStudio.VCProjectEngine;
+using VCProjectUtils.Base;
 
 #if VC14
 namespace VCProjectUtils.VS14
@@ -7,7 +8,7 @@ namespace VCProjectUtils.VS14
 namespace VCProjectUtils.VS15
 #endif
 {
-    public class VCHelper : VCProjectUtils.Base.IVCHelper
+    public class VCHelper : IVCHelper
     {
         public bool IsVCProject(Project project)
         {
@@ -82,6 +83,34 @@ namespace VCProjectUtils.VS15
             return compilerTool;
         }
 
+        public static VCLinkerTool GetLinkerTool(Project project, out string reasonForFailure)
+        {
+            VCProject vcProject = project?.Object as VCProject;
+            if (vcProject == null)
+            {
+                reasonForFailure = "Failed to retrieve VCLinkerTool since project is not a VCProject.";
+                return null;
+            }
+            VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
+            var tools = activeConfiguration.Tools;
+            VCLinkerTool linkerTool = null;
+            foreach (var tool in activeConfiguration.Tools)
+            {
+                linkerTool = tool as VCLinkerTool;
+                if (linkerTool != null)
+                    break;
+            }
+
+            if (linkerTool == null)
+            {
+                reasonForFailure = "Couldn't file a VCLinkerTool in VC++ Project.";
+                return null;
+            }
+
+            reasonForFailure = "";
+            return linkerTool;
+        }
+
         public bool IsCompilableFile(Document document, out string reasonForFailure)
         {
             return GetVCFileConfigForCompilation(document, out reasonForFailure) != null;
@@ -120,6 +149,15 @@ namespace VCProjectUtils.VS15
         {
             VCCLCompilerTool compilerTool = GetCompilerTool(project, out reasonForFailure);
             return compilerTool?.PreprocessorDefinitions;
+        }
+
+        public TargetMachineType? GetLinkerSetting_TargetMachine(EnvDTE.Project project, out string reasonForFailure)
+        {
+            var linkerTool = GetLinkerTool(project, out reasonForFailure);
+            if (linkerTool == null)
+                return null;
+            else
+                return (TargetMachineType)linkerTool.TargetMachine;
         }
     }
 }
