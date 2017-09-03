@@ -81,6 +81,11 @@ namespace IncludeToolbox
         [Description("Do not suggest that a file add foo.h unless foo.h is already visible in the file's transitive includes. (--transitive_includes_only)")]
         public bool TransitiveIncludesOnly { get; set; } = false;
 
+        [Category("iwyu options")]
+        [DisplayName("Additional Parameters")]
+        [Description("This string is inserted after all other parameters and before the filename of the file iwyu is running on.")]
+        public string AdditionalParameters { get; set; } = "";
+
         #endregion
 
         #region postprocessing
@@ -117,6 +122,7 @@ namespace IncludeToolbox
             settingsStore.SetBoolean(collectionName, nameof(PCHInCode), PCHInCode);
             settingsStore.SetInt32(collectionName, nameof(PrefixHeaderIncludes), (int)PrefixHeaderIncludes);
             settingsStore.SetBoolean(collectionName, nameof(TransitiveIncludesOnly), TransitiveIncludesOnly);
+            settingsStore.SetString(collectionName, nameof(AdditionalParameters), AdditionalParameters);
 
             settingsStore.SetBoolean(collectionName, nameof(ApplyProposal), ApplyProposal);
             settingsStore.SetBoolean(collectionName, nameof(RunIncludeFormatter), RunIncludeFormatter);
@@ -148,6 +154,8 @@ namespace IncludeToolbox
                 PrefixHeaderIncludes = (PrefixHeaderMode)settingsStore.GetInt32(collectionName, nameof(PrefixHeaderIncludes));
             if (settingsStore.PropertyExists(collectionName, nameof(TransitiveIncludesOnly)))
                 TransitiveIncludesOnly = settingsStore.GetBoolean(collectionName, nameof(TransitiveIncludesOnly));
+            if (settingsStore.PropertyExists(collectionName, nameof(AdditionalParameters)))
+                AdditionalParameters = settingsStore.GetString(collectionName, nameof(AdditionalParameters));
 
             if (settingsStore.PropertyExists(collectionName, nameof(ApplyProposal)))
                 ApplyProposal = settingsStore.GetBoolean(collectionName, nameof(ApplyProposal));

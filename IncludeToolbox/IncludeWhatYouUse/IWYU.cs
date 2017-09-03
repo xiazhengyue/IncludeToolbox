@@ -281,6 +281,10 @@ namespace IncludeToolbox.IncludeWhatYouUse
                     // --max_line_length: maximum line length for includes. Note that this only affects comments and alignment thereof,
                     // the maximum line length can still be exceeded with long file names(default: 80).
                     process.StartInfo.Arguments += "-Xiwyu --max_line_length=1024 ";
+
+                    // Custom stuff.
+                    process.StartInfo.Arguments += settings.AdditionalParameters;
+                    process.StartInfo.Arguments += " ";
                 }
 
 
