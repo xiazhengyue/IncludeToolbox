@@ -314,6 +314,16 @@ namespace IncludeToolbox.Formatter
         /// </remarks>
         public int LineNumber { get; private set; } = -1;
 
+        public static bool ContainsPreserveFlag(string lineText)
+        {
+            return lineText.Contains("$include-toolbox-preserve$");
+        }
+
+        /// <summary>
+        /// Whether the include line should not be removed by iwyu and Trial & Error Removal.
+        /// </summary>
+        public bool ShouldBePreserved { get { return ContainsPreserveFlag(lineText); } }
+
         private int delimiter0 = -1;
         private int delimiter1 = -1;
 

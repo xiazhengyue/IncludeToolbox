@@ -194,5 +194,17 @@ dfdf // */ #include <there1>";
             var parseWithEmpty = IncludeLineInfo.ParseIncludes(sourceCode, ParseOptions.None);
             Assert.AreEqual(6, parseWithEmpty.Count);
         }
+
+        [TestMethod]
+        public void PreserveFlag()
+        {
+            string testCode = @"#include <blorg> // $include-toolbox-preserve$
+#include ""test""";
+
+            var parsedLines = IncludeLineInfo.ParseIncludes(testCode, ParseOptions.RemoveEmptyLines);
+            Assert.AreEqual(2, parsedLines.Count);
+            Assert.IsTrue(parsedLines[0].ShouldBePreserved);
+            Assert.IsFalse(parsedLines[1].ShouldBePreserved);
+        }
     }
 }

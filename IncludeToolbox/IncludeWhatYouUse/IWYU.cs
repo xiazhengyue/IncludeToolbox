@@ -189,7 +189,8 @@ namespace IncludeToolbox.IncludeWhatYouUse
                     {
                         foreach (int lineToRemove in entry.Value.linesToRemove.Reverse())
                         {
-                            edit.Delete(originalLines[lineToRemove].ExtentIncludingLineBreak);
+                            if (!Formatter.IncludeLineInfo.ContainsPreserveFlag(originalLines[lineToRemove].GetText()))
+                                edit.Delete(originalLines[lineToRemove].ExtentIncludingLineBreak);
                         }
                     }
 

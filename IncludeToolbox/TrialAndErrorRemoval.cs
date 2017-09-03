@@ -122,6 +122,10 @@ namespace IncludeToolbox
             // Optionally skip top most include.
             if (settings.IgnoreFirstInclude)
                 includeLines = includeLines.Skip(1);
+
+            // Skip everything with preserve flag.
+            includeLines = includeLines.Where(x => !x.ShouldBePreserved);
+
             // Apply filter ignore regex.
             {
                 string documentName = Path.GetFileNameWithoutExtension(document.FullName);
