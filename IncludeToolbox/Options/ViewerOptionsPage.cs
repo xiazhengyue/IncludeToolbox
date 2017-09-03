@@ -1,16 +1,11 @@
-﻿using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Settings;
-using System;
+﻿using System;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace IncludeToolbox
 {
     [Guid("769AFCC2-25E2-459A-B2A3-89D7308800BD")]
-    public class ViewerOptionsPage : DialogPage
+    public class ViewerOptionsPage : OptionsPage
     {
         public const string SubCategory = "Include Viewer & Graph";
         private const string collectionName = "IncludeViewer";
@@ -55,12 +50,6 @@ namespace IncludeToolbox
         [DisplayName("Max Children Color")]
         [Description("See \"Colorize by Number of Includes\". Color for highest number of children.")]
         public System.Drawing.Color MaxChildrenColor { get; set; } = System.Drawing.Color.Red;
-
-        private WritableSettingsStore GetSettingsStore()
-        {
-            var settingsManager = new ShellSettingsManager(ServiceProvider.GlobalProvider);
-            return settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
-        }
 
         public override void SaveSettingsToStorage()
         {

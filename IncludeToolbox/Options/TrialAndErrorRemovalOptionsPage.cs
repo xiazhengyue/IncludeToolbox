@@ -1,15 +1,11 @@
-﻿using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Settings;
-using System;
+﻿using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace IncludeToolbox
 {
     [Guid("DBC8A65D-8B86-4296-9F1F-E785B182B550")]
-    public class TrialAndErrorRemovalOptionsPage : DialogPage
+    public class TrialAndErrorRemovalOptionsPage : OptionsPage
     {
         public const string SubCategory = "Trial and Error Include Removal";
         private const string collectionName = "TryAndErrorRemoval"; // All "try and error" were updated to "trial and error", but need to keep old string here to preserve existing settings files.
@@ -40,17 +36,6 @@ namespace IncludeToolbox
         [Description("If true, removed includes will leave an empty line.")]
         public bool KeepLineBreaks { get; set; } = false;
 
-
-        // In theory the whole save/load mechanism should be done automatically.
-        // But *something* is broken there.
-        // see http://stackoverflow.com/questions/32751040/store-array-in-options-using-dialogpage
-
-
-        private WritableSettingsStore GetSettingsStore()
-        {
-            var settingsManager = new ShellSettingsManager(ServiceProvider.GlobalProvider);
-            return settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
-        }
 
         public override void SaveSettingsToStorage()
         {

@@ -1,7 +1,4 @@
-﻿using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Settings;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -11,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace IncludeToolbox
 {
     [Guid("69CFD797-2E2B-497E-9231-334BCDC41407")]
-    public class IncludeWhatYouUseOptionsPage : DialogPage
+    public class IncludeWhatYouUseOptionsPage : OptionsPage
     {
         public const string SubCategory = "Include-What-You-Use";
         private const string collectionName = "IncludeFormatter";
@@ -100,17 +97,6 @@ namespace IncludeToolbox
 
 
         #endregion
-
-        // In theory the whole save/load mechanism should be done automatically.
-        // But *something* is broken there.
-        // see http://stackoverflow.com/questions/32751040/store-array-in-options-using-dialogpage
-
-
-        private WritableSettingsStore GetSettingsStore()
-        {
-            var settingsManager = new ShellSettingsManager(ServiceProvider.GlobalProvider);
-            return settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
-        }
 
         public override void SaveSettingsToStorage()
         {
