@@ -100,6 +100,11 @@ namespace IncludeToolbox
         [Description("Optionally put either includes with angle brackets <...> or quotes \"...\" first.")]
         public TypeSorting SortByType { get; set; } = TypeSorting.QuotedFirst;
 
+        [Category("Sorting")]
+        [DisplayName("Remove duplicates")]
+        [Description("If true, duplicate includes will be removed.")]
+        public bool RemoveDuplicates { get; set; } = true;
+
         #endregion
 
         public override void SaveSettingsToStorage()
@@ -121,6 +126,7 @@ namespace IncludeToolbox
             var value = string.Join("\n", PrecedenceRegexes);
             settingsStore.SetString(collectionName, nameof(PrecedenceRegexes), value);
             settingsStore.SetInt32(collectionName, nameof(SortByType), (int)SortByType);
+            settingsStore.SetBoolean(collectionName, nameof(RemoveDuplicates), RemoveDuplicates);
         }
 
         public override void LoadSettingsFromStorage()
@@ -150,6 +156,8 @@ namespace IncludeToolbox
             }
             if (settingsStore.PropertyExists(collectionName, nameof(SortByType)))
                 SortByType = (TypeSorting) settingsStore.GetInt32(collectionName, nameof(SortByType));
+            if (settingsStore.PropertyExists(collectionName, nameof(RemoveDuplicates)))
+                RemoveDuplicates = settingsStore.GetBoolean(collectionName, nameof(RemoveDuplicates));
         }
     }
 }

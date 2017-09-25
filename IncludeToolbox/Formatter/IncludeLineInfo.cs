@@ -78,7 +78,7 @@ namespace IncludeToolbox.Formatter
                         ++openMultiLineComments;
                         commentedSectionStart = multiLineCommentStart;
                     }
-                    
+
                     int multiLineCommentEnd = lineText.IndexOf("*/");
                     if (multiLineCommentEnd > -1)
                     {
@@ -109,7 +109,7 @@ namespace IncludeToolbox.Formatter
                 int includeOccurence = lineText.IndexOf("#include");
 
                 // Not a valid include.
-                if (includeOccurence == -1 ||        // Include not found 
+                if (includeOccurence == -1 ||        // Include not found
                     isCommented(includeOccurence) || // Include commented out
                     openIfdefs > 0)                // Inside an #ifdef block
                 {
@@ -204,11 +204,11 @@ namespace IncludeToolbox.Formatter
         }
 
         /// <summary>
-        /// Wheather the line contains a preprocessor directive.
+        /// Whether the line contains a preprocessor directive.
         /// Does not take into account surrounding block comments.
         /// </summary>
         public bool ContainsPreProcessorDirective
-        {   
+        {
             get
             {
                 // In theory the '#' of a preprocessor directive MUST come first, but just like MSVC we relax the rules a bit here.
@@ -270,7 +270,7 @@ namespace IncludeToolbox.Formatter
 
 
         /// <summary>
-        /// Changes in the include content will NOT be reflected immediately in the raw line text. 
+        /// Changes in the include content will NOT be reflected immediately in the raw line text.
         /// </summary>
         /// <see cref="UpdateRawLineWithIncludeContentChanges"/>
         public string IncludeContent

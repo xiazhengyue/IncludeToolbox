@@ -134,7 +134,15 @@ namespace IncludeToolbox.Formatter
             // order when rearranged by regex precedence groups.
             var includeLines = includeBatch
                 .Where(x => x.ContainsActiveInclude)
-                .OrderBy(x => x.IncludeContent);
+                .OrderBy(x => x.IncludeContent)
+                .ToList();
+
+            if (settings.RemoveDuplicates)
+            {
+                HashSet<string> uniqueIncludes = new HashSet<string>();
+                includeLines.RemoveAll(x => !x.ShouldBePreserved &&
+                                            !uniqueIncludes.Add(x.GetIncludeContentWithDelimiters()));
+            }
 
             // Group the includes by the index of the precedence regex they match, or
             // precedenceRegexes.Length for no match, and sort the groups by index.
@@ -176,7 +184,7 @@ namespace IncludeToolbox.Formatter
 
                 foreach (var sortedLine in sortedIncludes)
                 {
-                    // Advance until there is a include line to replace. There *must* be one left if sortedIncludes is not empty.
+                    // Advance until there is an include line to replace. There *must* be one left if sortedIncludes is not empty.
                     while (!originalLineEnumerator.Current.ContainsActiveInclude)
                     {
                         outSortedList.Add(originalLineEnumerator.Current);
@@ -197,6 +205,13 @@ namespace IncludeToolbox.Formatter
                     }
                     outSortedList.Add(sortedLine);
                     firstLine = false;
+                }
+
+                while (hasElements)
+                {
+                    if (!originalLineEnumerator.Current.ContainsActiveInclude)
+                        outSortedList.Add(originalLineEnumerator.Current);
+                    hasElements = originalLineEnumerator.MoveNext();
                 }
             }
 
