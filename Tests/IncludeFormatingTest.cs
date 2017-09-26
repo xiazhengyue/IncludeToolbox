@@ -10,20 +10,29 @@ namespace Tests
         private static string sourceCode_NoBlanks =
 @"#include ""a.h""
 #include <b.hpp>
+#include ""a.h""
 #include ""filename.h""
+#include <b.hpp>
 #include <d_firstanyways>
 #include <e_secondanyways>
-#include <c.hpp>";
+#include <e_secondanyways>
+#include <c.hpp>
+#include <d_firstanyways>";
 
         private static string sourceCode_WithBlanks =
 @"#include ""c_third""
 
 #include ""filename.h""
 
+#include ""z_first""
+
+#include <b_second>
 #include <b_second>
 // A comment
-#include ""z_first""";
+#include ""z_first""
 
+#include <b_second>
+#include ""filename.h""";
 
         [TestMethod]
         public void Sorting_BlanksAfterRegexGroup()
@@ -45,8 +54,10 @@ namespace Tests
 #include <b_second>
 
 #include ""c_third""
+
+#include ""z_first""
 // A comment
-#include ""z_first""";
+";
 
 
             var settings = new IncludeToolbox.FormatterOptionsPage();
@@ -85,8 +96,10 @@ namespace Tests
 #include ""filename.h""
 
 #include ""c_third""
+
+#include ""z_first""
 // A comment
-#include ""z_first""";
+";
 
 
             var settings = new IncludeToolbox.FormatterOptionsPage();
@@ -106,14 +119,63 @@ namespace Tests
         }
 
         [TestMethod]
+        public void Sorting_DontRemoveDuplicates()
+        {
+            // With sort by type.
+            string expectedFormatedCode_NoBlanks =
+@"#include ""filename.h""
+
+#include <d_firstanyways>
+#include <d_firstanyways>
+#include <e_secondanyways>
+#include <e_secondanyways>
+
+#include ""a.h""
+#include ""a.h""
+#include <b.hpp>
+#include <b.hpp>
+#include <c.hpp>";
+
+
+            string expectedFormatedCode_WithBlanks =
+@"#include ""filename.h""
+#include ""filename.h""
+
+#include <b_second>
+#include <b_second>
+#include <b_second>
+// A comment
+#include ""c_third""
+#include ""z_first""
+#include ""z_first""";
+
+
+            var settings = new IncludeToolbox.FormatterOptionsPage();
+            settings.SortByType = IncludeToolbox.FormatterOptionsPage.TypeSorting.None;
+            settings.PrecedenceRegexes = new string[]
+            {
+                    IncludeToolbox.RegexUtils.CurrentFileNameKey,
+                    ".+_.+"
+            };
+            settings.BlankAfterRegexGroupMatch = true;
+            settings.RemoveEmptyLines = true;
+            settings.RemoveDuplicates = false;
+
+            string formatedCode = IncludeFormatter.FormatIncludes(sourceCode_NoBlanks, "filename.cpp", new string[] { }, settings);
+            Assert.AreEqual(expectedFormatedCode_NoBlanks, formatedCode);
+            formatedCode = IncludeFormatter.FormatIncludes(sourceCode_WithBlanks, "filename.cpp", new string[] { }, settings);
+            Assert.AreEqual(expectedFormatedCode_WithBlanks, formatedCode);
+        }
+
+        [TestMethod]
         public void RemoveEmptyLines()
         {
             string expectedFormatedCode_WithBlanks =
 @"#include ""filename.h""
 #include <b_second>
 #include ""c_third""
-// A comment
-#include ""z_first""";
+#include ""z_first""
+// A comment";
 
             var settings = new IncludeToolbox.FormatterOptionsPage();
             settings.SortByType = IncludeToolbox.FormatterOptionsPage.TypeSorting.None;
@@ -148,6 +210,7 @@ namespace Tests
 @"#pragma once
 // SomeComment
 #include ""z""
+#include <b>
 
 #include ""filename.h""
 
@@ -155,6 +218,8 @@ namespace Tests
 #include <d>
 // A comment
 #include ""a9""
+#include <d>
+#include <c>
 #else
 #include <d>
 
@@ -163,17 +228,21 @@ namespace Tests
 
 #include <a2>
 #endif
+#include <b>
 #include <a1>";
 
             string expectedFormatedCode =
 @"#pragma once
 // SomeComment
+#include <b>
 #include ""filename.h""
 
 #include ""z""
+
 #if test
-#include <d>
+#include <c>
 // A comment
+#include <d>
 #include ""a9""
 #else
 #include <a2>
@@ -183,7 +252,8 @@ namespace Tests
 
 #include <d>
 #endif
-#include <a1>";
+#include <a1>
+#include <b>";
 
             var settings = new IncludeToolbox.FormatterOptionsPage();
             settings.SortByType = IncludeToolbox.FormatterOptionsPage.TypeSorting.AngleBracketsFirst;
