@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -127,7 +128,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
             onProgressUpdate("Unpacking...", "", -1.0f);
             await Task.Run(() =>
             {
-                using (var zipArchive = ZipFile.OpenRead(targetZipFile))
+                using (var zipArchive = new ZipArchive(File.OpenRead(targetZipFile), ZipArchiveMode.Read)) 
                 {
                     // Don't want to have the top level folder if any,
                     string topLevelFolderName = "";
@@ -149,7 +150,11 @@ namespace IncludeToolbox.IncludeWhatYouUse
                         }
                         else
                         {
-                            file.ExtractToFile(completeFileName, true);
+                            using (var destination = File.Open(completeFileName, FileMode.Create, FileAccess.Write, FileShare.None))
+                            {
+                                using (var stream = file.Open())
+                                    stream.CopyTo(destination);
+                            }
                         }
 
                         if (cancellationToken.IsCancellationRequested)
