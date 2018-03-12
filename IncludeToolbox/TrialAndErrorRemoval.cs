@@ -23,36 +23,37 @@ namespace IncludeToolbox
 
         private volatile bool lastBuildSuccessful;
         private AutoResetEvent outputWaitEvent = new AutoResetEvent(false);
-        private const int timeoutMS = 30000; // 30 seconds
+        private const int timeoutMS = 600000; // 600 seconds, 10 minutes per file
 
         /// <summary>
         /// Need to keep build events object around as long as it is used, otherwise the events may not be fired!
         /// </summary>
         private BuildEvents buildEvents;
 
-        public void PerformTrialAndErrorIncludeRemoval(EnvDTE.Document document, TrialAndErrorRemovalOptionsPage settings)
+        public bool PerformTrialAndErrorIncludeRemoval(EnvDTE.Document document, TrialAndErrorRemovalOptionsPage settings)
         {
             if (document == null)
-                return;
+                return false;
 
             string reasonForFailure;
            
             if (VSUtils.VCUtils.IsCompilableFile(document, out reasonForFailure) == false)
             {
-                Output.Instance.WriteLine("Can't compile file: {0}", reasonForFailure);
-                return;
+                Output.Instance.WriteLine("Can't compile file '{1}': {0}", reasonForFailure, document.Name);
+                return false;
             }
 
             if (WorkInProgress)
             {
                 Output.Instance.ErrorMsg("Trial and error include removal already in progress!");
-                return;
+                return false;
             }
             WorkInProgress = true;
 
             // Start wait dialog.
             IVsThreadedWaitDialog2 progressDialog = StartProgressDialog(document.Name);
-            if (progressDialog == null) return;
+            if (progressDialog == null)
+                return false;
 
             // Extract all includes.
             ITextBuffer textBuffer;
@@ -65,7 +66,7 @@ namespace IncludeToolbox
             {
                 Output.Instance.WriteLine("Unexpected error while extracting include selection: {0}", ex);
                 progressDialog.EndWaitDialog();
-                return;
+                return false;
             }
 
             // Hook into build events.
@@ -76,6 +77,7 @@ namespace IncludeToolbox
             outputWaitEvent.Reset();
             var removalThread = new System.Threading.Thread(() => TrialAndErrorRemovalThreadFunc(document, settings, includeLines, progressDialog, textBuffer));
             removalThread.Start();
+            return true;
         }
 
         private IVsThreadedWaitDialog2 StartProgressDialog(string documentName)
