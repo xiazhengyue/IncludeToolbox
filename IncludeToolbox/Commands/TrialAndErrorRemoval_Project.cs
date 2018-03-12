@@ -96,8 +96,9 @@ namespace IncludeToolbox.Commands
                 if (document == null)
                     continue;
 
-                impl.PerformTrialAndErrorIncludeRemoval(document, settings);
-                return true;
+                bool started = impl.PerformTrialAndErrorIncludeRemoval(document, settings);
+                if (started)
+                    return true;
             }
             return false;
         }
