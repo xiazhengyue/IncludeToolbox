@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -100,7 +101,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                     }
                     else
                     {
-                        if(!string.IsNullOrWhiteSpace(line))
+                        if (!string.IsNullOrWhiteSpace(line))
                         {
                             currentTask.linesToAdd.Add(line);
                         }
@@ -183,7 +184,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                         }
                         edit.Insert(insertPosition, stringToInsert.ToString());
                     }
-                     
+
                     // Remove lines.
                     // It should safe to do that last since we added includes at the bottom, this way there is no confusion with the text snapshot.
                     {
@@ -231,28 +232,21 @@ namespace IncludeToolbox.IncludeWhatYouUse
                 process.StartInfo.RedirectStandardOutput = true;
                 process.StartInfo.RedirectStandardError = true;
                 process.StartInfo.FileName = settings.ExecutablePath;
-                process.StartInfo.Arguments = "";
-
-                // Include-paths and Preprocessor.
-                var includeEntries = VSUtils.GetProjectIncludeDirectories(project, false);
-                process.StartInfo.Arguments = includeEntries.Aggregate("", (current, inc) => current + ("-I \"" + inc + "\" "));
-                process.StartInfo.Arguments = preprocessorDefintions.
-                    Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).
-                    Aggregate(process.StartInfo.Arguments, (current, def) => current + ("-D" + def + " "));
 
                 // Clang options
+                var clangOptionList = new List<string>();
                 // Disable all diagnostics
-                process.StartInfo.Arguments += "-w ";
+                clangOptionList.Add("-w");
                 // ... despite of that "invalid token paste" comes through a lot. Disable it.
-                process.StartInfo.Arguments += "-Wno-invalid-token-paste ";
+                clangOptionList.Add("-Wno-invalid-token-paste");
                 // Assume C++14
-                process.StartInfo.Arguments += "-std=c++14 ";
+                clangOptionList.Add("-std=c++14");
                 // MSVC specific. See https://clang.llvm.org/docs/UsersManual.html#microsoft-extensions
-                process.StartInfo.Arguments += "-fms-compatibility -fms-extensions -fdelayed-template-parsing ";
-                process.StartInfo.Arguments += $"-fmsc-version={VSUtils.GetMSCVerString()} ";
+                clangOptionList.Add("-fms-compatibility -fms-extensions -fdelayed-template-parsing");
+                clangOptionList.Add($"-fmsc-version={VSUtils.GetMSCVerString()}");
                 // Architecture
                 var targetMachine = VSUtils.VCUtils.GetLinkerSetting_TargetMachine(project, out reasonForFailure);
-                if(!targetMachine.HasValue)
+                if (!targetMachine.HasValue)
                     Output.Instance.ErrorMsg("Failed to query for target machine: {0}", reasonForFailure);
                 else
                 {
@@ -263,63 +257,66 @@ namespace IncludeToolbox.IncludeWhatYouUse
                         // It seems iwyu is only really fine with x86-64
 
                         /*case VCProjectUtils.Base.TargetMachineType.X86:
-                            process.StartInfo.Arguments += "-march=x86 ";
+                            clangOptions.Add("-march=x86");
                             break;*/
                         case VCProjectUtils.Base.TargetMachineType.AMD64:
-                            process.StartInfo.Arguments += "-march=x86-64 ";
+                            clangOptionList.Add("-march=x86-64");
                             break;
-                        /*case VCProjectUtils.Base.TargetMachineType.ARM:
-                            process.StartInfo.Arguments += "-march=arm ";
-                            break;
-                        case VCProjectUtils.Base.TargetMachineType.MIPS:
-                            process.StartInfo.Arguments += "-march=mips ";
-                            break;
-                        case VCProjectUtils.Base.TargetMachineType.THUMB:
-                            process.StartInfo.Arguments += "-march=thumb ";
-                            break;*/
+                            /*case VCProjectUtils.Base.TargetMachineType.ARM:
+                                clangOptions.Add("-march=arm");
+                                break;
+                            case VCProjectUtils.Base.TargetMachineType.MIPS:
+                                clangOptions.Add(""-march=mips");
+                                break;
+                            case VCProjectUtils.Base.TargetMachineType.THUMB:
+                                clangOptions.Add(""-march=thumb");
+                                break;*/
                     }
                 }
 
                 // icwyu options
+                var iwyuOptionList = new List<string>();
+                iwyuOptionList.Add("--verbose=" + settings.LogVerbosity);
+                for (int i = 0; i < settings.MappingFiles.Length; ++i)
+                    iwyuOptionList.Add("--mapping_file=\"" + settings.MappingFiles[i] + "\"");
+                if (settings.NoDefaultMappings)
+                    iwyuOptionList.Add("--no_default_mappings");
+                if (settings.PCHInCode)
+                    iwyuOptionList.Add("--pch_in_code");
+                switch (settings.PrefixHeaderIncludes)
                 {
-                    process.StartInfo.Arguments += "-Xiwyu --verbose=" + settings.LogVerbosity + " ";
-                    for (int i = 0; i < settings.MappingFiles.Length; ++i)
-                        process.StartInfo.Arguments += "-Xiwyu --mapping_file=\"" + settings.MappingFiles[i] + "\" ";
-                    if (settings.NoDefaultMappings)
-                        process.StartInfo.Arguments += "-Xiwyu --no_default_mappings ";
-                    if (settings.PCHInCode)
-                        process.StartInfo.Arguments += "-Xiwyu --pch_in_code ";
-                    switch (settings.PrefixHeaderIncludes)
-                    {
-                        case IncludeWhatYouUseOptionsPage.PrefixHeaderMode.Add:
-                            process.StartInfo.Arguments += "-Xiwyu --prefix_header_includes=add ";
-                            break;
-                        case IncludeWhatYouUseOptionsPage.PrefixHeaderMode.Remove:
-                            process.StartInfo.Arguments += "-Xiwyu --prefix_header_includes=remove ";
-                            break;
-                        case IncludeWhatYouUseOptionsPage.PrefixHeaderMode.Keep:
-                            process.StartInfo.Arguments += "-Xiwyu --prefix_header_includes=keep ";
-                            break;
-                    }
-                    if (settings.TransitiveIncludesOnly)
-                        process.StartInfo.Arguments += "-Xiwyu --transitive_includes_only ";
-
-                    // Set max line length so something large so we don't loose comment information.
-                    // Documentation:
-                    // --max_line_length: maximum line length for includes. Note that this only affects comments and alignment thereof,
-                    // the maximum line length can still be exceeded with long file names(default: 80).
-                    process.StartInfo.Arguments += "-Xiwyu --max_line_length=1024 ";
-
-                    // Custom stuff.
-                    process.StartInfo.Arguments += settings.AdditionalParameters;
-                    process.StartInfo.Arguments += " ";
+                    case IncludeWhatYouUseOptionsPage.PrefixHeaderMode.Add:
+                        iwyuOptionList.Add("--prefix_header_includes=add");
+                        break;
+                    case IncludeWhatYouUseOptionsPage.PrefixHeaderMode.Remove:
+                        iwyuOptionList.Add("--prefix_header_includes=remove");
+                        break;
+                    case IncludeWhatYouUseOptionsPage.PrefixHeaderMode.Keep:
+                        iwyuOptionList.Add("--prefix_header_includes=keep");
+                        break;
                 }
+                if (settings.TransitiveIncludesOnly)
+                    iwyuOptionList.Add("--transitive_includes_only");
 
+                // Set max line length so something large so we don't loose comment information.
+                // Documentation:
+                // --max_line_length: maximum line length for includes. Note that this only affects comments and alignment thereof,
+                // the maximum line length can still be exceeded with long file names(default: 80).
+                iwyuOptionList.Add("--max_line_length=1024");
 
-                // Finally, the file itself.
-                process.StartInfo.Arguments += "\"";
-                process.StartInfo.Arguments += fullFileName;
-                process.StartInfo.Arguments += "\"";
+                /// write support file with includes, defines and the targetgile. Long argument lists lead to an error. Support files are the solution here.
+                /// https://github.com/Wumpf/IncludeToolbox/issues/36                
+                // Include-paths and Preprocessor.
+                var includes = string.Join(" ", VSUtils.GetProjectIncludeDirectories(project, false).Select(x => "-I \"" + x.Replace("\\", "\\\\") + "\""));
+                var defines = string.Join(" ", preprocessorDefintions.Split(';').Select(x => "-D" + x));
+                var filename = "\"" + fullFileName.Replace("\\", "\\\\") + "\"";
+                var supportFilePath = Path.GetTempFileName();
+                File.WriteAllText(supportFilePath, includes + " " + defines + " " + filename);
+
+                var clangOptions = string.Join(" ", clangOptionList);
+                // each include-what-you-use parameter has an -Xiwyu prefix
+                var iwyuOptions = string.Join(" ", iwyuOptionList.Select(x => " -Xiwyu " + x));
+                process.StartInfo.Arguments = $"{clangOptions} {iwyuOptions} {settings.AdditionalParameters} \"@{supportFilePath}\"";
 
                 Output.Instance.Write("Running command '{0}' with following arguments:\n{1}\n\n", process.StartInfo.FileName, process.StartInfo.Arguments);
 
