@@ -7,7 +7,6 @@ using Microsoft.VisualStudio.Shell;
 using System.IO;
 using System.Linq;
 using IncludeToolbox;
-using Microsoft.VisualStudio.VCProjectEngine;
 using System.ComponentModel.Design;
 
 namespace IncludeToolbox.GraphWindow

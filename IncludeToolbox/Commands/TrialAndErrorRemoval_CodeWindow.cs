@@ -8,7 +8,6 @@ using System.Threading;
 using System.Windows;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.VCProjectEngine;
 using EnvDTE;
 using Microsoft.VisualStudio.Text;
 

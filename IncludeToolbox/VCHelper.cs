@@ -1,14 +1,9 @@
 ﻿using EnvDTE;
 using Microsoft.VisualStudio.VCProjectEngine;
-using VCProjectUtils.Base;
 
-#if VC14
-namespace VCProjectUtils.VS14
-#elif VC15
-namespace VCProjectUtils.VS15
-#endif
+namespace IncludeToolbox
 {
-    public class VCHelper : IVCHelper
+    public class VCHelper
     {
         public bool IsVCProject(Project project)
         {
@@ -162,6 +157,29 @@ namespace VCProjectUtils.VS15
             if (nmakeTool == null) return null;
             reasonForFailure = "";
             return nmakeTool.IncludeSearchPath;
+        }
+
+        // https://msdn.microsoft.com/en-us/library/microsoft.visualstudio.vcprojectengine.machinetypeoption.aspx
+        public enum TargetMachineType
+        {
+            NotSet = 0,
+            X86 = 1,
+            AM33 = 2,
+            ARM = 3,
+            EBC = 4,
+            IA64 = 5,
+            M32R = 6,
+            MIPS = 7,
+            MIPS16 = 8,
+            MIPSFPU = 9,
+            MIPSFPU16 = 10,
+            MIPSR41XX = 11,
+            SH3 = 12,
+            SH3DSP = 13,
+            SH4 = 14,
+            SH5 = 15,
+            THUMB = 16,
+            AMD64 = 17
         }
 
         public TargetMachineType? GetLinkerSetting_TargetMachine(EnvDTE.Project project, out string reasonForFailure)

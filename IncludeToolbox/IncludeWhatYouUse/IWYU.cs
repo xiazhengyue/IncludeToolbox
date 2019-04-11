@@ -259,7 +259,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                         /*case VCProjectUtils.Base.TargetMachineType.X86:
                             clangOptions.Add("-march=x86");
                             break;*/
-                        case VCProjectUtils.Base.TargetMachineType.AMD64:
+                        case VCHelper.TargetMachineType.AMD64:
                             clangOptionList.Add("-march=x86-64");
                             break;
                             /*case VCProjectUtils.Base.TargetMachineType.ARM:

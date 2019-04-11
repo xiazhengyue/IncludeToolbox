@@ -6,7 +6,6 @@ using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
-using VCProjectUtils.Base;
 using EnvDTE;
 using Microsoft.VisualStudio;
 
@@ -24,29 +23,33 @@ namespace IncludeToolbox
             return dte;
         }
 
-        public static IVCHelper VCUtils
-        {
-            get
-            {
-                if (vcUtils != null)
-                    return vcUtils;
-                else
-                    return InitVCHelper();
-            }
-        }
+        // Historically, the GUIDs of the COM interfaces in VCProject/VCProjectEngine would change from version to version.
+        // To work around this we had several builds of VCHelpers that we could choose from, each with a different dependency.
+        // With VS2019, the older versions are no longer available and we're stuck with a single version for better or worse.
 
-        private static IVCHelper vcUtils;
+        public static VCHelper VCUtils = new VCHelper();
+        //{
+        //    get
+        //    {
+        //        if (vcUtils != null)
+        //            return vcUtils;
+        //        else
+        //            return InitVCHelper();
+        //    }
+        //}
 
-        private static IVCHelper InitVCHelper()
-        {
-            var dte = GetDTE();
-            if (dte.Version.StartsWith("14."))
-                vcUtils = new VCProjectUtils.VS14.VCHelper();
-            else if (dte.Version.StartsWith("15."))
-                vcUtils = new VCProjectUtils.VS15.VCHelper();
+        //private static IVCHelper vcUtils;
 
-            return vcUtils;
-        }
+        //private static IVCHelper InitVCHelper()
+        //{
+        //    var dte = GetDTE();
+        //    if (dte.Version.StartsWith("14."))
+        //        vcUtils = new VCProjectUtils.VS14.VCHelper();
+        //    else if (dte.Version.StartsWith("15."))
+        //        vcUtils = new VCProjectUtils.VS15.VCHelper();
+
+        //    return vcUtils;
+        //}
 
         /// <summary>
         /// Returns what the C++ macro _MSC_VER should resolve to.

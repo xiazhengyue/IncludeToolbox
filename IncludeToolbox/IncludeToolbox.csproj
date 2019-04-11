@@ -1,41 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="packages\Microsoft.VSSDK.BuildTools.15.8.3253\build\Microsoft.VSSDK.BuildTools.props" Condition="Exists('packages\Microsoft.VSSDK.BuildTools.15.8.3253\build\Microsoft.VSSDK.BuildTools.props')" />
   <PropertyGroup>
-    <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+    <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <UseCodebase>true</UseCodebase>
-  </PropertyGroup>
-  <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AssemblyOriginatorKeyFile>Package\Key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <SchemaVersion>2.0</SchemaVersion>
     <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <ProjectGuid>{BB4BFB45-287B-4A10-ACC5-3956F3738597}</ProjectGuid>
+    <ProjectGuid>{F9E250C6-A7AD-4888-8F17-6876736B8DCF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>IncludeToolbox</RootNamespace>
     <AssemblyName>IncludeToolbox</AssemblyName>
-    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
+    <UseCodebase>true</UseCodebase>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
-    <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
-    <IncludeDebugSymbolsInLocalVSIXDeployment>true</IncludeDebugSymbolsInLocalVSIXDeployment>
-    <CreateVsixContainer>true</CreateVsixContainer>
-    <DeployExtension>false</DeployExtension>
-    <DeployVSTemplates>false</DeployVSTemplates>
-    <CopyVsixManifestToOutput>false</CopyVsixManifestToOutput>
+    <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
+    <IncludeDebugSymbolsInLocalVSIXDeployment>false</IncludeDebugSymbolsInLocalVSIXDeployment>
     <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
-    <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
+    <CopyOutputSymbolsToOutputDirectory>true</CopyOutputSymbolsToOutputDirectory>
     <StartAction>Program</StartAction>
     <StartProgram Condition="'$(DevEnvDir)' != ''">$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootsuffix Exp</StartArguments>
@@ -48,7 +35,9 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CopyVsixExtensionFiles>False</CopyVsixExtensionFiles>
+    <CopyVsixExtensionLocation>
+    </CopyVsixExtensionLocation>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -57,89 +46,104 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Commands\CommandBase.cs" />
-    <Compile Include="Commands\CommandSetGuids.cs" />
-    <Compile Include="Commands\IncludeGraphToolWindow.cs" />
-    <Compile Include="Commands\IncludeWhatYouUse.cs" />
-    <Compile Include="GraphWindow\Commands\SaveDGML.cs" />
-    <Compile Include="GraphWindow\Commands\RefreshModeComboBoxOptions.cs" />
-    <Compile Include="GraphWindow\Commands\RefreshModeComboBox.cs" />
-    <Compile Include="GraphWindow\Commands\RefreshIncludeGraph.cs" />
-    <Compile Include="GraphWindow\PropertyChangedBase.cs" />
-    <Compile Include="GraphWindow\ViewModel\FolderIncludeTreeItem.cs" />
-    <Compile Include="GraphWindow\ViewModel\HierarchyIncludeTreeViewItem.cs" />
-    <Compile Include="GraphWindow\ViewModel\IncludeGraphViewModel.cs" />
-    <Compile Include="Graph\CustomGraphParser.cs" />
-    <Compile Include="Graph\DGMLGraph.cs" />
-    <Compile Include="Graph\CompilationBasedGraphParser.cs" />
-    <Compile Include="Graph\IncludeGraphToDGML.cs" />
-    <Compile Include="Graph\IncludeGraph.cs" />
-    <Compile Include="IncludeWhatYouUse\IWYU.cs" />
-    <Compile Include="IncludeWhatYouUse\IWYUDownload.cs" />
+    <Compile Include="Options\Constants.cs" />
+    <Compile Include="Options\FormatterOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Options\IncludeWhatYouUseOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Options\OptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Options\ViewerOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="GraphWindow\ViewModel\IncludeTreeViewItem.cs" />
-    <Compile Include="RegexUtils.cs" />
-    <Compile Include="TrialAndErrorRemoval.cs" />
-    <Compile Include="Commands\TrialAndErrorRemoval_CodeWindow.cs" />
-    <Compile Include="Commands\TrialAndErrorRemoval_Project.cs" />
-    <Compile Include="Commands\FormatIncludes.cs" />
-    <Compile Include="Formatter\IncludeFormatter.cs" />
-    <Compile Include="Package\IncludeToolboxPackage.cs" />
-    <Compile Include="Formatter\IncludeLineInfo.cs" />
-    <Compile Include="Options\Constants.cs" />
     <Compile Include="Options\TrialAndErrorRemovalOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GraphWindow\View\IncludeGraphToolWindow.cs" />
-    <Compile Include="GraphWindow\View\IncludeGraphControl.xaml.cs">
-      <DependentUpon>IncludeGraphControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Options\FormatterOptionsPage.cs">
+    <Compile Include="Options\ViewerOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Output.cs" />
+    <Compile Include="Package\IncludeToolboxPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VSUtils.cs" />
+    <Compile Include="Commands\CommandBase.cs" />
+    <Compile Include="Commands\CommandSetGuids.cs" />
+    <Compile Include="Commands\FormatIncludes.cs" />
+    <Compile Include="Commands\IncludeGraphToolWindow.cs" />
+    <Compile Include="Commands\IncludeWhatYouUse.cs" />
+    <Compile Include="Commands\TrialAndErrorRemoval_CodeWindow.cs" />
+    <Compile Include="Commands\TrialAndErrorRemoval_Project.cs" />
+    <Compile Include="Formatter\IncludeFormatter.cs" />
+    <Compile Include="Formatter\IncludeLineInfo.cs" />
+    <Compile Include="GraphWindow\Commands\RefreshIncludeGraph.cs" />
+    <Compile Include="GraphWindow\Commands\RefreshModeComboBox.cs" />
+    <Compile Include="GraphWindow\Commands\RefreshModeComboBoxOptions.cs" />
+    <Compile Include="GraphWindow\Commands\SaveDGML.cs" />
+    <Compile Include="GraphWindow\PropertyChangedBase.cs" />
+    <Compile Include="GraphWindow\ViewModel\FolderIncludeTreeItem.cs" />
+    <Compile Include="GraphWindow\ViewModel\HierarchyIncludeTreeViewItem.cs" />
+    <Compile Include="GraphWindow\ViewModel\IncludeGraphViewModel.cs" />
+    <Compile Include="GraphWindow\ViewModel\IncludeTreeViewItem.cs" />
+    <Compile Include="GraphWindow\View\IncludeGraphControl.xaml.cs">
+      <DependentUpon>IncludeGraphControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="GraphWindow\View\IncludeGraphToolWindow.cs" />
+    <Compile Include="Graph\CompilationBasedGraphParser.cs" />
+    <Compile Include="Graph\CustomGraphParser.cs" />
+    <Compile Include="Graph\DGMLGraph.cs" />
+    <Compile Include="Graph\IncludeGraph.cs" />
+    <Compile Include="Graph\IncludeGraphToDGML.cs" />
+    <Compile Include="IncludeWhatYouUse\IWYU.cs" />
+    <Compile Include="IncludeWhatYouUse\IWYUDownload.cs" />
+    <Compile Include="RegexUtils.cs" />
+    <Compile Include="TrialAndErrorRemoval.cs" />
     <Compile Include="Utils.cs" />
+    <Compile Include="VCHelper.cs" />
+    <Compile Include="VSUtils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="IncludeToolbox.args.json" />
     <None Include="Package\Key.snk" />
+    <None Include="Package\source.extension.vsixmanifest">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <VSCTCompile Include="Package\CommandDefinitions.vsct">
-      <ResourceName>Menus.ctmenu</ResourceName>
-      <SubType>Designer</SubType>
-    </VSCTCompile>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.VisualStudio.VCProject, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.VCProjectEngine, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Package\VSPackage.resx">
-      <MergeWithCTO>true</MergeWithCTO>
-      <ManifestResourceName>VSPackage</ManifestResourceName>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
+    <PackageReference Include="Microsoft.VisualStudio.SDK" Version="15.9.3" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="16.0.2268" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="license.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="Package\source.extension.vsixmanifest" />
-    <Content Include="Resources\IncludeFormatterIcons.png" />
-    <Content Include="Resources\IncludeFormatterPackage.png">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="Resources\IncludeGraphToolbarIcons.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <VSCTCompile Include="Package\CommandDefinitions.vsct">
+      <ResourceName>Menus.ctmenu</ResourceName>
+    </VSCTCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Package\VSPackage.resx" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="GraphWindow\View\IncludeGraphControl.xaml">
@@ -147,69 +151,20 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="GraphWindow\View\ToolWindowStyle.xaml">
-      <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="EnvDTE">
-      <Version>8.0.2</Version>
-    </PackageReference>
-    <PackageReference Include="EnvDTE80">
-      <Version>8.0.3</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Editor">
-      <Version>15.8.525</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Shell.14.0">
-      <Version>14.3.25407</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Text.UI">
-      <Version>15.8.525</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Text.UI.Wpf">
-      <Version>15.8.525</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Xaml">
-      <Version>4.0.0.1</Version>
-    </PackageReference>
-    <PackageReference Include="PresentationFramework">
-      <Version>4.6.0</Version>
-    </PackageReference>
-    <PackageReference Include="System.IO.Compression">
-      <Version>4.3.0</Version>
-    </PackageReference>
-    <PackageReference Include="System.IO.Compression.ZipFile">
-      <Version>4.3.0</Version>
-    </PackageReference>
-    <PackageReference Include="System.Net.Http">
-      <Version>4.3.4</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Microsoft.VisualStudio.VCProject, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.VCProjectEngine, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="PresentationCore" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\VCProject.Base\VCProjectUtils.Base.csproj">
-      <Project>{17fd3b24-a713-440f-bca5-ac3c0e441ce5}</Project>
-      <Name>VCProjectUtils.Base</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\VCProject.VS14\VCProjectUtils.VS14.csproj">
-      <Project>{0874eeb9-b073-45ff-af30-7e2a8e326aaa}</Project>
-      <Name>VCProjectUtils.VS14</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\VCProject.VS15\VCProjectUtils.VS15.csproj">
-      <Project>{c62f09bf-1867-4ae7-abe2-7a127e18f410}</Project>
-      <Name>VCProjectUtils.VS15</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
+  <PropertyGroup>
+    <PostBuildEvent>copy $(TargetDir)\IncludeToolbox.vsix $(SolutionDir)\IncludeToolbox.vsix</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
 </Project>
