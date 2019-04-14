@@ -1,5 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -7,8 +9,8 @@ namespace IncludeToolbox
 {
     [ProvideBindingPath(SubPath = "")]   // Necessary to find packaged assemblies.
 
-    [PackageRegistration(UseManagedResourcesOnly = true)]
-    [ProvideAutoLoad(UIContextGuids80.SolutionExists)]
+    [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
+    [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
 
     [ProvideOptionPage(typeof(FormatterOptionsPage), Options.Constants.Category, FormatterOptionsPage.SubCategory, 1000, 1001, true)]
@@ -20,7 +22,7 @@ namespace IncludeToolbox
     [Guid(IncludeToolboxPackage.PackageGuidString)]
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     [InstalledProductRegistration("#110", "#112", "0.2", IconResourceID = 400)]
-    public sealed class IncludeToolboxPackage : Package
+    public sealed class IncludeToolboxPackage : AsyncPackage
     {
         /// <summary>
         /// IncludeToolboxPackage GUID string.
@@ -40,11 +42,7 @@ namespace IncludeToolbox
 
         #region Package Members
 
-        /// <summary>
-        /// Initialization of the package; this method is called right after the package is sited, so this is the place
-        /// where you can put all the initialization code that rely on services provided by VisualStudio.
-        /// </summary>
-        protected override void Initialize()
+        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
             Commands.IncludeGraphToolWindow.Initialize(this);
             Commands.FormatIncludes.Initialize(this);
@@ -52,7 +50,7 @@ namespace IncludeToolbox
             Commands.TrialAndErrorRemoval_CodeWindow.Initialize(this);
             Commands.TrialAndErrorRemoval_Project.Initialize(this);
 
-            base.Initialize();            
+            await base.InitializeAsync(cancellationToken, progress);
         }
 
         protected override void Dispose(bool disposing)
