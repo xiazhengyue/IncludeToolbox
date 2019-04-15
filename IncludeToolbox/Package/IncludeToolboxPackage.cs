@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox
 {
@@ -42,15 +43,16 @@ namespace IncludeToolbox
 
         #region Package Members
 
-        protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
+            await base.InitializeAsync(cancellationToken, progress);
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             Commands.IncludeGraphToolWindow.Initialize(this);
             Commands.FormatIncludes.Initialize(this);
             Commands.IncludeWhatYouUse.Initialize(this);
             Commands.TrialAndErrorRemoval_CodeWindow.Initialize(this);
             Commands.TrialAndErrorRemoval_Project.Initialize(this);
-
-            await base.InitializeAsync(cancellationToken, progress);
         }
 
         protected override void Dispose(bool disposing)
