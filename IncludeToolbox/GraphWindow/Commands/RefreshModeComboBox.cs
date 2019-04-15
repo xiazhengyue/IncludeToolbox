@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.GraphWindow.Commands
 {
@@ -16,7 +17,7 @@ namespace IncludeToolbox.GraphWindow.Commands
             this.viewModel = viewModel;
         }
 
-        protected override void MenuItemCallback(object sender, EventArgs e)
+        protected override Task MenuItemCallback(object sender, EventArgs e)
         {
             if ((null == e) || (e == EventArgs.Empty))
             {
@@ -78,6 +79,8 @@ namespace IncludeToolbox.GraphWindow.Commands
                 // We should never get here; EventArgs are required.
                 throw new ArgumentException("Event args are required!");
             }
+
+            return Task.CompletedTask;
         }
     }
 }

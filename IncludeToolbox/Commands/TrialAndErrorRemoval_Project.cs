@@ -4,6 +4,8 @@ using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.Commands
 {
@@ -39,16 +41,20 @@ namespace IncludeToolbox.Commands
 
         private void OnDocumentIncludeRemovalFinished(int removedIncludes, bool canceled)
         {
-            numTotalRemovedIncludes += removedIncludes;
-            if (canceled || !ProcessNextFile())
+            _ = Task.Run(async () =>
             {
-                Output.Instance.InfoMsg("Removed total of {0} #include directives from project.", numTotalRemovedIncludes);
-                numTotalRemovedIncludes = 0;
-            }
+                numTotalRemovedIncludes += removedIncludes;
+                if (canceled || !await ProcessNextFile())
+                {
+                    _ = Output.Instance.InfoMsg("Removed total of {0} #include directives from project.", numTotalRemovedIncludes);
+                    numTotalRemovedIncludes = 0;
+                }
+            });
         }
 
         private void UpdateVisibility(object sender, EventArgs e)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             string reason;
             var project = GetSelectedCppProject(out reason);
             menuCommand.Visible = project != null;
@@ -56,6 +62,8 @@ namespace IncludeToolbox.Commands
 
         static Project GetSelectedCppProject(out string reasonForFailure)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             reasonForFailure = "";
 
             var selectedItems = VSUtils.GetDTE().SelectedItems;
@@ -79,8 +87,10 @@ namespace IncludeToolbox.Commands
             return null;
         }
 
-        private bool ProcessNextFile()
+        private async Task<bool> ProcessNextFile()
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             while (projectFiles.Count > 0)
             {
                 ProjectItem projectItem = projectFiles.Dequeue();
@@ -96,15 +106,17 @@ namespace IncludeToolbox.Commands
                 if (document == null)
                     continue;
 
-                bool started = impl.PerformTrialAndErrorIncludeRemoval(document, settings);
+                bool started = await impl.PerformTrialAndErrorIncludeRemoval(document, settings);
                 if (started)
                     return true;
             }
             return false;
         }
 
-        static void RecursiveFindFilesInProject(ProjectItems items, ref Queue<ProjectItem> projectFiles)
+        private static void RecursiveFindFilesInProject(ProjectItems items, ref Queue<ProjectItem> projectFiles)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             var e = items.GetEnumerator();
             while (e.MoveNext())
             {
@@ -132,8 +144,10 @@ namespace IncludeToolbox.Commands
             }
         }
 
-        private void PerformTrialAndErrorRemoval(Project project)
+        private async Task PerformTrialAndErrorRemoval(Project project)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             projectItems = project.ProjectItems;
 
             projectFiles.Clear();
@@ -141,7 +155,7 @@ namespace IncludeToolbox.Commands
 
             if (projectFiles.Count > 2)
             {
-                if (Output.Instance.YesNoMsg("Attention! Trial and error include removal on large projects make take up to several hours! In this time you will not be able to use Visual Studio. Are you sure you want to continue?")
+                if (await Output.Instance.YesNoMsg("Attention! Trial and error include removal on large projects make take up to several hours! In this time you will not be able to use Visual Studio. Are you sure you want to continue?")
                     != Output.MessageResult.Yes)
                 {
                     return;
@@ -149,7 +163,7 @@ namespace IncludeToolbox.Commands
             }
 
             numTotalRemovedIncludes = 0;
-            ProcessNextFile();
+            await ProcessNextFile();
         }
     
 
@@ -160,11 +174,13 @@ namespace IncludeToolbox.Commands
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        protected override void MenuItemCallback(object sender, EventArgs e)
+        protected override async Task MenuItemCallback(object sender, EventArgs e)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             if (TrialAndErrorRemoval.WorkInProgress)
             {
-                Output.Instance.ErrorMsg("Trial and error include removal already in progress!");
+                await Output.Instance.ErrorMsg("Trial and error include removal already in progress!");
                 return;
             }
 
@@ -177,7 +193,7 @@ namespace IncludeToolbox.Commands
                     return;
                 }
 
-                PerformTrialAndErrorRemoval(project);
+                await PerformTrialAndErrorRemoval(project);
             }
             finally
             {

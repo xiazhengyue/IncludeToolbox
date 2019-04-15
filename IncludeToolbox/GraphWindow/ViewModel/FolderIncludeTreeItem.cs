@@ -146,8 +146,9 @@ namespace IncludeToolbox.GraphWindow
             }
         }
 
-        public override void NavigateToInclude()
+        public override Task NavigateToInclude()
         {
+            return Task.CompletedTask;
         }
     }
 
@@ -180,9 +181,10 @@ namespace IncludeToolbox.GraphWindow
             }
         }
 
-        public override void NavigateToInclude()
+        public override Task NavigateToInclude()
         {
             // todo?
+            return Task.CompletedTask;
         }
     }
 
@@ -213,10 +215,11 @@ namespace IncludeToolbox.GraphWindow
                 ParentFolder = Path.GetDirectoryName(AbsoluteFilename);
         }
 
-        public override void NavigateToInclude()
+        public override async Task NavigateToInclude()
         {
             if (AbsoluteFilename != null && Path.IsPathRooted(AbsoluteFilename))
             {
+                await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                 var fileWindow = VSUtils.OpenFileAndShowDocument(AbsoluteFilename);
             }
         }

@@ -6,7 +6,6 @@ using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
-using VCProjectUtils.Base;
 using EnvDTE;
 using Microsoft.VisualStudio;
 
@@ -24,29 +23,33 @@ namespace IncludeToolbox
             return dte;
         }
 
-        public static IVCHelper VCUtils
-        {
-            get
-            {
-                if (vcUtils != null)
-                    return vcUtils;
-                else
-                    return InitVCHelper();
-            }
-        }
+        // Historically, the GUIDs of the COM interfaces in VCProject/VCProjectEngine would change from version to version.
+        // To work around this we had several builds of VCHelpers that we could choose from, each with a different dependency.
+        // With VS2019, the older versions are no longer available and we're stuck with a single version for better or worse.
 
-        private static IVCHelper vcUtils;
+        public static VCHelper VCUtils = new VCHelper();
+        //{
+        //    get
+        //    {
+        //        if (vcUtils != null)
+        //            return vcUtils;
+        //        else
+        //            return InitVCHelper();
+        //    }
+        //}
 
-        private static IVCHelper InitVCHelper()
-        {
-            var dte = GetDTE();
-            if (dte.Version.StartsWith("14."))
-                vcUtils = new VCProjectUtils.VS14.VCHelper();
-            else if (dte.Version.StartsWith("15."))
-                vcUtils = new VCProjectUtils.VS15.VCHelper();
+        //private static IVCHelper vcUtils;
 
-            return vcUtils;
-        }
+        //private static IVCHelper InitVCHelper()
+        //{
+        //    var dte = GetDTE();
+        //    if (dte.Version.StartsWith("14."))
+        //        vcUtils = new VCProjectUtils.VS14.VCHelper();
+        //    else if (dte.Version.StartsWith("15."))
+        //        vcUtils = new VCProjectUtils.VS15.VCHelper();
+
+        //    return vcUtils;
+        //}
 
         /// <summary>
         /// Returns what the C++ macro _MSC_VER should resolve to.
@@ -56,10 +59,13 @@ namespace IncludeToolbox
         {
             // See http://stackoverflow.com/questions/70013/how-to-detect-if-im-compiling-code-with-visual-studio-2008
             var dte = GetDTE();
+            var dteVersion = dte.Version;
             if (dte.Version.StartsWith("14."))
                 return "1900";
             else if (dte.Version.StartsWith("15."))
-                return "1910";
+                return "1915";
+            else if (dte.Version.StartsWith("16."))
+                return "1920";
             else
                 throw new NotImplementedException("Unknown MSVC version!");
         }
@@ -75,14 +81,18 @@ namespace IncludeToolbox
             if (project == null)
                 return pathStrings;
 
-            string reasonForFailure;
-            string projectIncludeDirectories = VCUtils.GetCompilerSetting_Includes(project, out reasonForFailure);
-            if(projectIncludeDirectories == null)
+            string projectIncludeDirectories;
+            try
             {
-                Output.Instance.WriteLine(reasonForFailure);
+                projectIncludeDirectories = VCUtils.GetCompilerSetting_Includes(project);
+            }
+            catch (VCQueryFailure e)
+            {
+                Output.Instance.WriteLine(e.Message); 
                 return pathStrings;
             }
 
+            ThreadHelper.ThrowIfNotOnUIThread();
             string projectPath = Path.GetDirectoryName(Path.GetFullPath(project.FileName));
 
             // According to documentation FullIncludePath has resolved macros.
@@ -135,6 +145,8 @@ namespace IncludeToolbox
 
         public static EnvDTE.Window OpenFileAndShowDocument(string filePath)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             if (filePath == null)
                 return null;
 
@@ -153,6 +165,7 @@ namespace IncludeToolbox
 
         public static string GetOutputText()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var dte = GetDTE();
             if (dte == null)
                 return "";
@@ -169,7 +182,7 @@ namespace IncludeToolbox
             }
             if (buildOutputPane == null)
             {
-                Output.Instance.ErrorMsg("Failed to query for build output pane!");
+                _ = Output.Instance.ErrorMsg("Failed to query for build output pane!");
                 return null;
             }
             TextSelection sel = buildOutputPane.TextDocument.Selection;

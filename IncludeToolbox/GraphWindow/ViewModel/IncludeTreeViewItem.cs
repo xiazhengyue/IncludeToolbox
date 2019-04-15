@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace IncludeToolbox.GraphWindow
 {
@@ -29,6 +30,6 @@ namespace IncludeToolbox.GraphWindow
         /// <summary>
         /// Navigates to to the file/include in the IDE.
         /// </summary>
-        abstract public void NavigateToInclude();
+        abstract public Task NavigateToInclude();
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.Shell;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -105,6 +106,7 @@ namespace IncludeToolbox
 
         public override void SaveSettingsToStorage()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var settingsStore = GetSettingsStore();
 
             if (!settingsStore.CollectionExists(collectionName))
@@ -130,6 +132,7 @@ namespace IncludeToolbox
 
         public override void LoadSettingsFromStorage()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var settingsStore = GetSettingsStore();
 
             if (settingsStore.PropertyExists(collectionName, nameof(ExecutablePath)))

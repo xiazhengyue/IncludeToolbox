@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.Commands
 {
@@ -53,8 +54,10 @@ namespace IncludeToolbox.Commands
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        protected override void MenuItemCallback(object sender, EventArgs e)
+        protected override async Task MenuItemCallback(object sender, EventArgs e)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var settings = (FormatterOptionsPage)Package.GetDialogPage(typeof(FormatterOptionsPage));
 
             // Try to find absolute paths
@@ -63,6 +66,7 @@ namespace IncludeToolbox.Commands
             if (project == null)
             {
                 Output.Instance.WriteLine("The document '{0}' is not part of a project.", document.Name);
+                return;
             }
             var includeDirectories = VSUtils.GetProjectIncludeDirectories(project);
 

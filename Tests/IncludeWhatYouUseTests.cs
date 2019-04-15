@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Tests
 {
@@ -33,17 +34,16 @@ namespace Tests
         /// This indirectly also tests whether our iwyu repository is healthy!
         /// </remarks>
         [TestMethod]
-        public void Download()
+        public async Task DownloadAsync()
         {
             var executableDir = GetCleanExecutableDir();
 
             Assert.AreEqual(false, File.Exists(executableDir));
-            Assert.AreEqual(true, IWYUDownload.IsNewerVersionAvailableOnline(executableDir).Result); // Nothing here practically means that there is a new version.
+            Assert.AreEqual(true, await IWYUDownload.IsNewerVersionAvailableOnline(executableDir)); // Nothing here practically means that there is a new version.
 
-            var downloadTask = IWYUDownload.DownloadIWYU(executableDir, ReportProgress, new CancellationToken());
-            downloadTask.Wait();
+            await IWYUDownload.DownloadIWYU(executableDir, ReportProgress, new CancellationToken());
 
-            Assert.AreEqual(false, IWYUDownload.IsNewerVersionAvailableOnline(executableDir).Result);
+            Assert.AreEqual(false, await IWYUDownload.IsNewerVersionAvailableOnline(executableDir));
             Assert.AreEqual(true, File.Exists(executableDir));
         }
 

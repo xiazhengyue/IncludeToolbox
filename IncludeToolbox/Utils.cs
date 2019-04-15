@@ -6,10 +6,15 @@ using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudio.VCProjectEngine;
 
 namespace IncludeToolbox
 {
+    public struct BoolWithReason
+    {
+        public bool Result;
+        public string Reason;
+    }
+
     public static class Utils
     {
         public static string MakeRelative(string absoluteRoot, string absoluteTarget)

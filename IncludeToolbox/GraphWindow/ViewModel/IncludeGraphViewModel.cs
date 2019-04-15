@@ -1,11 +1,13 @@
 ﻿using IncludeToolbox.Formatter;
 using IncludeToolbox.Graph;
 using Microsoft.VisualStudio.PlatformUI;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.GraphWindow
 {
@@ -34,7 +36,7 @@ namespace IncludeToolbox.GraphWindow
                 {
                     activeRefreshMode = value;
                     OnNotifyPropertyChanged();
-                    UpdateCanRefresh();
+                    QueueUpdatingRefreshStatus();
                 }
             }
         }
@@ -62,7 +64,7 @@ namespace IncludeToolbox.GraphWindow
             private set
             {
                 refreshInProgress = value;
-                UpdateCanRefresh();
+                QueueUpdatingRefreshStatus();
                 OnNotifyPropertyChanged();
                 OnNotifyPropertyChanged(nameof(CanSave));
             }
@@ -91,50 +93,58 @@ namespace IncludeToolbox.GraphWindow
 
         public IncludeGraphViewModel()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             // UI update on dte events.
             var dte = VSUtils.GetDTE();
             if (dte != null)
             {
                 windowEvents = dte.Events.WindowEvents;
-                windowEvents.WindowActivated += (x, y) => UpdateCanRefresh();
+                windowEvents.WindowActivated += (x, y) => QueueUpdatingRefreshStatus();
             }
 
-            UpdateCanRefresh();
+            QueueUpdatingRefreshStatus();
         }
 
-        private void UpdateCanRefresh()
+        private void QueueUpdatingRefreshStatus()
         {
-            var currentDocument = VSUtils.GetDTE()?.ActiveDocument;
+            _ = Task.Run(async () =>
+            {
+                var currentDocument = VSUtils.GetDTE()?.ActiveDocument;
 
-            if (RefreshInProgress)
-            {
-                CanRefresh = false;
-                RefreshTooltip = "Refresh in progress";
-            }
-            // Limiting to C++ document is a bit harsh though for the general case as we might not have this information depending on the project type.
-            // This is why we just check for "having a document" here for now.
-            else if (currentDocument == null)
-            {
-                CanRefresh = false;
-                RefreshTooltip = "No open document";
-            }
-            else
-            {
-                if (activeRefreshMode == RefreshMode.ShowIncludes)
+                if (RefreshInProgress)
                 {
-                    CanRefresh = CompilationBasedGraphParser.CanPerformShowIncludeCompilation(currentDocument, out string reasonForFailure);
-                    RefreshTooltip = reasonForFailure;
+                    CanRefresh = false;
+                    RefreshTooltip = "Refresh in progress";
+                }
+                // Limiting to C++ document is a bit harsh though for the general case as we might not have this information depending on the project type.
+                // This is why we just check for "having a document" here for now.
+                else if (currentDocument == null)
+                {
+                    CanRefresh = false;
+                    RefreshTooltip = "No open document";
                 }
                 else
                 {
-                    CanRefresh = true;
-                    RefreshTooltip = null;
+                    if (activeRefreshMode == RefreshMode.ShowIncludes)
+                    {
+                        var canPerformShowIncludeCompilation = await CompilationBasedGraphParser.CanPerformShowIncludeCompilation(currentDocument);
+                        CanRefresh = canPerformShowIncludeCompilation.Result;
+                        RefreshTooltip = canPerformShowIncludeCompilation.Reason;
+                    }
+                    else
+                    {
+                        CanRefresh = true;
+                        RefreshTooltip = null;
+                    }
                 }
-            }
+            });
         }
 
-        public void RefreshIncludeGraph()
+        public async Task RefreshIncludeGraph()
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var currentDocument = VSUtils.GetDTE()?.ActiveDocument;
             GraphRootFilename = currentDocument.Name ?? "<No File>";
             if (currentDocument == null)
@@ -148,7 +158,7 @@ namespace IncludeToolbox.GraphWindow
                 switch (activeRefreshMode)
                 {
                     case RefreshMode.ShowIncludes:
-                        if (newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, OnNewTreeComputed))
+                        if (await newGraph.AddIncludesRecursively_ShowIncludesCompilation(currentDocument, OnNewTreeComputed))
                         {
                             ResetIncludeTreeModel(null);
                         }
@@ -159,14 +169,12 @@ namespace IncludeToolbox.GraphWindow
                         var settings = (ViewerOptionsPage)IncludeToolboxPackage.Instance.GetDialogPage(typeof(ViewerOptionsPage));
                         var includeDirectories = VSUtils.GetProjectIncludeDirectories(currentDocument.ProjectItem.ContainingProject);
                         var uiThreadDispatcher = System.Windows.Threading.Dispatcher.CurrentDispatcher;
-                        System.Threading.Tasks.Task.Run(
-                            () =>
+                        await Task.Run(
+                            async () =>
                             {
+                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                                 newGraph.AddIncludesRecursively_ManualParsing(currentDocument.FullName, includeDirectories, settings.NoParsePaths);
-                            }).ContinueWith(
-                            (x) =>
-                            {
-                                uiThreadDispatcher.BeginInvoke((Action)(() => OnNewTreeComputed(newGraph, currentDocument, true)));
+                                await OnNewTreeComputed(newGraph, currentDocument, true);
                             });
                         break;
 
@@ -177,7 +185,7 @@ namespace IncludeToolbox.GraphWindow
             catch(Exception e)
             {
                 Output.Instance.WriteLine("Unexpected error when refreshing Include Graph: {0}", e);
-                OnNewTreeComputed(newGraph, currentDocument, false);
+                await OnNewTreeComputed(newGraph, currentDocument, false);
             }
         }
 
@@ -198,8 +206,10 @@ namespace IncludeToolbox.GraphWindow
         /// <param name="graph">The include tree</param>
         /// <param name="documentTreeComputedFor">This can be different from the active document at the time the refresh button was clicked.</param>
         /// <param name="success">Wheather the tree was created successfully</param>
-        private void OnNewTreeComputed(IncludeGraph graph, EnvDTE.Document documentTreeComputedFor, bool success)
+        private async Task OnNewTreeComputed(IncludeGraph graph, EnvDTE.Document documentTreeComputedFor, bool success)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             RefreshInProgress = false;
 
             if (success)

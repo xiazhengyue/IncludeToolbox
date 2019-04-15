@@ -1,9 +1,12 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.Shell;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.IncludeWhatYouUse
 {
@@ -118,8 +121,10 @@ namespace IncludeToolbox.IncludeWhatYouUse
             return fileTasks;
         }
 
-        static private void ApplyTasks(Dictionary<string, FormatTask> tasks, bool applyFormatting, FormatterOptionsPage formatSettings)
+        static private async Task ApplyTasks(Dictionary<string, FormatTask> tasks, bool applyFormatting, FormatterOptionsPage formatSettings)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var dte = VSUtils.GetDTE();
 
             foreach (KeyValuePair<string, FormatTask> entry in tasks)
@@ -128,7 +133,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                 EnvDTE.Window fileWindow = dte.ItemOperations.OpenFile(filename);
                 if (fileWindow == null)
                 {
-                    Output.Instance.ErrorMsg("Failed to open File {0}", filename);
+                    await Output.Instance.ErrorMsg("Failed to open File {0}", filename);
                     continue;
                 }
                 fileWindow.Activate();
@@ -205,22 +210,27 @@ namespace IncludeToolbox.IncludeWhatYouUse
             }
         }
 
-        static public void Apply(string iwyuOutput, bool applyFormatter, FormatterOptionsPage formatOptions)
+        static public async Task Apply(string iwyuOutput, bool applyFormatter, FormatterOptionsPage formatOptions)
         {
             var tasks = ParseOutput(iwyuOutput);
-            ApplyTasks(tasks, applyFormatter, formatOptions);
+            await ApplyTasks(tasks, applyFormatter, formatOptions);
         }
 
         /// <summary>
         /// Runs iwyu. Blocks until finished.
         /// </summary>
-        static public string RunIncludeWhatYouUse(string fullFileName, EnvDTE.Project project, IncludeWhatYouUseOptionsPage settings)
+        static public async Task<string> RunIncludeWhatYouUse(string fullFileName, EnvDTE.Project project, IncludeWhatYouUseOptionsPage settings)
         {
-            string reasonForFailure;
-            string preprocessorDefintions = VSUtils.VCUtils.GetCompilerSetting_PreprocessorDefinitions(project, out reasonForFailure);
-            if (preprocessorDefintions == null)
-            {
-                Output.Instance.ErrorMsg("Can't run IWYU: {0}", reasonForFailure);
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            string preprocessorDefintions;
+            try
+            { 
+                preprocessorDefintions = VSUtils.VCUtils.GetCompilerSetting_PreprocessorDefinitions(project);
+            }
+            catch (VCQueryFailure e)
+            { 
+                await Output.Instance.ErrorMsg("Can't run IWYU: {0}", e.Message);
                 return null;
             }
 
@@ -245,12 +255,9 @@ namespace IncludeToolbox.IncludeWhatYouUse
                 clangOptionList.Add("-fms-compatibility -fms-extensions -fdelayed-template-parsing");
                 clangOptionList.Add($"-fmsc-version={VSUtils.GetMSCVerString()}");
                 // Architecture
-                var targetMachine = VSUtils.VCUtils.GetLinkerSetting_TargetMachine(project, out reasonForFailure);
-                if (!targetMachine.HasValue)
-                    Output.Instance.ErrorMsg("Failed to query for target machine: {0}", reasonForFailure);
-                else
+                try
                 {
-                    switch (targetMachine.Value)
+                    switch (VSUtils.VCUtils.GetLinkerSetting_TargetMachine(project))
                     {
                         // Most targets give an error of this form:
                         // "error: unknown target CPU 'x86'"
@@ -259,7 +266,7 @@ namespace IncludeToolbox.IncludeWhatYouUse
                         /*case VCProjectUtils.Base.TargetMachineType.X86:
                             clangOptions.Add("-march=x86");
                             break;*/
-                        case VCProjectUtils.Base.TargetMachineType.AMD64:
+                        case VCHelper.TargetMachineType.AMD64:
                             clangOptionList.Add("-march=x86-64");
                             break;
                             /*case VCProjectUtils.Base.TargetMachineType.ARM:
@@ -272,6 +279,10 @@ namespace IncludeToolbox.IncludeWhatYouUse
                                 clangOptions.Add(""-march=thumb");
                                 break;*/
                     }
+                }
+                catch (VCQueryFailure e)
+                {
+                    await Output.Instance.ErrorMsg($"Failed to query for target machine: {e.Message}");
                 }
 
                 // icwyu options
