@@ -59,10 +59,13 @@ namespace IncludeToolbox
         {
             // See http://stackoverflow.com/questions/70013/how-to-detect-if-im-compiling-code-with-visual-studio-2008
             var dte = GetDTE();
+            var dteVersion = dte.Version;
             if (dte.Version.StartsWith("14."))
                 return "1900";
             else if (dte.Version.StartsWith("15."))
-                return "1910";
+                return "1915";
+            else if (dte.Version.StartsWith("16."))
+                return "1920";
             else
                 throw new NotImplementedException("Unknown MSVC version!");
         }
