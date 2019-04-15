@@ -47,12 +47,12 @@ namespace IncludeToolbox.GraphWindow.Commands
             }
         }
 
-        protected override void MenuItemCallback(object sender, EventArgs e)
+        protected override async Task MenuItemCallback(object sender, EventArgs e)
         {
             if (viewModel == null)
                 return;
 
-            viewModel.RefreshIncludeGraph();
+            await viewModel.RefreshIncludeGraph();
         }
     }
 }

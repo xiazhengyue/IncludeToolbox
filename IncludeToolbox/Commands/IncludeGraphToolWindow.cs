@@ -2,6 +2,7 @@
 using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.Commands
 {
@@ -17,15 +18,17 @@ namespace IncludeToolbox.Commands
         /// </summary>
         /// <param name="sender">The event sender.</param>
         /// <param name="e">The event args.</param>
-        protected override void MenuItemCallback(object sender, EventArgs e)
+        protected override async Task MenuItemCallback(object sender, EventArgs e)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             // Get the instance number 0 of this tool window. This window is single instance so this instance
             // is actually the only one.
             // The last flag is set to true so that if the tool window does not exists it will be created.
             ToolWindowPane window = Package.FindToolWindow(typeof(GraphWindow.IncludeGraphToolWindow), 0, true);
             if (window?.Frame == null)
             {
-                Output.Instance.ErrorMsg("Failed to open Include Graph window!");
+                await Output.Instance.ErrorMsg("Failed to open Include Graph window!");
             }
             else
             {

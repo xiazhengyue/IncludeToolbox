@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.GraphWindow.Commands
 {
@@ -12,7 +13,7 @@ namespace IncludeToolbox.GraphWindow.Commands
     {
         public override CommandID CommandID { get; } = new CommandID(IncludeToolbox.Commands.CommandSetGuids.GraphWindowToolbarCmdSet, 0x103);
 
-        protected override void MenuItemCallback(object sender, EventArgs e)
+        protected override Task MenuItemCallback(object sender, EventArgs e)
         {
             if (e == EventArgs.Empty)
             {
@@ -40,6 +41,8 @@ namespace IncludeToolbox.GraphWindow.Commands
                     throw new ArgumentException("Out parameter can not be NULL");
                 }
             }
+
+            return Task.CompletedTask;
         }
     }
 }

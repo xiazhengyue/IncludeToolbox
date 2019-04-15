@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.Commands
 {
@@ -14,9 +15,8 @@ namespace IncludeToolbox.Commands
         public static void Initialize(Package package)
         {
             if (package == null)
-            {
                 throw new ArgumentNullException("package");
-            }
+            ThreadHelper.ThrowIfNotOnUIThread();
 
             Instance = new T();
             Instance.Package = package;
@@ -34,14 +34,17 @@ namespace IncludeToolbox.Commands
 
             EventHandler callback = (sender, e) =>
             {
-                try
-                {
-                    this.MenuItemCallback(sender, e);
-                }
-                catch (Exception exception)
-                {
-                    Output.Instance.ErrorMsg("Unexpected Error: {0}", exception.ToString());
-                }
+                _ = Task.Run(async () =>
+                  {
+                      try
+                      {
+                          await this.MenuItemCallback(sender, e);
+                      }
+                      catch (Exception exception)
+                      {
+                          await Output.Instance.ErrorMsg("Unexpected Error: {0}", exception.ToString());
+                      }
+                  });
             };
 
             menuCommand = new OleMenuCommand(callback, CommandID);
@@ -69,6 +72,6 @@ namespace IncludeToolbox.Commands
 
         public abstract CommandID CommandID { get; }
 
-        protected abstract void MenuItemCallback(object sender, EventArgs e);
+        protected abstract Task MenuItemCallback(object sender, EventArgs e);
     }
 }

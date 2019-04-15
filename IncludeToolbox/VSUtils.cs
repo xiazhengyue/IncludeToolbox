@@ -78,14 +78,18 @@ namespace IncludeToolbox
             if (project == null)
                 return pathStrings;
 
-            string reasonForFailure;
-            string projectIncludeDirectories = VCUtils.GetCompilerSetting_Includes(project, out reasonForFailure);
-            if(projectIncludeDirectories == null)
+            string projectIncludeDirectories;
+            try
             {
-                Output.Instance.WriteLine(reasonForFailure);
+                projectIncludeDirectories = VCUtils.GetCompilerSetting_Includes(project);
+            }
+            catch (VCQueryFailure e)
+            {
+                Output.Instance.WriteLine(e.Message); 
                 return pathStrings;
             }
 
+            ThreadHelper.ThrowIfNotOnUIThread();
             string projectPath = Path.GetDirectoryName(Path.GetFullPath(project.FileName));
 
             // According to documentation FullIncludePath has resolved macros.
@@ -138,6 +142,8 @@ namespace IncludeToolbox
 
         public static EnvDTE.Window OpenFileAndShowDocument(string filePath)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             if (filePath == null)
                 return null;
 
@@ -156,6 +162,7 @@ namespace IncludeToolbox
 
         public static string GetOutputText()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var dte = GetDTE();
             if (dte == null)
                 return "";
@@ -172,7 +179,7 @@ namespace IncludeToolbox
             }
             if (buildOutputPane == null)
             {
-                Output.Instance.ErrorMsg("Failed to query for build output pane!");
+                _ = Output.Instance.ErrorMsg("Failed to query for build output pane!");
                 return null;
             }
             TextSelection sel = buildOutputPane.TextDocument.Selection;

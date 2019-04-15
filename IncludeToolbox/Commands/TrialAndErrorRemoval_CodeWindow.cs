@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using EnvDTE;
 using Microsoft.VisualStudio.Text;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.Commands
 {
@@ -34,10 +35,9 @@ namespace IncludeToolbox.Commands
             menuCommand.BeforeQueryStatus += UpdateVisibility;
         }
 
-        private void UpdateVisibility(object sender, EventArgs e)
+        private async void UpdateVisibility(object sender, EventArgs e)
         {
-            string reason;
-            menuCommand.Visible = VSUtils.VCUtils.IsCompilableFile(VSUtils.GetDTE().ActiveDocument, out reason);
+            menuCommand.Visible = (await VSUtils.VCUtils.IsCompilableFile(VSUtils.GetDTE().ActiveDocument)).Result;
         }
 
         /// <summary>
@@ -47,13 +47,11 @@ namespace IncludeToolbox.Commands
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        protected override void MenuItemCallback(object sender, EventArgs e)
+        protected override async Task MenuItemCallback(object sender, EventArgs e)
         {
             var document = VSUtils.GetDTE().ActiveDocument;
             if (document != null)
-            {
-                impl.PerformTrialAndErrorIncludeRemoval(document, (TrialAndErrorRemovalOptionsPage)Package.GetDialogPage(typeof(TrialAndErrorRemovalOptionsPage)));
-            }
+                await impl.PerformTrialAndErrorIncludeRemoval(document, (TrialAndErrorRemovalOptionsPage)Package.GetDialogPage(typeof(TrialAndErrorRemovalOptionsPage)));
         }
     }
 }

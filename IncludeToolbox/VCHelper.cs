@@ -1,8 +1,18 @@
 ﻿using EnvDTE;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.VCProjectEngine;
+using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox
 {
+    public class VCQueryFailure : System.Exception
+    {
+        public VCQueryFailure(string message) : base(message)
+        {
+        }
+    }
+
     public class VCHelper
     {
         public bool IsVCProject(Project project)
@@ -10,54 +20,40 @@ namespace IncludeToolbox
             return project?.Object is VCProject;
         }
 
-        private static VCFileConfiguration GetVCFileConfigForCompilation(Document document, out string reasonForFailure)
+        private static async Task<VCFileConfiguration> GetVCFileConfigForCompilation(Document document)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             if (document == null)
-            {
-                reasonForFailure = "No document.";
-                return null;
-            }
+                throw new VCQueryFailure("No document.");
 
             var vcProject = document.ProjectItem.ContainingProject?.Object as VCProject;
             if (vcProject == null)
-            {
-                reasonForFailure = "The given document does not belong to a VC++ Project.";
-                return null;
-            }
+                throw new VCQueryFailure("The given document does not belong to a VC++ Project.");
 
             VCFile vcFile = document.ProjectItem?.Object as VCFile;
             if (vcFile == null)
-            {
-                reasonForFailure = "The given document is not a VC++ file.";
-                return null;
-            }
+                throw new VCQueryFailure("The given document is not a VC++ file.");
 
             if (vcFile.FileType != eFileType.eFileTypeCppCode)
-            {
-                reasonForFailure = "The given document is not a compileable VC++ file.";
-                return null;
-            }
+                throw new VCQueryFailure("The given document is not a compileable VC++ file.");
 
             IVCCollection fileConfigCollection = vcFile.FileConfigurations as IVCCollection;
             VCFileConfiguration fileConfig = fileConfigCollection?.Item(vcProject.ActiveConfiguration.Name) as VCFileConfiguration;
             if (fileConfig == null)
-            {
-                reasonForFailure = "Failed to retrieve file config from document.";
-                return null;
-            }
+                throw new VCQueryFailure("Failed to retrieve file config from document.");
 
-            reasonForFailure = "";
             return fileConfig;
         }
 
-        private static VCTool GetToolFromActiveConfiguration<VCTool>(Project project, out string reasonForFailure) where VCTool: class
+        private static VCTool GetToolFromActiveConfiguration<VCTool>(Project project) where VCTool: class
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             VCProject vcProject = project?.Object as VCProject;
             if (vcProject == null)
-            {
-                reasonForFailure = $"Failed to retrieve VCCLCompilerTool since project \"{project.Name}\" is not a VCProject.";
-                return null;
-            }
+                throw new VCQueryFailure($"Failed to retrieve VCCLCompilerTool since project \"{project.Name}\" is not a VCProject.");
+
             VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
             VCTool compilerTool = null;
             foreach (var tool in activeConfiguration.Tools)
@@ -68,23 +64,17 @@ namespace IncludeToolbox
             }
 
             if (compilerTool == null)
-            {
-                reasonForFailure = $"Couldn't find a {typeof(VCTool).Name} in active configuration of VC++ Project \"{vcProject.Name}\"";
-                return null;
-            }
+                throw new VCQueryFailure($"Couldn't find a {typeof(VCTool).Name} in active configuration of VC++ Project \"{vcProject.Name}\"");
 
-            reasonForFailure = "";
             return compilerTool;
         }
 
-        public static VCLinkerTool GetLinkerTool(Project project, out string reasonForFailure)
+        public static VCLinkerTool GetLinkerTool(Project project)
         {
             VCProject vcProject = project?.Object as VCProject;
             if (vcProject == null)
-            {
-                reasonForFailure = "Failed to retrieve VCLinkerTool since project is not a VCProject.";
-                return null;
-            }
+                throw new VCQueryFailure("Failed to retrieve VCLinkerTool since project is not a VCProject.");
+
             VCConfiguration activeConfiguration = vcProject.ActiveConfiguration;
             var tools = activeConfiguration.Tools;
             VCLinkerTool linkerTool = null;
@@ -96,67 +86,110 @@ namespace IncludeToolbox
             }
 
             if (linkerTool == null)
-            {
-                reasonForFailure = "Couldn't file a VCLinkerTool in VC++ Project.";
-                return null;
-            }
+                throw new VCQueryFailure("Couldn't file a VCLinkerTool in VC++ Project.");
 
-            reasonForFailure = "";
             return linkerTool;
         }
 
-        public bool IsCompilableFile(Document document, out string reasonForFailure)
+        public async Task<BoolWithReason> IsCompilableFile(Document document)
         {
-            return GetVCFileConfigForCompilation(document, out reasonForFailure) != null;
+            try
+            {
+                await GetVCFileConfigForCompilation(document);
+            }
+            catch (VCQueryFailure queryFailure)
+            {
+                return new BoolWithReason()
+                {
+                    Result = false,
+                    Reason = queryFailure.Message,
+                };
+            }
+
+            return new BoolWithReason()
+            {
+                Result = true,
+                Reason = "",
+            };
         }
 
-        public void CompileSingleFile(Document document)
+        public async Task CompileSingleFile(Document document)
         {
-            string reasonForFailure;
-            var fileConfig = GetVCFileConfigForCompilation(document, out reasonForFailure);
-            if(fileConfig != null)
-            {
+            var fileConfig = await GetVCFileConfigForCompilation(document);
+            if (fileConfig != null)
                 fileConfig.Compile(true, false); // WaitOnBuild==true always fails.
+        }
+
+        public string GetCompilerSetting_Includes(Project project)
+        {
+            VCQueryFailure queryFailure;
+            try
+            {
+                VCCLCompilerTool compilerTool = GetToolFromActiveConfiguration<VCCLCompilerTool>(project);
+                if (compilerTool != null)
+                    return compilerTool.FullIncludePath;
+                else
+                    queryFailure = new VCQueryFailure("Unhandled error");
+            }
+            catch (VCQueryFailure e)
+            {
+                queryFailure = e;
+            }
+
+            // If querying the NMake tool fails, keep old reason for failure, since this is what we usually expect. Using NMake is seen as mere fallback.
+            try
+            {
+                VCNMakeTool nmakeTool = GetToolFromActiveConfiguration<VCNMakeTool>(project);
+                if (nmakeTool == null)
+                    throw queryFailure;
+
+                return nmakeTool.IncludeSearchPath;
+            }
+            catch
+            {
+                throw queryFailure;
             }
         }
 
-        public string GetCompilerSetting_Includes(Project project, out string reasonForFailure)
+        public void SetCompilerSetting_ShowIncludes(Project project, bool show)
         {
-            VCCLCompilerTool compilerTool = GetToolFromActiveConfiguration<VCCLCompilerTool>(project, out reasonForFailure);
-            if (compilerTool != null)
-                return compilerTool.FullIncludePath;
+            GetToolFromActiveConfiguration<VCCLCompilerTool>(project).ShowIncludes = show;
+        }
+
+        public bool GetCompilerSetting_ShowIncludes(Project project)
+        {
+            return GetToolFromActiveConfiguration<VCCLCompilerTool>(project).ShowIncludes;
+        }
+
+        public string GetCompilerSetting_PreprocessorDefinitions(Project project)
+        {
+            VCQueryFailure queryFailure;
+            try
+            {
+                VCCLCompilerTool compilerTool = GetToolFromActiveConfiguration<VCCLCompilerTool>(project);
+                if (compilerTool != null)
+                    return compilerTool?.PreprocessorDefinitions;
+                else
+                    queryFailure = new VCQueryFailure("Unhandled error");
+            }
+            catch (VCQueryFailure e)
+            {
+                queryFailure = e;
+            }
 
             // If querying the NMake tool fails, keep old reason for failure, since this is what we usually expect. Using NMake is seen as mere fallback.
-            VCNMakeTool nmakeTool = GetToolFromActiveConfiguration<VCNMakeTool>(project, out var _);
-            if (nmakeTool == null) return null;
-            reasonForFailure = "";
-            return nmakeTool.IncludeSearchPath;
-        }
+            try
+            {
+                VCNMakeTool nmakeTool = GetToolFromActiveConfiguration<VCNMakeTool>(project);
+                if (nmakeTool == null)
+                    throw queryFailure;
 
-        public void SetCompilerSetting_ShowIncludes(Project project, bool show, out string reasonForFailure)
-        {
-            VCCLCompilerTool compilerTool = GetToolFromActiveConfiguration<VCCLCompilerTool>(project, out reasonForFailure);
-            if(compilerTool != null)
-                compilerTool.ShowIncludes = show;
-        }
-
-        public bool? GetCompilerSetting_ShowIncludes(Project project, out string reasonForFailure)
-        {
-            VCCLCompilerTool compilerTool = GetToolFromActiveConfiguration<VCCLCompilerTool>(project, out reasonForFailure);
-            return compilerTool?.ShowIncludes;
-        }
-
-        public string GetCompilerSetting_PreprocessorDefinitions(Project project, out string reasonForFailure)
-        {
-            VCCLCompilerTool compilerTool = GetToolFromActiveConfiguration<VCCLCompilerTool>(project, out reasonForFailure);
-            if (compilerTool != null)
-                return compilerTool?.PreprocessorDefinitions;
-
-            // If querying the NMake tool fails, keep old reason for failure, since this is what we usually expect. Using NMake is seen as mere fallback.
-            VCNMakeTool nmakeTool = GetToolFromActiveConfiguration<VCNMakeTool>(project, out var _);
-            if (nmakeTool == null) return null;
-            reasonForFailure = "";
-            return nmakeTool.IncludeSearchPath;
+                return nmakeTool.PreprocessorDefinitions;
+            }
+            catch
+            {
+                throw queryFailure;
+            }
         }
 
         // https://msdn.microsoft.com/en-us/library/microsoft.visualstudio.vcprojectengine.machinetypeoption.aspx
@@ -182,13 +215,9 @@ namespace IncludeToolbox
             AMD64 = 17
         }
 
-        public TargetMachineType? GetLinkerSetting_TargetMachine(EnvDTE.Project project, out string reasonForFailure)
+        public TargetMachineType GetLinkerSetting_TargetMachine(EnvDTE.Project project)
         {
-            var linkerTool = GetLinkerTool(project, out reasonForFailure);
-            if (linkerTool == null)
-                return null;
-            else
-                return (TargetMachineType)linkerTool.TargetMachine;
+            return (TargetMachineType)GetLinkerTool(project).TargetMachine;
         }
     }
 }

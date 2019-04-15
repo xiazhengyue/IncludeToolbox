@@ -30,6 +30,7 @@ namespace IncludeToolbox
 
         static protected WritableSettingsStore GetSettingsStore()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             var settingsManager = new ShellSettingsManager(ServiceProvider.GlobalProvider);
             return settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
         }

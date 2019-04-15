@@ -8,6 +8,8 @@ using EnvDTE;
 using Microsoft.VisualStudio.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox
 {
@@ -30,28 +32,28 @@ namespace IncludeToolbox
         /// </summary>
         private BuildEvents buildEvents;
 
-        public bool PerformTrialAndErrorIncludeRemoval(EnvDTE.Document document, TrialAndErrorRemovalOptionsPage settings)
+        public async Task<bool> PerformTrialAndErrorIncludeRemoval(EnvDTE.Document document, TrialAndErrorRemovalOptionsPage settings)
         {
             if (document == null)
                 return false;
 
-            string reasonForFailure;
-           
-            if (VSUtils.VCUtils.IsCompilableFile(document, out reasonForFailure) == false)
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            var canCompile = await VSUtils.VCUtils.IsCompilableFile(document);
+            if (canCompile.Result == false)
             {
-                Output.Instance.WriteLine("Can't compile file '{1}': {0}", reasonForFailure, document.Name);
+                Output.Instance.WriteLine($"Can't compile file '{canCompile.Reason}': {document.Name}");
                 return false;
             }
 
             if (WorkInProgress)
             {
-                Output.Instance.ErrorMsg("Trial and error include removal already in progress!");
+                _ = Output.Instance.ErrorMsg("Trial and error include removal already in progress!");
                 return false;
             }
             WorkInProgress = true;
 
             // Start wait dialog.
-            IVsThreadedWaitDialog2 progressDialog = StartProgressDialog(document.Name);
+            IVsThreadedWaitDialog2 progressDialog = await StartProgressDialog(document.Name);
             if (progressDialog == null)
                 return false;
 
@@ -80,8 +82,10 @@ namespace IncludeToolbox
             return true;
         }
 
-        private IVsThreadedWaitDialog2 StartProgressDialog(string documentName)
+        private async Task<IVsThreadedWaitDialog2> StartProgressDialog(string documentName)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var dialogFactory = Package.GetGlobalService(typeof(SVsThreadedWaitDialogFactory)) as IVsThreadedWaitDialogFactory;
             if (dialogFactory == null)
             {
@@ -114,6 +118,8 @@ namespace IncludeToolbox
         private void ExtractSelectionAndIncludes(EnvDTE.Document document, TrialAndErrorRemovalOptionsPage settings,
                                                 out ITextBuffer textBuffer, out Formatter.IncludeLineInfo[] includeLinesArray)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             // Parsing.
             document.Activate();
             var documentTextView = VSUtils.GetCurrentTextViewHost();
@@ -160,25 +166,27 @@ namespace IncludeToolbox
                     if (settings.RemovalOrder == TrialAndErrorRemovalOptionsPage.IncludeRemovalOrder.TopToBottom)
                         currentLine -= numRemovedIncludes;
 
-                    // Update progress.
-                    string waitMessage = $"Removing #includes from '{document.Name}'";
-                    string progressText = $"Trying to remove '{line.IncludeContent}' ...";
-                    progressDialog.UpdateProgress(
-                        szUpdatedWaitMessage: waitMessage,
-                        szProgressText: progressText,
-                        szStatusBarText: "Running Trial & Error Removal - " + waitMessage + " - " + progressText,
-                        iCurrentStep: currentProgressStep + 1,
-                        iTotalSteps: includeLines.Length + 1,
-                        fDisableCancel: false,
-                        pfCanceled: out canceled);
-                    if (canceled)
-                        break;
-
-                    ++currentProgressStep;
-
-                    // Remove include - this needs to be done on the main thread.
-                    Application.Current.Dispatcher.Invoke(() =>
+                    ThreadHelper.JoinableTaskFactory.Run(async () =>
                     {
+                        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                        // Update progress.
+                        string waitMessage = $"Removing #includes from '{document.Name}'";
+                        string progressText = $"Trying to remove '{line.IncludeContent}' ...";
+                        progressDialog.UpdateProgress(
+                            szUpdatedWaitMessage: waitMessage,
+                            szProgressText: progressText,
+                            szStatusBarText: "Running Trial & Error Removal - " + waitMessage + " - " + progressText,
+                            iCurrentStep: currentProgressStep + 1,
+                            iTotalSteps: includeLines.Length + 1,
+                            fDisableCancel: false,
+                            pfCanceled: out canceled);
+                        if (canceled)
+                            return;
+
+                         ++currentProgressStep;
+
+                        // Remove include
                         using (var edit = textBuffer.CreateEdit())
                         {
                             if (settings.KeepLineBreaks)
@@ -191,15 +199,22 @@ namespace IncludeToolbox
                     });
                     outputWaitEvent.WaitOne();
 
+                    if (canceled)
+                        break;
+
                     // Compile - In rare cases VS tells us that we are still building which should not be possible because we have received OnBuildFinished
                     // As a workaround we just try again a few times.
+                    ThreadHelper.JoinableTaskFactory.Run(async () =>
                     {
+                        await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
                         const int maxNumCompileAttempts = 3;
                         for (int numCompileFails = 0; numCompileFails < maxNumCompileAttempts; ++numCompileFails)
                         {
+                            // TODO: This happens on the main thread. Making the whole thread thing a bit pointless!!!
                             try
                             {
-                                VSUtils.VCUtils.CompileSingleFile(document);
+                                await VSUtils.VCUtils.CompileSingleFile(document);
                             }
                             catch (Exception e)
                             {
@@ -213,13 +228,13 @@ namespace IncludeToolbox
                                 else
                                 {
                                     // Try again.
-                                    System.Threading.Thread.Sleep(100);
+                                    await System.Threading.Tasks.Task.Delay(100);
                                     continue;
                                 }
                             }
                             break;
                         }
-                    }
+                    });
 
                     // Wait till woken.
                     bool noTimeout = outputWaitEvent.WaitOne(timeoutMS);
@@ -228,12 +243,16 @@ namespace IncludeToolbox
                     if (!noTimeout || !lastBuildSuccessful)
                     {
                         Output.Instance.WriteLine("Could not remove #include: '{0}'", line.IncludeContent);
-                        document.Undo();
-                        if (!noTimeout)
+                        ThreadHelper.JoinableTaskFactory.Run(async () =>
                         {
-                            Output.Instance.ErrorMsg("Compilation of {0} timeouted!", document.Name);
+                            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                            document.Undo();
+                            if (!noTimeout)
+                                await Output.Instance.ErrorMsg("Compilation of {0} timeouted!", document.Name);
+                        });
+
+                        if (!noTimeout)
                             break;
-                        }
                     }
                     else
                     {
@@ -248,12 +267,14 @@ namespace IncludeToolbox
             }
             finally
             {
-                Application.Current.Dispatcher.Invoke(() => OnTrialAndErrorRemovalDone(progressDialog, document, numRemovedIncludes, canceled));
+                _ = OnTrialAndErrorRemovalDone(progressDialog, document, numRemovedIncludes, canceled);
             }
         }
 
-        private void OnTrialAndErrorRemovalDone(IVsThreadedWaitDialog2 progressDialog, EnvDTE.Document document, int numRemovedIncludes, bool canceled)
+        private async Task OnTrialAndErrorRemovalDone(IVsThreadedWaitDialog2 progressDialog, EnvDTE.Document document, int numRemovedIncludes, bool canceled)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             // Close Progress bar.
             progressDialog.EndWaitDialog();
 
@@ -271,6 +292,7 @@ namespace IncludeToolbox
 
         private void SubscribeBuildEvents()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             buildEvents = VSUtils.GetDTE().Events.BuildEvents;
             buildEvents.OnBuildDone += OnBuildFinished;
             buildEvents.OnBuildProjConfigDone += OnBuildConfigFinished;

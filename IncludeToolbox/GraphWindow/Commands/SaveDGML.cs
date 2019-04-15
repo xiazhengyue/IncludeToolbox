@@ -1,10 +1,12 @@
 ﻿using IncludeToolbox.Graph;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.GraphWindow.Commands
 {
@@ -29,14 +31,14 @@ namespace IncludeToolbox.GraphWindow.Commands
             }
         }
 
-        protected override void MenuItemCallback(object sender, EventArgs e)
+        protected override async Task MenuItemCallback(object sender, EventArgs e)
         {
             if (viewModel == null)
                 return;
 
             if (viewModel.NumIncludes <= 0)
             {
-                Output.Instance.ErrorMsg("There is no include tree to save!");
+                await Output.Instance.ErrorMsg("There is no include tree to save!");
                 return;
             }
 
@@ -61,7 +63,7 @@ namespace IncludeToolbox.GraphWindow.Commands
                 }
                 catch
                 {
-                    Output.Instance.ErrorMsg($"Failed to create dgml graph.");
+                    await Output.Instance.ErrorMsg($"Failed to create dgml graph.");
                     return;
                 }
 
@@ -71,12 +73,13 @@ namespace IncludeToolbox.GraphWindow.Commands
                 }
                 catch
                 {
-                    Output.Instance.ErrorMsg($"Failed to safe dgml to {dlg.FileName}.");
+                    await Output.Instance.ErrorMsg($"Failed to safe dgml to {dlg.FileName}.");
                     return;
                 }
 
-                if (Output.Instance.YesNoMsg("Saved dgml successfully. Do you want to open it in Visual Studio?") == Output.MessageResult.Yes)
+                if (await Output.Instance.YesNoMsg("Saved dgml successfully. Do you want to open it in Visual Studio?") == Output.MessageResult.Yes)
                 {
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                     VSUtils.OpenFileAndShowDocument(dlg.FileName);
                 }
             }

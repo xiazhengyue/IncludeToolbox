@@ -9,6 +9,12 @@ using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace IncludeToolbox
 {
+    public struct BoolWithReason
+    {
+        public bool Result;
+        public string Reason;
+    }
+
     public static class Utils
     {
         public static string MakeRelative(string absoluteRoot, string absoluteTarget)

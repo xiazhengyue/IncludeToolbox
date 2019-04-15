@@ -34,7 +34,7 @@ namespace Tests
         /// This indirectly also tests whether our iwyu repository is healthy!
         /// </remarks>
         [TestMethod]
-        public async Task Download()
+        public async Task DownloadAsync()
         {
             var executableDir = GetCleanExecutableDir();
 

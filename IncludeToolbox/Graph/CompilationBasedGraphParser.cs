@@ -1,15 +1,18 @@
 ﻿using EnvDTE;
 using Microsoft.VisualStudio.PlatformUI;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.Graph
 {
     public static class CompilationBasedGraphParser
     {
-        public delegate void OnCompleteCallback(IncludeGraph graph, Document document, bool success);
+        public delegate Task OnCompleteCallback(IncludeGraph graph, Document document, bool success);
 
         // There can always be only one compilation operation and it takes a while.
         // This makes the whole mechanism effectively a singletonish thing.
@@ -20,28 +23,35 @@ namespace IncludeToolbox.Graph
         private static IncludeGraph graphBeingExtended;
 
 
-        public static bool CanPerformShowIncludeCompilation(Document document, out string reasonForFailure)
+        public static async Task<BoolWithReason> CanPerformShowIncludeCompilation(Document document)
         {
             if (CompilationOngoing)
             {
-                reasonForFailure = "Can't compile while another file is being compiled.";
-                return false;
+                return new BoolWithReason
+                { 
+                    Result = false,
+                    Reason = "Can't compile while another file is being compiled.",
+                };
             }
 
             var dte = VSUtils.GetDTE();
             if (dte == null)
             {
-                reasonForFailure = "Failed to acquire dte object.";
-                return false;
+                return new BoolWithReason
+                {
+                    Result = false,
+                    Reason = "Failed to acquire dte object.",
+                };
             }
 
-            if (VSUtils.VCUtils.IsCompilableFile(document, out reasonForFailure) == false)
+            var result = await VSUtils.VCUtils.IsCompilableFile(document);
+            if (result.Result == false)
             {
-                reasonForFailure = string.Format("Can't extract include graph since current file '{0}' can't be compiled: {1}.", document?.FullName ?? "<no file>", reasonForFailure);
-                return false;
+                result.Reason = $"Can't extract include graph since current file '{document?.FullName ?? "<no file>"}' can't be compiled: {result.Reason}.";
+                return result;
             }
 
-            return true;
+            return new BoolWithReason { Result = true, Reason = "" };
          }
 
         /// <summary>
@@ -51,11 +61,12 @@ namespace IncludeToolbox.Graph
         /// If this is the first file, the graph is necessarily a tree after this operation.
         /// </remarks>
         /// <returns>true if successful, false otherwise.</returns>
-        public static bool AddIncludesRecursively_ShowIncludesCompilation(this IncludeGraph graph, Document document, OnCompleteCallback onCompleted)
+        public static async Task<bool> AddIncludesRecursively_ShowIncludesCompilation(this IncludeGraph graph, Document document, OnCompleteCallback onCompleted)
         {
-            if (!CanPerformShowIncludeCompilation(document, out string reasonForFailure))
+            var canPerformShowIncludeCompilation = await CanPerformShowIncludeCompilation(document);
+            if (!canPerformShowIncludeCompilation.Result)
             {
-                Output.Instance.ErrorMsg(reasonForFailure);
+                await Output.Instance.ErrorMsg(canPerformShowIncludeCompilation.Reason);
                 return false;
             }
 
@@ -64,26 +75,20 @@ namespace IncludeToolbox.Graph
                 var dte = VSUtils.GetDTE();
                 if (dte == null)
                 {
-                    Output.Instance.ErrorMsg("Failed to acquire dte object.");
+                    await Output.Instance.ErrorMsg("Failed to acquire dte object.");
                     return false;
                 }
 
+                try
                 {
-                    bool? setting = VSUtils.VCUtils.GetCompilerSetting_ShowIncludes(document.ProjectItem?.ContainingProject, out reasonForFailure);
-                    if (!setting.HasValue)
-                    {
-                        Output.Instance.ErrorMsg("Can't compile with show includes: {0}.", reasonForFailure);
-                        return false;
-                    }
-                    else
-                        showIncludeSettingBefore = setting.Value;
-
-                    VSUtils.VCUtils.SetCompilerSetting_ShowIncludes(document.ProjectItem?.ContainingProject, true, out reasonForFailure);
-                    if (!string.IsNullOrEmpty(reasonForFailure))
-                    {
-                        Output.Instance.ErrorMsg("Can't compile with show includes: {0}.", reasonForFailure);
-                        return false;
-                    }
+                    await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                    showIncludeSettingBefore = VSUtils.VCUtils.GetCompilerSetting_ShowIncludes(document.ProjectItem?.ContainingProject);
+                    VSUtils.VCUtils.SetCompilerSetting_ShowIncludes(document.ProjectItem?.ContainingProject, true);
+                }
+                catch (VCQueryFailure queryFailure)
+                {
+                    await Output.Instance.ErrorMsg("Can't compile with show includes: {0}.", queryFailure.Message);
+                    return false;
                 }
 
                 // Only after we're through all early out error cases, set static compilation infos.
@@ -109,22 +114,27 @@ namespace IncludeToolbox.Graph
                     }
                 }
 
-                VSUtils.VCUtils.CompileSingleFile(document);
+                await VSUtils.VCUtils.CompileSingleFile(document);
             }
             catch(Exception e)
             {
-                ResetPendingCompilationInfo();
-                Output.Instance.ErrorMsg("Compilation of file '{0}' with /showIncludes failed: {1}.", document.FullName, e);
+                await ResetPendingCompilationInfo();
+                await Output.Instance.ErrorMsg("Compilation of file '{0}' with /showIncludes failed: {1}.", document.FullName, e);
                 return false;
             }
 
             return true;
         }
 
-        private static void ResetPendingCompilationInfo()
+        private static async Task ResetPendingCompilationInfo()
         {
-            string reasonForFailure;
-            VSUtils.VCUtils.SetCompilerSetting_ShowIncludes(documentBeingCompiled.ProjectItem?.ContainingProject, showIncludeSettingBefore, out reasonForFailure);
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            try
+            {
+                VSUtils.VCUtils.SetCompilerSetting_ShowIncludes(documentBeingCompiled.ProjectItem?.ContainingProject, showIncludeSettingBefore);
+            }
+            catch (VCQueryFailure) { }
 
             onCompleted = null;
             documentBeingCompiled = null;
@@ -135,6 +145,8 @@ namespace IncludeToolbox.Graph
 
         private static void OnBuildConfigFinished(vsBuildScope Scope, vsBuildAction Action)
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
+
             // Sometimes we get this message several times.
             if (!CompilationOngoing)
                 return;
@@ -185,22 +197,16 @@ namespace IncludeToolbox.Graph
                 }
             }
 
-            catch(Exception e)
+            catch (Exception e)
             {
-                Output.Instance.ErrorMsg("Failed to parse output from /showInclude compilation of file '{0}': {1}", documentBeingCompiled.FullName, e);
+                _ = Output.Instance.ErrorMsg("Failed to parse output from /showInclude compilation of file '{0}': {1}", documentBeingCompiled.FullName, e);
                 successfulParsing = false;
                 return;
             }
             finally
             {
-                try
-                {
-                    onCompleted(graphBeingExtended, documentBeingCompiled, successfulParsing);
-                }
-                finally
-                {
-                    ResetPendingCompilationInfo();
-                }
+                _ = onCompleted(graphBeingExtended, documentBeingCompiled, successfulParsing);
+                _ = ResetPendingCompilationInfo();
             }
         }
     }

@@ -14,7 +14,7 @@ namespace IncludeToolbox.GraphWindow
             ViewModel = (IncludeGraphViewModel)DataContext;
         }
 
-        private void OnIncludeTreeItemMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private async void OnIncludeTreeItemMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed && e.ClickCount == 2)
             {
@@ -22,13 +22,13 @@ namespace IncludeToolbox.GraphWindow
                 {
                     if (frameworkElement.DataContext is IncludeTreeViewItem treeItem)   // Arguably a bit hacky to go over the DataContext, but it seems to be a good direct route.
                     {
-                        treeItem.NavigateToInclude();
+                        await treeItem.NavigateToInclude();
                     }
                 }
             }
         }
 
-        private void OnIncludeTreeItemKeyDown(object sender, KeyEventArgs e)
+        private async void OnIncludeTreeItemKeyDown(object sender, KeyEventArgs e)
         {
             if(e.Key == Key.Enter)
             {
@@ -36,7 +36,7 @@ namespace IncludeToolbox.GraphWindow
                 {
                     if (treeView.SelectedItem is IncludeTreeViewItem treeItem)
                     {
-                        treeItem.NavigateToInclude();
+                        await treeItem.NavigateToInclude();
                     }
                 }
             }

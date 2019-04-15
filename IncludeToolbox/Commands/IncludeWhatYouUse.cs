@@ -5,6 +5,7 @@ using System;
 using System.ComponentModel.Design;
 using System.IO;
 using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.Commands
 {
@@ -39,6 +40,8 @@ namespace IncludeToolbox.Commands
 
         private async Task<bool> DownloadIWYUWithProgressBar(string executablePath, IVsThreadedWaitDialogFactory dialogFactory)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             IVsThreadedWaitDialog2 progressDialog;
             dialogFactory.CreateInstance(out progressDialog);
             if (progressDialog == null)
@@ -62,8 +65,10 @@ namespace IncludeToolbox.Commands
 
             try
             {
-                await IWYUDownload.DownloadIWYU(executablePath, (string section, string status, float percentage) =>
+                await IWYUDownload.DownloadIWYU(executablePath, delegate (string section, string status, float percentage)
                 {
+                    ThreadHelper.ThrowIfNotOnUIThread();
+
                     bool canceled;
                     progressDialog.UpdateProgress(
                         szUpdatedWaitMessage: section,
@@ -81,7 +86,7 @@ namespace IncludeToolbox.Commands
             }
             catch (Exception e)
             {
-                Output.Instance.ErrorMsg("Failed to download include-what-you-use: {0}", e);
+                await Output.Instance.ErrorMsg("Failed to download include-what-you-use: {0}", e);
                 return false;
             }
             finally
@@ -92,13 +97,13 @@ namespace IncludeToolbox.Commands
             return true;
         }
 
-        private async System.Threading.Tasks.Task OptionalDownloadOrUpdate(IncludeWhatYouUseOptionsPage settings, IVsThreadedWaitDialogFactory dialogFactory)
+        private async Task OptionalDownloadOrUpdate(IncludeWhatYouUseOptionsPage settings, IVsThreadedWaitDialogFactory dialogFactory)
         {
             // Check existence, offer to download if it's not there.
             bool downloadedNewIwyu = false;
             if (!File.Exists(settings.ExecutablePath))
             {
-                if (Output.Instance.YesNoMsg($"Can't find include-what-you-use in '{settings.ExecutablePath}'. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?") != Output.MessageResult.Yes)
+                if (await Output.Instance.YesNoMsg($"Can't find include-what-you-use in '{settings.ExecutablePath}'. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?") != Output.MessageResult.Yes)
                 {
                     return;
                 }
@@ -109,6 +114,8 @@ namespace IncludeToolbox.Commands
             }
             else if (settings.AutomaticCheckForUpdates && !checkedForUpdatesThisSession)
             {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
                 IVsThreadedWaitDialog2 dialog = null;
                 dialogFactory.CreateInstance(out dialog);
                 dialog?.StartWaitDialog("Include Toolbox", "Running Include-What-You-Use", null, null, "Checking for Updates for include-what-you-use", 0, false, true);
@@ -118,7 +125,7 @@ namespace IncludeToolbox.Commands
                 if (newVersionAvailable)
                 {
                     checkedForUpdatesThisSession = true;
-                    if (Output.Instance.YesNoMsg($"There is a new version of include-what-you-use available. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?") == Output.MessageResult.Yes)
+                    if (await Output.Instance.YesNoMsg($"There is a new version of include-what-you-use available. Do you want to download it from '{IWYUDownload.DisplayRepositorURL}'?") == Output.MessageResult.Yes)
                     {
                         downloadedNewIwyu = await DownloadIWYUWithProgressBar(settings.ExecutablePath, dialogFactory);
                     }
@@ -135,8 +142,10 @@ namespace IncludeToolbox.Commands
         /// </summary>
         /// <param name="sender">Event sender.</param>
         /// <param name="e">Event args.</param>
-        protected override async void MenuItemCallback(object sender, EventArgs e)
+        protected override async Task MenuItemCallback(object sender, EventArgs e)
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var settingsIwyu = (IncludeWhatYouUseOptionsPage)Package.GetDialogPage(typeof(IncludeWhatYouUseOptionsPage));
             Output.Instance.Clear();
 
@@ -165,7 +174,7 @@ namespace IncludeToolbox.Commands
             // We should really have it now, but just in case our update or download method screwed up.
             if (!File.Exists(settingsIwyu.ExecutablePath))
             {
-                Output.Instance.ErrorMsg("Unexpected error: Can't find include-what-you-use.exe after download/update.");
+                await Output.Instance.ErrorMsg("Unexpected error: Can't find include-what-you-use.exe after download/update.");
                 return;
             }
             checkedForUpdatesThisSession = true;
@@ -186,11 +195,11 @@ namespace IncludeToolbox.Commands
                 dialogFactory.CreateInstance(out dialog);
                 dialog?.StartWaitDialog("Include Toolbox", "Running include-what-you-use", null, null, "Running include-what-you-use", 0, false, true);
 
-                string output = IWYU.RunIncludeWhatYouUse(document.FullName, project, settingsIwyu);
+                string output = await IWYU.RunIncludeWhatYouUse(document.FullName, project, settingsIwyu);
                 if (settingsIwyu.ApplyProposal && output != null)
                 {
                     var settingsFormatting = (FormatterOptionsPage)Package.GetDialogPage(typeof(FormatterOptionsPage));
-                    IWYU.Apply(output, settingsIwyu.RunIncludeFormatter, settingsFormatting);
+                    await IWYU.Apply(output, settingsIwyu.RunIncludeFormatter, settingsFormatting);
                 }
 
                 dialog?.EndWaitDialog();

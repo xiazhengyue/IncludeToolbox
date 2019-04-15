@@ -1,7 +1,10 @@
 ﻿using IncludeToolbox.Graph;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace IncludeToolbox.GraphWindow
 {
@@ -58,8 +61,10 @@ namespace IncludeToolbox.GraphWindow
             NotifyAllPropertiesChanged();
         }
 
-        public override void NavigateToInclude()
+        public override async Task NavigateToInclude()
         {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             // Want to navigate to origin of this include, not target if possible
             if (includingFileAbsoluteFilename != null && Path.IsPathRooted(includingFileAbsoluteFilename))
             {
