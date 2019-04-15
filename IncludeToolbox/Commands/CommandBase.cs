@@ -32,19 +32,16 @@ namespace IncludeToolbox.Commands
                 return;
             }
 
-            EventHandler callback = (sender, e) =>
+            EventHandler callback = async (sender, e) =>
             {
-                _ = Task.Run(async () =>
-                  {
-                      try
-                      {
-                          await this.MenuItemCallback(sender, e);
-                      }
-                      catch (Exception exception)
-                      {
-                          await Output.Instance.ErrorMsg("Unexpected Error: {0}", exception.ToString());
-                      }
-                  });
+                try
+                {
+                    await this.MenuItemCallback(sender, e);
+                }
+                catch (Exception exception)
+                {
+                    await Output.Instance.ErrorMsg("Unexpected Error: {0}", exception.ToString());
+                }
             };
 
             menuCommand = new OleMenuCommand(callback, CommandID);
