@@ -109,6 +109,7 @@
     <None Include="Package\source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Resources\IncludeFormatterIcons.pdn" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -137,6 +138,13 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="Resources\include13.png" />
+    <Content Include="Resources\include16.png" />
+    <Content Include="Resources\IncludeFormatterIcons.png" />
+    <Content Include="Resources\IncludeFormatterPackage.png">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Resources\IncludeGraphToolbarIcons.png" />
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="Package\CommandDefinitions.vsct">
