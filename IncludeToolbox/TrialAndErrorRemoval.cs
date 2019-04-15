@@ -181,19 +181,19 @@ namespace IncludeToolbox
                             iTotalSteps: includeLines.Length + 1,
                             fDisableCancel: false,
                             pfCanceled: out canceled);
-                        if (canceled)
-                            return;
+                        if (!canceled)
+                        { 
+                            ++currentProgressStep;
 
-                         ++currentProgressStep;
-
-                        // Remove include
-                        using (var edit = textBuffer.CreateEdit())
-                        {
-                            if (settings.KeepLineBreaks)
-                                edit.Delete(edit.Snapshot.Lines.ElementAt(currentLine).Extent);
-                            else
-                                edit.Delete(edit.Snapshot.Lines.ElementAt(currentLine).ExtentIncludingLineBreak);
-                            edit.Apply();
+                            // Remove include
+                            using (var edit = textBuffer.CreateEdit())
+                            {
+                                if (settings.KeepLineBreaks)
+                                    edit.Delete(edit.Snapshot.Lines.ElementAt(currentLine).Extent);
+                                else
+                                    edit.Delete(edit.Snapshot.Lines.ElementAt(currentLine).ExtentIncludingLineBreak);
+                                edit.Apply();
+                            }
                         }
                         outputWaitEvent.Set();
                     });
