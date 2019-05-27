@@ -27,7 +27,7 @@ namespace IncludeToolbox
             if (document == null)
                 throw new VCQueryFailure("No document.");
 
-            var vcProject = document.ProjectItem.ContainingProject?.Object as VCProject;
+            var vcProject = document.ProjectItem?.ContainingProject?.Object as VCProject;
             if (vcProject == null)
                 throw new VCQueryFailure("The given document does not belong to a VC++ Project.");
 

@@ -155,7 +155,7 @@ namespace IncludeToolbox.Commands
                 Output.Instance.WriteLine("No active document!");
                 return;
             }
-            var project = document.ProjectItem.ContainingProject;
+            var project = document.ProjectItem?.ContainingProject;
             if (project == null)
             {
                 Output.Instance.WriteLine("The document {0} is not part of a project.", document.Name);
