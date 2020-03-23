@@ -15,6 +15,11 @@ namespace IncludeToolbox.Commands
         public static readonly Guid ToolGroup = new Guid("032eb795-1f1c-440d-af98-43cdc1de7a8b");
 
         /// <summary>
+        /// Command menu group for commands in the solution menu.
+        /// </summary>
+        public static readonly Guid SolutionGroup = new Guid("0641EBB9-E5FF-4979-9B4C-E29598BE45C7");
+                                                              
+        /// <summary>
         /// Command menu group for commands in the project menu.
         /// </summary>
         public static readonly Guid ProjectGroup = new Guid("1970ECF3-6C03-4CCF-B422-8DD07F774ED8");

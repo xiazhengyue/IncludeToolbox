@@ -16,7 +16,7 @@ namespace IncludeToolbox.Commands
     {
         public override CommandID CommandID => new CommandID(CommandSetGuids.ProjectGroup, 0x0100);
 
-        private TrialAndErrorRemoval impl;
+        private TrialAndErrorRemovalWithoutDialog impl;
         private TrialAndErrorRemovalOptionsPage settings;
 
         private ProjectItems projectItems = null;
@@ -32,7 +32,7 @@ namespace IncludeToolbox.Commands
         {
             base.SetupMenuCommand();
 
-            impl = new TrialAndErrorRemoval();
+            impl = new TrialAndErrorRemovalWithoutDialog();
             impl.OnFileFinished += OnDocumentIncludeRemovalFinished;
             menuCommand.BeforeQueryStatus += UpdateVisibility;
 
@@ -178,7 +178,7 @@ namespace IncludeToolbox.Commands
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            if (TrialAndErrorRemoval.WorkInProgress)
+            if (TrialAndErrorRemovalWithoutDialog.WorkInProgress)
             {
                 await Output.Instance.ErrorMsg("Trial and error include removal already in progress!");
                 return;

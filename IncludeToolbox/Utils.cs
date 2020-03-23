@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
@@ -85,6 +86,35 @@ namespace IncludeToolbox
             {
                 yield return t;
             }
+        }
+
+        public static List<string> LoadProjectsConfig()
+        {
+            List<string> projects = new List<string>();
+            XmlDocument doc = new XmlDocument();
+            doc.Load(@".\ProjectsFilterConfig.xml");
+            XmlNodeList nodes = doc.SelectNodes("/root/project");
+            foreach(var node in nodes)
+            {
+                XmlElement el = node as XmlElement;
+                projects.Add(el.InnerText);
+            }
+
+            return projects;
+        }
+
+        public static void SaveProjectsConfig(List<string> projects)
+        {
+            XmlDocument doc = new XmlDocument();
+            doc.Load(@".\ProjectsFilterConfig.xml");
+            XmlNode root = doc.SelectSingleNode("root");
+            foreach (var proj in projects)
+            {
+                XmlElement elm = doc.CreateElement("project");
+                elm.InnerText = proj;
+                root.AppendChild(elm);
+            }
+            doc.Save(@".\ProjectsFilterConfig.xml");
         }
     }
 }

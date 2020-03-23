@@ -52,6 +52,7 @@ namespace IncludeToolbox
             Commands.FormatIncludes.Initialize(this);
             Commands.IncludeWhatYouUse.Initialize(this);
             Commands.TrialAndErrorRemoval_CodeWindow.Initialize(this);
+            Commands.TrialAndErrorRemoval_Solution.Initialize(this);
             Commands.TrialAndErrorRemoval_Project.Initialize(this);
         }
 

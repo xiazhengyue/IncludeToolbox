@@ -51,6 +51,7 @@
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN" />
       </Group>
       <Group guid="guidIncludeGraphWindowCmdSet" id="IncludeGraphToolWindowGroup" priority="0x8000"/>
+      <Group guid="guidSolutionMenuCmdSet" id="SolutionMenuGroup" priority="0x8000"/>
       <Group guid="guidProjectMenuCmdSet" id="ProjectMenuGroup" priority="0x8000"/>
     
       <!-- Groups for include graph window toolbar -->
@@ -92,6 +93,14 @@
       </Button>
       <Button guid="guidCodeMenuCmdSet" id="TrialAndErrorRemovalId" priority="0x0102" type="Button">
         <Parent guid="guidCodeMenuCmdSet" id="EditMenuGroup" />
+        <Icon guid="guidIconsCommon" id="iconTrialAndError" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Trial and Error Include Removal</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidSolutionMenuCmdSet" id="SolutionWideTrialAndErrorRemovalId" priority="0x2000" type="Button">
         <Icon guid="guidIconsCommon" id="iconTrialAndError" />
         <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
@@ -160,6 +169,22 @@
     </Bitmaps>
   </Commands>
 
+  <CommandPlacements>
+
+     <!--Placement for group. The parent of a group is a menu, context menu or toolbar. 
+           The priority sets the position of the group compared to the priority of other existing groups in the menu.-->    
+      
+    <CommandPlacement guid="guidSolutionMenuCmdSet" id="SolutionMenuGroup" priority="0x1000">
+       <!--The parent of the group will be the Solution context menu--> 
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_SOLNNODE"/>
+    </CommandPlacement>
+
+     <!--Placement for command. The parent of a command is always a group, never a menu, context menu or toolbar.--> 
+    <CommandPlacement guid="guidSolutionMenuCmdSet" id="SolutionWideTrialAndErrorRemovalId" priority="0x0001" >
+      <Parent guid="guidSolutionMenuCmdSet" id="SolutionMenuGroup"/>
+    </CommandPlacement>
+  </CommandPlacements>
+  
   <Symbols>
     <!-- This is the package guid. -->
     <GuidSymbol name="guidIncludeToolboxPackage" value="{5c2743c4-1b3f-4edd-b6a0-4379f867d47f}" />
@@ -174,6 +199,11 @@
     <GuidSymbol name="guidIncludeGraphWindowCmdSet" value="{032eb795-1f1c-440d-af98-43cdc1de7a8b}">
       <IDSymbol name="IncludeGraphToolWindowGroup" value="0x1000" />
       <IDSymbol name="IncludeGraphToolWindowCommandId" value="0x0102" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidSolutionMenuCmdSet" value="{0641EBB9-E5FF-4979-9B4C-E29598BE45C7}">
+      <IDSymbol name="SolutionMenuGroup" value="0x1000" />
+      <IDSymbol name="SolutionWideTrialAndErrorRemovalId" value="0x0100" />
     </GuidSymbol>
 
     <GuidSymbol name="guidProjectMenuCmdSet" value="{1970ECF3-6C03-4CCF-B422-8DD07F774ED8}">

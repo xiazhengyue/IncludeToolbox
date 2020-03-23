@@ -21,7 +21,7 @@ namespace IncludeToolbox.Commands
     {
         public override CommandID CommandID => new CommandID(CommandSetGuids.MenuGroup, 0x0104);
 
-        private TrialAndErrorRemoval impl;
+        private TrialAndErrorRemovalWithoutDialog impl;
 
         public TrialAndErrorRemoval_CodeWindow()
         {
@@ -31,7 +31,7 @@ namespace IncludeToolbox.Commands
         {
             base.SetupMenuCommand();
 
-            impl = new TrialAndErrorRemoval();
+            impl = new TrialAndErrorRemovalWithoutDialog();
             menuCommand.BeforeQueryStatus += UpdateVisibility;
         }
 
